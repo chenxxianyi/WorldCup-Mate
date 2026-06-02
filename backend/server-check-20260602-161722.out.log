@@ -1,0 +1,380 @@
+MySQL connected
+Redis connected
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] POST   /api/auth/register        --> worldcup-mate/internal/handlers.Register (4 handlers)
+[GIN-debug] POST   /api/auth/login           --> worldcup-mate/internal/handlers.Login (4 handlers)
+[GIN-debug] POST   /api/auth/logout          --> worldcup-mate/internal/handlers.Logout (4 handlers)
+[GIN-debug] GET    /api/matches              --> worldcup-mate/internal/handlers.ListMatches (4 handlers)
+[GIN-debug] GET    /api/matches/today        --> worldcup-mate/internal/handlers.GetTodayMatches (4 handlers)
+[GIN-debug] GET    /api/matches/tomorrow     --> worldcup-mate/internal/handlers.GetTomorrowMatches (4 handlers)
+[GIN-debug] GET    /api/matches/upcoming     --> worldcup-mate/internal/handlers.GetUpcomingMatches (4 handlers)
+[GIN-debug] GET    /api/matches/live         --> worldcup-mate/internal/handlers.GetLiveMatches (4 handlers)
+[GIN-debug] GET    /api/matches/recommended  --> worldcup-mate/internal/handlers.GetRecommendedMatches (4 handlers)
+[GIN-debug] GET    /api/matches/progress     --> worldcup-mate/internal/handlers.GetTournamentProgress (4 handlers)
+[GIN-debug] GET    /api/matches/:id          --> worldcup-mate/internal/handlers.GetMatchDetail (4 handlers)
+[GIN-debug] GET    /api/matches/by-team/:teamId --> worldcup-mate/internal/handlers.GetMatchesByTeam (4 handlers)
+[GIN-debug] GET    /api/matches/by-group/:groupId --> worldcup-mate/internal/handlers.GetMatchesByGroup (4 handlers)
+[GIN-debug] GET    /api/matches/by-stage/:stage --> worldcup-mate/internal/handlers.GetMatchesByStage (4 handlers)
+[GIN-debug] GET    /api/teams                --> worldcup-mate/internal/handlers.ListTeams (4 handlers)
+[GIN-debug] GET    /api/teams/:id            --> worldcup-mate/internal/handlers.GetTeamDetail (4 handlers)
+[GIN-debug] GET    /api/teams/:id/matches    --> worldcup-mate/internal/handlers.GetTeamMatches (4 handlers)
+[GIN-debug] GET    /api/groups               --> worldcup-mate/internal/handlers.ListGroups (4 handlers)
+[GIN-debug] GET    /api/groups/:id           --> worldcup-mate/internal/handlers.GetGroupDetail (4 handlers)
+[GIN-debug] GET    /api/groups/:id/standings --> worldcup-mate/internal/handlers.GetGroupStandings (4 handlers)
+[GIN-debug] GET    /api/standings            --> worldcup-mate/internal/handlers.ListStandings (4 handlers)
+[GIN-debug] GET    /api/standings/best-third --> worldcup-mate/internal/handlers.GetBestThird (4 handlers)
+[GIN-debug] GET    /api/cities               --> worldcup-mate/internal/handlers.ListCities (4 handlers)
+[GIN-debug] GET    /api/stadiums             --> worldcup-mate/internal/handlers.ListStadiums (4 handlers)
+[GIN-debug] GET    /api/stadiums/:id         --> worldcup-mate/internal/handlers.GetStadiumDetail (4 handlers)
+[GIN-debug] GET    /api/sync/status          --> worldcup-mate/internal/handlers.GetSyncStatus (4 handlers)
+[GIN-debug] GET    /api/user/profile         --> worldcup-mate/internal/handlers.GetProfile (5 handlers)
+[GIN-debug] PUT    /api/user/profile         --> worldcup-mate/internal/handlers.UpdateProfile (5 handlers)
+[GIN-debug] POST   /api/favorites/teams/:teamId --> worldcup-mate/internal/handlers.AddFavoriteTeam (5 handlers)
+[GIN-debug] DELETE /api/favorites/teams/:teamId --> worldcup-mate/internal/handlers.RemoveFavoriteTeam (5 handlers)
+[GIN-debug] GET    /api/favorites/teams      --> worldcup-mate/internal/handlers.ListFavoriteTeams (5 handlers)
+[GIN-debug] POST   /api/favorites/matches/:matchId --> worldcup-mate/internal/handlers.AddFavoriteMatch (5 handlers)
+[GIN-debug] DELETE /api/favorites/matches/:matchId --> worldcup-mate/internal/handlers.RemoveFavoriteMatch (5 handlers)
+[GIN-debug] GET    /api/favorites/matches    --> worldcup-mate/internal/handlers.ListFavoriteMatches (5 handlers)
+[GIN-debug] POST   /api/reminders            --> worldcup-mate/internal/handlers.CreateReminder (5 handlers)
+[GIN-debug] GET    /api/reminders            --> worldcup-mate/internal/handlers.ListReminders (5 handlers)
+[GIN-debug] PUT    /api/reminders/:id        --> worldcup-mate/internal/handlers.UpdateReminder (5 handlers)
+[GIN-debug] DELETE /api/reminders/:id        --> worldcup-mate/internal/handlers.DeleteReminder (5 handlers)
+[GIN-debug] GET    /api/notifications        --> worldcup-mate/internal/handlers.ListNotifications (5 handlers)
+[GIN-debug] PUT    /api/notifications/:id/read --> worldcup-mate/internal/handlers.MarkNotificationRead (5 handlers)
+[GIN-debug] PUT    /api/notifications/read-all --> worldcup-mate/internal/handlers.MarkAllNotificationsRead (5 handlers)
+[GIN-debug] POST   /api/admin/login          --> worldcup-mate/internal/handlers.AdminLogin (4 handlers)
+[GIN-debug] GET    /api/admin/dashboard      --> worldcup-mate/internal/handlers.AdminDashboard (6 handlers)
+[GIN-debug] GET    /api/admin/teams          --> worldcup-mate/internal/handlers.AdminListTeams (6 handlers)
+[GIN-debug] POST   /api/admin/teams          --> worldcup-mate/internal/handlers.AdminCreateTeam (6 handlers)
+[GIN-debug] PUT    /api/admin/teams/:id      --> worldcup-mate/internal/handlers.AdminUpdateTeam (6 handlers)
+[GIN-debug] DELETE /api/admin/teams/:id      --> worldcup-mate/internal/handlers.AdminDeleteTeam (6 handlers)
+[GIN-debug] GET    /api/admin/groups         --> worldcup-mate/internal/handlers.AdminListGroups (6 handlers)
+[GIN-debug] POST   /api/admin/groups         --> worldcup-mate/internal/handlers.AdminCreateGroup (6 handlers)
+[GIN-debug] PUT    /api/admin/groups/:id     --> worldcup-mate/internal/handlers.AdminUpdateGroup (6 handlers)
+[GIN-debug] GET    /api/admin/cities         --> worldcup-mate/internal/handlers.AdminListCities (6 handlers)
+[GIN-debug] POST   /api/admin/cities         --> worldcup-mate/internal/handlers.AdminCreateCity (6 handlers)
+[GIN-debug] PUT    /api/admin/cities/:id     --> worldcup-mate/internal/handlers.AdminUpdateCity (6 handlers)
+[GIN-debug] DELETE /api/admin/cities/:id     --> worldcup-mate/internal/handlers.AdminDeleteCity (6 handlers)
+[GIN-debug] GET    /api/admin/stadiums       --> worldcup-mate/internal/handlers.AdminListStadiums (6 handlers)
+[GIN-debug] POST   /api/admin/stadiums       --> worldcup-mate/internal/handlers.AdminCreateStadium (6 handlers)
+[GIN-debug] PUT    /api/admin/stadiums/:id   --> worldcup-mate/internal/handlers.AdminUpdateStadium (6 handlers)
+[GIN-debug] DELETE /api/admin/stadiums/:id   --> worldcup-mate/internal/handlers.AdminDeleteStadium (6 handlers)
+[GIN-debug] GET    /api/admin/matches        --> worldcup-mate/internal/handlers.AdminListMatches (6 handlers)
+[GIN-debug] POST   /api/admin/matches        --> worldcup-mate/internal/handlers.AdminCreateMatch (6 handlers)
+[GIN-debug] PUT    /api/admin/matches/:id    --> worldcup-mate/internal/handlers.AdminUpdateMatch (6 handlers)
+[GIN-debug] DELETE /api/admin/matches/:id    --> worldcup-mate/internal/handlers.AdminDeleteMatch (6 handlers)
+[GIN-debug] PUT    /api/admin/matches/:id/score --> worldcup-mate/internal/handlers.AdminUpdateMatchScore (6 handlers)
+[GIN-debug] PUT    /api/admin/matches/:id/status --> worldcup-mate/internal/handlers.AdminUpdateMatchStatus (6 handlers)
+[GIN-debug] POST   /api/admin/matches/import --> worldcup-mate/internal/handlers.AdminImportMatches (6 handlers)
+[GIN-debug] POST   /api/admin/sync/matches   --> worldcup-mate/internal/handlers.AdminSyncMatches (6 handlers)
+[GIN-debug] GET    /api/admin/standings      --> worldcup-mate/internal/handlers.AdminListStandings (6 handlers)
+[GIN-debug] POST   /api/admin/standings/recalculate --> worldcup-mate/internal/handlers.AdminRecalculateStandings (6 handlers)
+[GIN-debug] PUT    /api/admin/standings/:id  --> worldcup-mate/internal/handlers.AdminUpdateStanding (6 handlers)
+[GIN-debug] GET    /api/admin/users          --> worldcup-mate/internal/handlers.AdminListUsers (6 handlers)
+[GIN-debug] PUT    /api/admin/users/:id/status --> worldcup-mate/internal/handlers.AdminUpdateUserStatus (6 handlers)
+[GIN-debug] Listening and serving HTTP on listener what's bind with address@[::]:8080
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.531ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537328') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.530ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537333') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.548ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537345') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.596ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537334') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537339') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.569ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537340') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.531ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537346') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[1.080ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537351') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537352') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537358') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.578ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537369') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.560ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537363') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.528ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537370') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.537ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537364') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.533ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537391') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[1.064ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537392') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.608ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537397') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.525ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537398') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.625ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537403') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.572ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537409') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.526ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537410') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.580ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537404') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.705ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537329') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537335') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.650ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537336') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.539ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537330') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.555ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537348') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537342') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.527ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537341') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537347') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.525ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537359') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.650ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537353') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.526ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537354') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.576ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537360') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.523ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537371') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.529ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537365') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.555ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537372') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.636ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537366') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.538ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537399') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[1.163ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537393') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.581ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537394') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537400') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.543ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537405') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.582ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537412') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537406') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.537ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537337') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.520ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537338') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537344') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.687ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537343') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.586ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537331') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.523ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537332') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.540ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537355') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.538ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537356') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.528ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537361') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.533ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537362') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537349') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537350') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537395') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537396') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.546ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537373') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.525ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537374') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.527ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537368') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.573ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537413') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537414') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.530ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537407') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.599ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537408') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.560ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537401') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537402') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.576ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537417') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.581ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537423') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537415') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537418') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.531ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537424') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.649ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537416') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537425') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537426') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.622ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537422') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.537ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537421') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.523ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537420') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.554ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537419') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.616ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537429') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537428') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537427') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537430') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.709ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537376') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.814ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537375') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.597ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537377') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537378') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537379') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.567ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537380') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.607ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537381') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.597ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537382') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.715ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537383') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537384') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.527ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537385') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.601ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537386') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.549ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537387') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537388') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.542ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537389') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1
+
+2026/06/02 16:17:26 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/match_repo.go:75 [35;1mrecord not found
+[0m[33m[0.531ms] [34;1m[rows:0][0m SELECT * FROM `matches` WHERE (external_provider = 'football-data' AND external_id = '537390') AND `matches`.`deleted_at` IS NULL ORDER BY `matches`.`id` LIMIT 1

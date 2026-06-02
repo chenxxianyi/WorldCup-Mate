@@ -1,0 +1,77 @@
+package config
+
+import (
+	"os"
+	"strconv"
+
+	"github.com/joho/godotenv"
+)
+
+type Config struct {
+	AppEnv                      string
+	AppPort                     string
+	JWTSecret                   string
+	MySQLDSN                    string
+	RedisAddr                   string
+	RedisPass                   string
+	RedisDB                     string
+	DataSyncEnabled             bool
+	DataSyncProvider            string
+	DataSyncLiveIntervalSeconds int
+	DataSyncIdleIntervalMinutes int
+	DataSyncFullIntervalHours   int
+	FootballDataAPIKey          string
+	FootballDataBaseURL         string
+}
+
+func Load() *Config {
+	_ = godotenv.Load()
+
+	return &Config{
+		AppEnv:                      getEnv("APP_ENV", "development"),
+		AppPort:                     getEnv("APP_PORT", "8080"),
+		JWTSecret:                   getEnv("JWT_SECRET", "default_secret"),
+		MySQLDSN:                    getEnv("MYSQL_DSN", "xxladmin:XXLadmin_2021!@tcp(127.0.0.1:3310)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local"),
+		RedisAddr:                   getEnv("REDIS_ADDR", "127.0.0.1:6379"),
+		RedisPass:                   getEnv("REDIS_PASSWORD", ""),
+		RedisDB:                     getEnv("REDIS_DB", "0"),
+		DataSyncEnabled:             getBoolEnv("DATA_SYNC_ENABLED", false),
+		DataSyncProvider:            getEnv("DATA_SYNC_PROVIDER", "football-data"),
+		DataSyncLiveIntervalSeconds: getIntEnv("DATA_SYNC_LIVE_INTERVAL_SECONDS", 120),
+		DataSyncIdleIntervalMinutes: getIntEnv("DATA_SYNC_IDLE_INTERVAL_MINUTES", 30),
+		DataSyncFullIntervalHours:   getIntEnv("DATA_SYNC_FULL_INTERVAL_HOURS", 6),
+		FootballDataAPIKey:          getEnv("FOOTBALL_DATA_API_KEY", ""),
+		FootballDataBaseURL:         getEnv("FOOTBALL_DATA_BASE_URL", "https://api.football-data.org/v4"),
+	}
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func getBoolEnv(key string, fallback bool) bool {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(v)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func getIntEnv(key string, fallback int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(v)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return parsed
+}

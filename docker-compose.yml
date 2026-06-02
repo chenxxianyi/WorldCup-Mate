@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: wc-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: worldcup_mate
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: wc-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wc-backend
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: production
+      APP_PORT: 8080
+      JWT_SECRET: change_this_in_production
+      MYSQL_DSN: xxladmin:XXLadmin_2021!@tcp(mysql:3306)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: "0"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wc-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

@@ -1,0 +1,480 @@
+package services
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"worldcup-mate/internal/database"
+	"worldcup-mate/internal/models"
+	"worldcup-mate/internal/providers/footballdata"
+	"worldcup-mate/internal/repositories"
+
+	"gorm.io/gorm"
+)
+
+const (
+	syncProviderFootballData = "football-data"
+	syncResourceMatches      = "matches"
+)
+
+type MatchSyncConfig struct {
+	Enabled             bool
+	Provider            string
+	FootballDataAPIKey  string
+	FootballDataBaseURL string
+	LiveInterval        time.Duration
+	IdleInterval        time.Duration
+	FullInterval        time.Duration
+}
+
+type MatchSyncResult struct {
+	Provider   string    `json:"provider"`
+	Resource   string    `json:"resource"`
+	Reason     string    `json:"reason"`
+	Total      int       `json:"total"`
+	Created    int       `json:"created"`
+	Updated    int       `json:"updated"`
+	Skipped    int       `json:"skipped"`
+	StartedAt  time.Time `json:"started_at"`
+	FinishedAt time.Time `json:"finished_at"`
+}
+
+var (
+	matchSyncConfig MatchSyncConfig
+	matchSyncMu     sync.RWMutex
+	matchSyncRunMu  sync.Mutex
+)
+
+func ConfigureMatchSync(cfg MatchSyncConfig) {
+	if cfg.Provider == "" {
+		cfg.Provider = syncProviderFootballData
+	}
+	if cfg.LiveInterval <= 0 {
+		cfg.LiveInterval = 2 * time.Minute
+	}
+	if cfg.IdleInterval <= 0 {
+		cfg.IdleInterval = 30 * time.Minute
+	}
+	if cfg.FullInterval <= 0 {
+		cfg.FullInterval = 6 * time.Hour
+	}
+	matchSyncMu.Lock()
+	matchSyncConfig = cfg
+	matchSyncMu.Unlock()
+}
+
+func GetMatchSyncConfig() MatchSyncConfig {
+	matchSyncMu.RLock()
+	defer matchSyncMu.RUnlock()
+	return matchSyncConfig
+}
+
+func IsMatchSyncEnabled() bool {
+	cfg := GetMatchSyncConfig()
+	return cfg.Enabled && cfg.FootballDataAPIKey != ""
+}
+
+func SyncMatchesWithDefault(ctx context.Context, reason string) (*MatchSyncResult, error) {
+	cfg := GetMatchSyncConfig()
+	return SyncMatches(ctx, cfg, reason)
+}
+
+func SyncMatches(ctx context.Context, cfg MatchSyncConfig, reason string) (*MatchSyncResult, error) {
+	matchSyncRunMu.Lock()
+	defer matchSyncRunMu.Unlock()
+
+	if !cfg.Enabled {
+		return nil, errors.New("match data sync is disabled")
+	}
+	if cfg.Provider != syncProviderFootballData {
+		return nil, fmt.Errorf("unsupported match data provider: %s", cfg.Provider)
+	}
+	if strings.TrimSpace(cfg.FootballDataAPIKey) == "" {
+		return nil, errors.New("FOOTBALL_DATA_API_KEY is empty")
+	}
+
+	startedAt := time.Now().UTC()
+	_ = saveSyncState(cfg, "running", "", startedAt, nextSyncAt(cfg))
+
+	result := &MatchSyncResult{
+		Provider:  cfg.Provider,
+		Resource:  syncResourceMatches,
+		Reason:    reason,
+		StartedAt: startedAt,
+	}
+
+	client := footballdata.NewClient(cfg.FootballDataBaseURL, cfg.FootballDataAPIKey)
+	data, err := client.CompetitionMatches(ctx, "WC", 2026)
+	if err != nil {
+		_ = saveSyncState(cfg, "failed", err.Error(), startedAt, nextSyncAt(cfg))
+		return nil, err
+	}
+
+	finishedGroups := map[uint]bool{}
+	result.Total = len(data.Matches)
+	for _, externalMatch := range data.Matches {
+		action, groupID, err := upsertFootballDataMatch(externalMatch)
+		if err != nil {
+			result.Skipped++
+			continue
+		}
+		switch action {
+		case "created":
+			result.Created++
+		case "updated":
+			result.Updated++
+		default:
+			result.Skipped++
+		}
+		if groupID != nil {
+			finishedGroups[*groupID] = true
+		}
+	}
+
+	for groupID := range finishedGroups {
+		_ = RecalculateGroupStanding(groupID)
+	}
+	_ = RecalculateBestThird()
+
+	result.FinishedAt = time.Now().UTC()
+	_ = saveSyncState(cfg, "success", "", result.FinishedAt, nextSyncAt(cfg))
+	return result, nil
+}
+
+func GetSyncStates() ([]models.SyncState, error) {
+	return repositories.GetSyncStates()
+}
+
+func MarkInterruptedMatchSync() error {
+	return repositories.MarkInterruptedSyncState(
+		syncProviderFootballData,
+		syncResourceMatches,
+		"previous sync was interrupted before completion",
+		time.Now().UTC(),
+	)
+}
+
+func IsMatchLiveWindow(now time.Time) bool {
+	count, err := repositories.CountMatchesInSyncWindow(now.UTC())
+	return err == nil && count > 0
+}
+
+func NextMatchSyncInterval() time.Duration {
+	cfg := GetMatchSyncConfig()
+	return matchSyncInterval(cfg)
+}
+
+func matchSyncInterval(cfg MatchSyncConfig) time.Duration {
+	if IsMatchLiveWindow(time.Now().UTC()) {
+		return cfg.LiveInterval
+	}
+	return cfg.IdleInterval
+}
+
+func saveSyncState(cfg MatchSyncConfig, status, lastError string, lastSyncedAt time.Time, next *time.Time) error {
+	state := &models.SyncState{
+		Provider:     cfg.Provider,
+		Resource:     syncResourceMatches,
+		Status:       status,
+		LastSyncedAt: &lastSyncedAt,
+		NextSyncAt:   next,
+		LastError:    lastError,
+	}
+	return repositories.UpsertSyncState(state)
+}
+
+func nextSyncAt(cfg MatchSyncConfig) *time.Time {
+	next := time.Now().UTC().Add(matchSyncInterval(cfg))
+	return &next
+}
+
+func upsertFootballDataMatch(externalMatch footballdata.Match) (string, *uint, error) {
+	externalID := strconv.FormatInt(externalMatch.ID, 10)
+	if externalID == "0" {
+		return "skipped", nil, errors.New("missing external match id")
+	}
+
+	groupID, err := findOrCreateGroup(externalMatch.Group)
+	if err != nil {
+		return "skipped", nil, err
+	}
+	homeTeam, err := findOrCreateTeam(externalMatch.HomeTeam, groupID)
+	if err != nil {
+		return "skipped", nil, err
+	}
+	awayTeam, err := findOrCreateTeam(externalMatch.AwayTeam, groupID)
+	if err != nil {
+		return "skipped", nil, err
+	}
+	cityID, stadiumID, err := ensureFallbackVenue()
+	if err != nil {
+		return "skipped", nil, err
+	}
+
+	now := time.Now().UTC()
+	status := normalizeExternalStatus(externalMatch.Status)
+	homeScore, awayScore := scoreForStatus(externalMatch)
+	winnerTeamID := winnerID(externalMatch.Score.Winner, homeTeam.ID, awayTeam.ID)
+
+	existing, err := repositories.GetMatchByExternal(syncProviderFootballData, externalID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return "skipped", groupID, err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		match := models.Match{
+			MatchNo:          int(externalMatch.ID),
+			HomeTeamID:       homeTeam.ID,
+			AwayTeamID:       awayTeam.ID,
+			GroupID:          groupID,
+			Stage:            normalizeExternalStage(externalMatch.Stage),
+			StadiumID:        stadiumID,
+			CityID:           cityID,
+			KickoffTimeUTC:   externalMatch.UTCDate.UTC(),
+			HomeScore:        homeScore,
+			AwayScore:        awayScore,
+			Status:           status,
+			StatusDetail:     externalMatch.Status,
+			WinnerTeamID:     winnerTeamID,
+			ExternalProvider: syncProviderFootballData,
+			ExternalID:       externalID,
+			LastSyncedAt:     &now,
+		}
+		if err := repositories.CreateMatch(&match); err != nil {
+			return "skipped", groupID, err
+		}
+		return "created", finishedGroupID(status, groupID), nil
+	}
+
+	existing.HomeTeamID = homeTeam.ID
+	existing.AwayTeamID = awayTeam.ID
+	existing.GroupID = groupID
+	existing.Stage = normalizeExternalStage(externalMatch.Stage)
+	existing.StadiumID = stadiumID
+	existing.CityID = cityID
+	existing.KickoffTimeUTC = externalMatch.UTCDate.UTC()
+	existing.HomeScore = homeScore
+	existing.AwayScore = awayScore
+	existing.Status = status
+	existing.StatusDetail = externalMatch.Status
+	existing.WinnerTeamID = winnerTeamID
+	existing.LastSyncedAt = &now
+	if err := repositories.UpdateMatch(existing); err != nil {
+		return "skipped", groupID, err
+	}
+	return "updated", finishedGroupID(status, groupID), nil
+}
+
+func findOrCreateTeam(team footballdata.Team, matchGroupID *uint) (*models.Team, error) {
+	code := strings.ToUpper(strings.TrimSpace(team.TLA))
+	if code == "" {
+		code = fallbackTeamCode(team)
+	}
+	name := strings.TrimSpace(team.Name)
+	if name == "" {
+		name = "TBD"
+	}
+	nameEn := strings.TrimSpace(team.ShortName)
+	if nameEn == "" {
+		nameEn = name
+	}
+
+	var existing models.Team
+	result := database.DB.Where("fifa_code = ?", code).Limit(1).Find(&existing)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected > 0 {
+		if existing.Name == "" || existing.Name == "TBD" {
+			existing.Name = name
+		}
+		if existing.NameEn == "" || existing.NameEn == "TBD" {
+			existing.NameEn = nameEn
+		}
+		if existing.FlagURL == "" && team.Crest != "" {
+			existing.FlagURL = team.Crest
+		}
+		if existing.GroupID == 0 && matchGroupID != nil {
+			existing.GroupID = *matchGroupID
+		}
+		return &existing, database.DB.Save(&existing).Error
+	}
+
+	groupID, err := teamGroupID(matchGroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	created := models.Team{
+		GroupID:   groupID,
+		Name:     name,
+		NameEn:   nameEn,
+		FIFACode: code,
+		FlagURL:  team.Crest,
+	}
+	if err := repositories.CreateTeam(&created); err != nil {
+		return nil, err
+	}
+	return &created, nil
+}
+
+func fallbackTeamCode(team footballdata.Team) string {
+	if team.ID > 0 {
+		return fmt.Sprintf("TBD%d", team.ID)
+	}
+	return "TBD"
+}
+
+func teamGroupID(matchGroupID *uint) (uint, error) {
+	if matchGroupID != nil && *matchGroupID > 0 {
+		return *matchGroupID, nil
+	}
+	groupID, err := findOrCreateGroup("TBD")
+	if err != nil {
+		return 0, err
+	}
+	if groupID == nil {
+		return 0, errors.New("fallback team group is missing")
+	}
+	return *groupID, nil
+}
+
+func ensureFallbackVenue() (uint, uint, error) {
+	var city models.City
+	result := database.DB.Where("name_en = ?", "TBD").Limit(1).Find(&city)
+	if result.Error != nil {
+		return 0, 0, result.Error
+	}
+	if result.RowsAffected == 0 {
+		city = models.City{Name: "TBD", NameEn: "TBD", Country: "", Timezone: "UTC"}
+		if err := database.DB.Create(&city).Error; err != nil {
+			return 0, 0, err
+		}
+	}
+
+	var stadium models.Stadium
+	result = database.DB.Where("name_en = ?", "TBD").Limit(1).Find(&stadium)
+	if result.Error != nil {
+		return 0, 0, result.Error
+	}
+	if result.RowsAffected == 0 {
+		stadium = models.Stadium{Name: "TBD", NameEn: "TBD", CityID: city.ID}
+		if err := database.DB.Create(&stadium).Error; err != nil {
+			return 0, 0, err
+		}
+	}
+
+	return city.ID, stadium.ID, nil
+}
+
+func findOrCreateGroup(group string) (*uint, error) {
+	name := normalizeExternalGroup(group)
+	if name == "" {
+		return nil, nil
+	}
+
+	var existing models.Group
+	result := database.DB.Where("name = ?", name).Limit(1).Find(&existing)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected > 0 {
+		return &existing.ID, nil
+	}
+
+	created := models.Group{Name: name, Stage: "group"}
+	if err := database.DB.Create(&created).Error; err != nil {
+		return nil, err
+	}
+	return &created.ID, nil
+}
+
+func normalizeExternalGroup(group string) string {
+	value := strings.TrimSpace(group)
+	if value == "" {
+		return ""
+	}
+	value = strings.TrimPrefix(strings.ToUpper(value), "GROUP_")
+	value = strings.TrimPrefix(value, "GROUP ")
+	if len(value) == 1 && value[0] >= 'A' && value[0] <= 'Z' {
+		return "Group " + value
+	}
+	return strings.Title(strings.ToLower(strings.ReplaceAll(group, "_", " ")))
+}
+
+func normalizeExternalStage(stage string) string {
+	switch strings.ToUpper(strings.TrimSpace(stage)) {
+	case "GROUP_STAGE", "GROUP":
+		return "group"
+	case "LAST_32", "ROUND_OF_32":
+		return "round_of_32"
+	case "LAST_16", "ROUND_OF_16":
+		return "round_of_16"
+	case "QUARTER_FINALS", "QUARTER_FINAL":
+		return "quarter_final"
+	case "SEMI_FINALS", "SEMI_FINAL":
+		return "semi_final"
+	case "THIRD_PLACE":
+		return "third_place"
+	case "FINAL":
+		return "final"
+	default:
+		value := strings.ToLower(strings.TrimSpace(stage))
+		if value == "" {
+			return "group"
+		}
+		return strings.ReplaceAll(value, "-", "_")
+	}
+}
+
+func normalizeExternalStatus(status string) string {
+	switch strings.ToUpper(strings.TrimSpace(status)) {
+	case "TIMED", "SCHEDULED":
+		return "scheduled"
+	case "IN_PLAY", "LIVE", "PAUSED":
+		return "live"
+	case "FINISHED":
+		return "finished"
+	case "POSTPONED":
+		return "postponed"
+	case "SUSPENDED":
+		return "suspended"
+	case "CANCELLED":
+		return "cancelled"
+	default:
+		return "scheduled"
+	}
+}
+
+func scoreForStatus(match footballdata.Match) (*int, *int) {
+	if match.Score.FullTime.Home != nil || match.Score.FullTime.Away != nil {
+		return match.Score.FullTime.Home, match.Score.FullTime.Away
+	}
+	if match.Score.RegularTime.Home != nil || match.Score.RegularTime.Away != nil {
+		return match.Score.RegularTime.Home, match.Score.RegularTime.Away
+	}
+	return nil, nil
+}
+
+func winnerID(winner string, homeID, awayID uint) *uint {
+	switch strings.ToUpper(strings.TrimSpace(winner)) {
+	case "HOME_TEAM":
+		return &homeID
+	case "AWAY_TEAM":
+		return &awayID
+	default:
+		return nil
+	}
+}
+
+func finishedGroupID(status string, groupID *uint) *uint {
+	if status == "finished" {
+		return groupID
+	}
+	return nil
+}

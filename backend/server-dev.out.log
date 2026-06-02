@@ -1,0 +1,722 @@
+MySQL connected
+Redis connected
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] POST   /api/auth/register        --> worldcup-mate/internal/handlers.Register (4 handlers)
+[GIN-debug] POST   /api/auth/login           --> worldcup-mate/internal/handlers.Login (4 handlers)
+[GIN-debug] POST   /api/auth/logout          --> worldcup-mate/internal/handlers.Logout (4 handlers)
+[GIN-debug] GET    /api/matches              --> worldcup-mate/internal/handlers.ListMatches (4 handlers)
+[GIN-debug] GET    /api/matches/today        --> worldcup-mate/internal/handlers.GetTodayMatches (4 handlers)
+[GIN-debug] GET    /api/matches/tomorrow     --> worldcup-mate/internal/handlers.GetTomorrowMatches (4 handlers)
+[GIN-debug] GET    /api/matches/upcoming     --> worldcup-mate/internal/handlers.GetUpcomingMatches (4 handlers)
+[GIN-debug] GET    /api/matches/live         --> worldcup-mate/internal/handlers.GetLiveMatches (4 handlers)
+[GIN-debug] GET    /api/matches/recommended  --> worldcup-mate/internal/handlers.GetRecommendedMatches (4 handlers)
+[GIN-debug] GET    /api/matches/progress     --> worldcup-mate/internal/handlers.GetTournamentProgress (4 handlers)
+[GIN-debug] GET    /api/matches/:id          --> worldcup-mate/internal/handlers.GetMatchDetail (4 handlers)
+[GIN-debug] GET    /api/matches/by-team/:teamId --> worldcup-mate/internal/handlers.GetMatchesByTeam (4 handlers)
+[GIN-debug] GET    /api/matches/by-group/:groupId --> worldcup-mate/internal/handlers.GetMatchesByGroup (4 handlers)
+[GIN-debug] GET    /api/matches/by-stage/:stage --> worldcup-mate/internal/handlers.GetMatchesByStage (4 handlers)
+[GIN-debug] GET    /api/teams                --> worldcup-mate/internal/handlers.ListTeams (4 handlers)
+[GIN-debug] GET    /api/teams/:id            --> worldcup-mate/internal/handlers.GetTeamDetail (4 handlers)
+[GIN-debug] GET    /api/teams/:id/matches    --> worldcup-mate/internal/handlers.GetTeamMatches (4 handlers)
+[GIN-debug] GET    /api/groups               --> worldcup-mate/internal/handlers.ListGroups (4 handlers)
+[GIN-debug] GET    /api/groups/:id           --> worldcup-mate/internal/handlers.GetGroupDetail (4 handlers)
+[GIN-debug] GET    /api/groups/:id/standings --> worldcup-mate/internal/handlers.GetGroupStandings (4 handlers)
+[GIN-debug] GET    /api/standings            --> worldcup-mate/internal/handlers.ListStandings (4 handlers)
+[GIN-debug] GET    /api/standings/best-third --> worldcup-mate/internal/handlers.GetBestThird (4 handlers)
+[GIN-debug] GET    /api/cities               --> worldcup-mate/internal/handlers.ListCities (4 handlers)
+[GIN-debug] GET    /api/stadiums             --> worldcup-mate/internal/handlers.ListStadiums (4 handlers)
+[GIN-debug] GET    /api/stadiums/:id         --> worldcup-mate/internal/handlers.GetStadiumDetail (4 handlers)
+[GIN-debug] GET    /api/sync/status          --> worldcup-mate/internal/handlers.GetSyncStatus (4 handlers)
+[GIN-debug] GET    /api/user/profile         --> worldcup-mate/internal/handlers.GetProfile (5 handlers)
+[GIN-debug] PUT    /api/user/profile         --> worldcup-mate/internal/handlers.UpdateProfile (5 handlers)
+[GIN-debug] POST   /api/favorites/teams/:teamId --> worldcup-mate/internal/handlers.AddFavoriteTeam (5 handlers)
+[GIN-debug] DELETE /api/favorites/teams/:teamId --> worldcup-mate/internal/handlers.RemoveFavoriteTeam (5 handlers)
+[GIN-debug] GET    /api/favorites/teams      --> worldcup-mate/internal/handlers.ListFavoriteTeams (5 handlers)
+[GIN-debug] POST   /api/favorites/matches/:matchId --> worldcup-mate/internal/handlers.AddFavoriteMatch (5 handlers)
+[GIN-debug] DELETE /api/favorites/matches/:matchId --> worldcup-mate/internal/handlers.RemoveFavoriteMatch (5 handlers)
+[GIN-debug] GET    /api/favorites/matches    --> worldcup-mate/internal/handlers.ListFavoriteMatches (5 handlers)
+[GIN-debug] POST   /api/reminders            --> worldcup-mate/internal/handlers.CreateReminder (5 handlers)
+[GIN-debug] GET    /api/reminders            --> worldcup-mate/internal/handlers.ListReminders (5 handlers)
+[GIN-debug] PUT    /api/reminders/:id        --> worldcup-mate/internal/handlers.UpdateReminder (5 handlers)
+[GIN-debug] DELETE /api/reminders/:id        --> worldcup-mate/internal/handlers.DeleteReminder (5 handlers)
+[GIN-debug] GET    /api/notifications        --> worldcup-mate/internal/handlers.ListNotifications (5 handlers)
+[GIN-debug] PUT    /api/notifications/:id/read --> worldcup-mate/internal/handlers.MarkNotificationRead (5 handlers)
+[GIN-debug] PUT    /api/notifications/read-all --> worldcup-mate/internal/handlers.MarkAllNotificationsRead (5 handlers)
+[GIN-debug] POST   /api/admin/login          --> worldcup-mate/internal/handlers.AdminLogin (4 handlers)
+[GIN-debug] GET    /api/admin/dashboard      --> worldcup-mate/internal/handlers.AdminDashboard (6 handlers)
+[GIN-debug] GET    /api/admin/teams          --> worldcup-mate/internal/handlers.AdminListTeams (6 handlers)
+[GIN-debug] POST   /api/admin/teams          --> worldcup-mate/internal/handlers.AdminCreateTeam (6 handlers)
+[GIN-debug] PUT    /api/admin/teams/:id      --> worldcup-mate/internal/handlers.AdminUpdateTeam (6 handlers)
+[GIN-debug] DELETE /api/admin/teams/:id      --> worldcup-mate/internal/handlers.AdminDeleteTeam (6 handlers)
+[GIN-debug] GET    /api/admin/groups         --> worldcup-mate/internal/handlers.AdminListGroups (6 handlers)
+[GIN-debug] POST   /api/admin/groups         --> worldcup-mate/internal/handlers.AdminCreateGroup (6 handlers)
+[GIN-debug] PUT    /api/admin/groups/:id     --> worldcup-mate/internal/handlers.AdminUpdateGroup (6 handlers)
+[GIN-debug] GET    /api/admin/cities         --> worldcup-mate/internal/handlers.AdminListCities (6 handlers)
+[GIN-debug] POST   /api/admin/cities         --> worldcup-mate/internal/handlers.AdminCreateCity (6 handlers)
+[GIN-debug] PUT    /api/admin/cities/:id     --> worldcup-mate/internal/handlers.AdminUpdateCity (6 handlers)
+[GIN-debug] DELETE /api/admin/cities/:id     --> worldcup-mate/internal/handlers.AdminDeleteCity (6 handlers)
+[GIN-debug] GET    /api/admin/stadiums       --> worldcup-mate/internal/handlers.AdminListStadiums (6 handlers)
+[GIN-debug] POST   /api/admin/stadiums       --> worldcup-mate/internal/handlers.AdminCreateStadium (6 handlers)
+[GIN-debug] PUT    /api/admin/stadiums/:id   --> worldcup-mate/internal/handlers.AdminUpdateStadium (6 handlers)
+[GIN-debug] DELETE /api/admin/stadiums/:id   --> worldcup-mate/internal/handlers.AdminDeleteStadium (6 handlers)
+[GIN-debug] GET    /api/admin/matches        --> worldcup-mate/internal/handlers.AdminListMatches (6 handlers)
+[GIN-debug] POST   /api/admin/matches        --> worldcup-mate/internal/handlers.AdminCreateMatch (6 handlers)
+[GIN-debug] PUT    /api/admin/matches/:id    --> worldcup-mate/internal/handlers.AdminUpdateMatch (6 handlers)
+[GIN-debug] DELETE /api/admin/matches/:id    --> worldcup-mate/internal/handlers.AdminDeleteMatch (6 handlers)
+[GIN-debug] PUT    /api/admin/matches/:id/score --> worldcup-mate/internal/handlers.AdminUpdateMatchScore (6 handlers)
+[GIN-debug] PUT    /api/admin/matches/:id/status --> worldcup-mate/internal/handlers.AdminUpdateMatchStatus (6 handlers)
+[GIN-debug] POST   /api/admin/matches/import --> worldcup-mate/internal/handlers.AdminImportMatches (6 handlers)
+[GIN-debug] POST   /api/admin/sync/matches   --> worldcup-mate/internal/handlers.AdminSyncMatches (6 handlers)
+[GIN-debug] GET    /api/admin/standings      --> worldcup-mate/internal/handlers.AdminListStandings (6 handlers)
+[GIN-debug] POST   /api/admin/standings/recalculate --> worldcup-mate/internal/handlers.AdminRecalculateStandings (6 handlers)
+[GIN-debug] PUT    /api/admin/standings/:id  --> worldcup-mate/internal/handlers.AdminUpdateStanding (6 handlers)
+[GIN-debug] GET    /api/admin/users          --> worldcup-mate/internal/handlers.AdminListUsers (6 handlers)
+[GIN-debug] PUT    /api/admin/users/:id/status --> worldcup-mate/internal/handlers.AdminUpdateUserStatus (6 handlers)
+[GIN-debug] Listening and serving HTTP on listener what's bind with address@[::]:8080
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
+
+2026/06/02 16:11:25 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/sync_repo.go:29 [35;1mError 1292 (22007): Incorrect datetime value: '0000-00-00' for column 'created_at' at row 1
+[0m[33m[0.344ms] [34;1m[rows:0][0m UPDATE `sync_states` SET `provider`='football-data',`resource`='matches',`status`='running',`last_synced_at`='2026-06-02 16:11:25.564',`next_sync_at`='2026-06-02 16:41:25.564',`last_error`='',`created_at`='0000-00-00 00:00:00',`updated_at`='2026-06-02 16:11:25.566' WHERE `id` = 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'KOR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.073ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('South Korea','Korea Republic','KOR','https://crests.football-data.org/772.png','',0,'','','2026-06-02 16:11:27.642','2026-06-02 16:11:27.642',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[2.509ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'BIH' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.675ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Bosnia-Herzegovina','Bosnia-H.','BIH','https://crests.football-data.org/bosnia.svg','',0,'','','2026-06-02 16:11:27.649','2026-06-02 16:11:27.649',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.406ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'PAR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.765ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Paraguay','Paraguay','PAR','https://crests.football-data.org/761.svg','',0,'','','2026-06-02 16:11:27.653','2026-06-02 16:11:27.653',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'QAT' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.517ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Qatar','Qatar','QAT','https://crests.football-data.org/8030.svg','',0,'','','2026-06-02 16:11:27.655','2026-06-02 16:11:27.655',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[1.581ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'MAR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.139ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Morocco','Morocco','MAR','https://crests.football-data.org/morocco.svg','',0,'','','2026-06-02 16:11:27.66','2026-06-02 16:11:27.66',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.534ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'HAI' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.525ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Haiti','Haiti','HAI','https://crests.football-data.org/haiti.svg','',0,'','','2026-06-02 16:11:27.663','2026-06-02 16:11:27.663',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.589ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'AUS' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.142ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Australia','Australia','AUS','https://crests.football-data.org/779.svg','',0,'','','2026-06-02 16:11:27.664','2026-06-02 16:11:27.664',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[2.247ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CUW' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.106ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Curaçao','Curaçao','CUW','https://crests.football-data.org/curacao.svg','',0,'','','2026-06-02 16:11:27.669','2026-06-02 16:11:27.669',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CIV' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.137ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Ivory Coast','Ivory Coast','CIV','https://crests.football-data.org/787.svg','',0,'','','2026-06-02 16:11:27.684','2026-06-02 16:11:27.684',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.703ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SWE' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.524ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Sweden','Sweden','SWE','https://crests.football-data.org/792.svg','',0,'','','2026-06-02 16:11:27.685','2026-06-02 16:11:27.685',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CPV' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.521ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Cape Verde Islands','Cape Verde','CPV','https://crests.football-data.org/cape_verde.svg','',0,'','','2026-06-02 16:11:27.692','2026-06-02 16:11:27.692',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.505ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'EGY' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.203ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Egypt','Egypt','EGY','https://crests.football-data.org/825.svg','',0,'','','2026-06-02 16:11:27.697','2026-06-02 16:11:27.697',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'KSA' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.529ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Saudi Arabia','Saudi Arabia','KSA','https://crests.football-data.org/saudi_arabia.svg','',0,'','','2026-06-02 16:11:27.7','2026-06-02 16:11:27.7',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.724ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'IRN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.065ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Iran','Iran','IRN','https://crests.football-data.org/iran.svg','',0,'','','2026-06-02 16:11:27.702','2026-06-02 16:11:27.702',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SEN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.253ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Senegal','Senegal','SEN','https://crests.football-data.org/senegal.svg','',0,'','','2026-06-02 16:11:27.706','2026-06-02 16:11:27.706',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.475ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'IRQ' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.058ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Iraq','Iraq','IRQ','https://crests.football-data.org/iraq.svg','',0,'','','2026-06-02 16:11:27.708','2026-06-02 16:11:27.708',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[1.293ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'ALG' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.531ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Algeria','Algeria','ALG','https://crests.football-data.org/algeria.svg','',0,'','','2026-06-02 16:11:27.713','2026-06-02 16:11:27.713',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.743ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'AUT' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.903ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Austria','Austria','AUT','https://crests.football-data.org/816.svg','',0,'','','2026-06-02 16:11:27.715','2026-06-02 16:11:27.715',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.464ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'COD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.246ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Congo DR','Congo DR','COD','https://crests.football-data.org/congo_dr.svg','',0,'','','2026-06-02 16:11:27.721','2026-06-02 16:11:27.721',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[1.840ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CRO' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.151ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Croatia','Croatia','CRO','https://crests.football-data.org/799.svg','',0,'','','2026-06-02 16:11:27.727','2026-06-02 16:11:27.727',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.379ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'PAN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.962ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Panama','Panama','PAN','https://crests.football-data.org/panama.svg','',0,'','','2026-06-02 16:11:27.733','2026-06-02 16:11:27.733',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.505ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'UZB' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.087ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Uzbekistan','Uzbekistan','UZB','https://crests.football-data.org/8070.png','',0,'','','2026-06-02 16:11:27.735','2026-06-02 16:11:27.735',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.753ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CZE' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.953ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Czechia','Czechia','CZE','https://crests.football-data.org/798.svg','',0,'','','2026-06-02 16:11:27.736','2026-06-02 16:11:27.736',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.692ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SUI' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.529ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Switzerland','Switzerland','SUI','https://crests.football-data.org/788.svg','',0,'','','2026-06-02 16:11:27.738','2026-06-02 16:11:27.738',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'QAT' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.828ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Qatar','Qatar','QAT','https://crests.football-data.org/8030.svg','',0,'','','2026-06-02 16:11:27.743','2026-06-02 16:11:27.743',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.522ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'KOR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.327ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('South Korea','Korea Republic','KOR','https://crests.football-data.org/772.png','',0,'','','2026-06-02 16:11:27.75','2026-06-02 16:11:27.75',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'AUS' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.879ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Australia','Australia','AUS','https://crests.football-data.org/779.svg','',0,'','','2026-06-02 16:11:27.755','2026-06-02 16:11:27.755',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.463ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SCO' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.800ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Scotland','Scotland','SCO','https://crests.football-data.org/814.svg','',0,'','','2026-06-02 16:11:27.757','2026-06-02 16:11:27.757',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'HAI' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.876ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Haiti','Haiti','HAI','https://crests.football-data.org/haiti.svg','',0,'','','2026-06-02 16:11:27.762','2026-06-02 16:11:27.762',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.504ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TUR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.057ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Turkey','Turkey','TUR','https://crests.football-data.org/803.svg','',0,'','','2026-06-02 16:11:27.764','2026-06-02 16:11:27.764',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[1.812ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SWE' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.905ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Sweden','Sweden','SWE','https://crests.football-data.org/792.svg','',0,'','','2026-06-02 16:11:27.769','2026-06-02 16:11:27.769',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[2.409ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CIV' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.211ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Ivory Coast','Ivory Coast','CIV','https://crests.football-data.org/787.svg','',0,'','','2026-06-02 16:11:27.774','2026-06-02 16:11:27.774',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.606ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'ECU' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.037ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Ecuador','Ecuador','ECU','https://crests.football-data.org/791.svg','',0,'','','2026-06-02 16:11:27.777','2026-06-02 16:11:27.777',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.697ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TUN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.247ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Tunisia','Tunisia','TUN','https://crests.football-data.org/tunisia.svg','',0,'','','2026-06-02 16:11:27.778','2026-06-02 16:11:27.778',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.332ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'KSA' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.108ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Saudi Arabia','Saudi Arabia','KSA','https://crests.football-data.org/saudi_arabia.svg','',0,'','','2026-06-02 16:11:27.783','2026-06-02 16:11:27.783',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'IRN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.518ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Iran','Iran','IRN','https://crests.football-data.org/iran.svg','',0,'','','2026-06-02 16:11:27.789','2026-06-02 16:11:27.789',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.369ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'URY' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.664ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Uruguay','Uruguay','URY','https://crests.football-data.org/758.svg','',0,'','','2026-06-02 16:11:27.791','2026-06-02 16:11:27.791',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.575ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'EGY' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.083ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Egypt','Egypt','EGY','https://crests.football-data.org/825.svg','',0,'','','2026-06-02 16:11:27.797','2026-06-02 16:11:27.797',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'AUT' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.080ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Austria','Austria','AUT','https://crests.football-data.org/816.svg','',0,'','','2026-06-02 16:11:27.801','2026-06-02 16:11:27.801',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[1.547ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'IRQ' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.954ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Iraq','Iraq','IRQ','https://crests.football-data.org/iraq.svg','',0,'','','2026-06-02 16:11:27.808','2026-06-02 16:11:27.808',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.763ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'NOR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.133ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Norway','Norway','NOR','https://crests.football-data.org/813.svg','',0,'','','2026-06-02 16:11:27.81','2026-06-02 16:11:27.81',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.599ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'JOR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.039ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Jordan','Jordan','JOR','https://crests.football-data.org/8049.png','',0,'','','2026-06-02 16:11:27.811','2026-06-02 16:11:27.811',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'UZB' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.892ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Uzbekistan','Uzbekistan','UZB','https://crests.football-data.org/8070.png','',0,'','','2026-06-02 16:11:27.817','2026-06-02 16:11:27.817',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'PAN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.051ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Panama','Panama','PAN','https://crests.football-data.org/panama.svg','',0,'','','2026-06-02 16:11:27.832','2026-06-02 16:11:27.832',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'COL' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.718ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Colombia','Colombia','COL','https://crests.football-data.org/818.svg','',0,'','','2026-06-02 16:11:27.834','2026-06-02 16:11:27.834',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.754ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SUI' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.979ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Switzerland','Switzerland','SUI','https://crests.football-data.org/788.svg','',0,'','','2026-06-02 16:11:27.836','2026-06-02 16:11:27.836',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'BIH' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.533ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Bosnia-Herzegovina','Bosnia-H.','BIH','https://crests.football-data.org/bosnia.svg','',0,'','','2026-06-02 16:11:27.838','2026-06-02 16:11:27.838',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.775ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'MAR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.524ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Morocco','Morocco','MAR','https://crests.football-data.org/morocco.svg','',0,'','','2026-06-02 16:11:27.839','2026-06-02 16:11:27.839',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.724ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SCO' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.960ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Scotland','Scotland','SCO','https://crests.football-data.org/814.svg','',0,'','','2026-06-02 16:11:27.84','2026-06-02 16:11:27.84',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CZE' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.044ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Czechia','Czechia','CZE','https://crests.football-data.org/798.svg','',0,'','','2026-06-02 16:11:27.842','2026-06-02 16:11:27.842',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[1.641ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'KOR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.088ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('South Korea','Korea Republic','KOR','https://crests.football-data.org/772.png','',0,'','','2026-06-02 16:11:27.847','2026-06-02 16:11:27.847',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.625ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'ECU' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.846ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Ecuador','Ecuador','ECU','https://crests.football-data.org/791.svg','',0,'','','2026-06-02 16:11:27.849','2026-06-02 16:11:27.849',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.522ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CUW' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.523ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Curaçao','Curaçao','CUW','https://crests.football-data.org/curacao.svg','',0,'','','2026-06-02 16:11:27.851','2026-06-02 16:11:27.851',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.713ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TUN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.111ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Tunisia','Tunisia','TUN','https://crests.football-data.org/tunisia.svg','',0,'','','2026-06-02 16:11:27.852','2026-06-02 16:11:27.852',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[2.065ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SWE' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.657ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Sweden','Sweden','SWE','https://crests.football-data.org/792.svg','',0,'','','2026-06-02 16:11:27.857','2026-06-02 16:11:27.857',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.568ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TUR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.069ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Turkey','Turkey','TUR','https://crests.football-data.org/803.svg','',0,'','','2026-06-02 16:11:27.859','2026-06-02 16:11:27.859',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.604ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'PAR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.915ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Paraguay','Paraguay','PAR','https://crests.football-data.org/761.svg','',0,'','','2026-06-02 16:11:27.861','2026-06-02 16:11:27.861',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.532ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'NOR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.526ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Norway','Norway','NOR','https://crests.football-data.org/813.svg','',0,'','','2026-06-02 16:11:27.863','2026-06-02 16:11:27.863',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'SEN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.524ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Senegal','Senegal','SEN','https://crests.football-data.org/senegal.svg','',0,'','','2026-06-02 16:11:27.864','2026-06-02 16:11:27.864',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.573ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'URY' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.380ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Uruguay','Uruguay','URY','https://crests.football-data.org/758.svg','',0,'','','2026-06-02 16:11:27.866','2026-06-02 16:11:27.866',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.409ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CPV' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.597ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Cape Verde Islands','Cape Verde','CPV','https://crests.football-data.org/cape_verde.svg','',0,'','','2026-06-02 16:11:27.867','2026-06-02 16:11:27.867',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[2.335ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'EGY' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.900ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Egypt','Egypt','EGY','https://crests.football-data.org/825.svg','',0,'','','2026-06-02 16:11:27.881','2026-06-02 16:11:27.881',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.729ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'PAN' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.529ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Panama','Panama','PAN','https://crests.football-data.org/panama.svg','',0,'','','2026-06-02 16:11:27.884','2026-06-02 16:11:27.884',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.739ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'CRO' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.078ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Croatia','Croatia','CRO','https://crests.football-data.org/799.svg','',0,'','','2026-06-02 16:11:27.885','2026-06-02 16:11:27.885',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.610ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'COL' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.525ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Colombia','Colombia','COL','https://crests.football-data.org/818.svg','',0,'','','2026-06-02 16:11:27.887','2026-06-02 16:11:27.887',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'COD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.518ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Congo DR','Congo DR','COD','https://crests.football-data.org/congo_dr.svg','',0,'','','2026-06-02 16:11:27.888','2026-06-02 16:11:27.888',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.522ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'JOR' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.215ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Jordan','Jordan','JOR','https://crests.football-data.org/8049.png','',0,'','','2026-06-02 16:11:27.89','2026-06-02 16:11:27.89',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'ALG' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.520ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('Algeria','Algeria','ALG','https://crests.football-data.org/algeria.svg','',0,'','','2026-06-02 16:11:27.892','2026-06-02 16:11:27.892',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.686ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.600ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.893','2026-06-02 16:11:27.893',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.737ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.048ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.894','2026-06-02 16:11:27.894',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.738ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.059ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.897','2026-06-02 16:11:27.897',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.699ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.036ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.898','2026-06-02 16:11:27.898',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.678ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.965ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.9','2026-06-02 16:11:27.9',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.505ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.971ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.902','2026-06-02 16:11:27.902',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.528ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.863ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.904','2026-06-02 16:11:27.904',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.504ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.105ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.906','2026-06-02 16:11:27.906',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.901ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.140ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.908','2026-06-02 16:11:27.908',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.630ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.006ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.91','2026-06-02 16:11:27.91',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.505ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.090ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.912','2026-06-02 16:11:27.912',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.535ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.496ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.915','2026-06-02 16:11:27.915',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.307ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.515ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.917','2026-06-02 16:11:27.917',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.528ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.919','2026-06-02 16:11:27.919',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.345ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.133ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.92','2026-06-02 16:11:27.92',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.520ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.063ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.922','2026-06-02 16:11:27.922',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.526ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.010ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.924','2026-06-02 16:11:27.924',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.765ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.589ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.926','2026-06-02 16:11:27.926',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.527ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.250ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.928','2026-06-02 16:11:27.928',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.528ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.055ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.93','2026-06-02 16:11:27.93',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.539ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.017ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.932','2026-06-02 16:11:27.932',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.673ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.058ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.934','2026-06-02 16:11:27.934',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.323ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.936','2026-06-02 16:11:27.936',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.524ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.246ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.938','2026-06-02 16:11:27.938',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.531ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.149ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.94','2026-06-02 16:11:27.94',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.505ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.530ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.943','2026-06-02 16:11:27.943',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.515ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.075ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.944','2026-06-02 16:11:27.944',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.524ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.946','2026-06-02 16:11:27.946',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.524ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.601ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.948','2026-06-02 16:11:27.948',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.525ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[0.840ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.949','2026-06-02 16:11:27.949',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.058ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.951','2026-06-02 16:11:27.951',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/services/sync_service.go:288 [35;1mrecord not found
+[0m[33m[0.537ms] [34;1m[rows:0][0m SELECT * FROM `teams` WHERE fifa_code = 'TBD' AND `teams`.`deleted_at` IS NULL ORDER BY `teams`.`id` LIMIT 1
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/team_repo.go:33 [35;1mError 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`worldcup_mate`.`teams`, CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))
+[0m[33m[1.429ms] [34;1m[rows:0][0m INSERT INTO `teams` (`name`,`name_en`,`fifa_code`,`flag_url`,`continent`,`group_id`,`description`,`coach`,`created_at`,`updated_at`,`deleted_at`) VALUES ('TBD','TBD','TBD','','',0,'','','2026-06-02 16:11:27.953','2026-06-02 16:11:27.953',NULL)
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.709ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 1 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 2 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 3 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 4 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 5 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.521ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 6 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 7 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 8 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.528ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 9 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 10 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.537ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 11 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/standing_repo.go:11 [35;1mError 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASC' at line 1
+[0m[33m[0.000ms] [34;1m[rows:0][0m SELECT * FROM `group_standings` WHERE group_id = 12 ORDER BY rank ASC
+
+2026/06/02 16:11:27 [31;1mD:/project/WorldCup Mate/backend/internal/repositories/sync_repo.go:29 [35;1mError 1292 (22007): Incorrect datetime value: '0000-00-00' for column 'created_at' at row 1
+[0m[33m[0.538ms] [34;1m[rows:0][0m UPDATE `sync_states` SET `provider`='football-data',`resource`='matches',`status`='success',`last_synced_at`='2026-06-02 16:11:27.957',`next_sync_at`='2026-06-02 16:41:27.957',`last_error`='',`created_at`='0000-00-00 00:00:00',`updated_at`='2026-06-02 16:11:27.959' WHERE `id` = 1

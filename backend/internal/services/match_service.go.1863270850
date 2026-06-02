@@ -1,0 +1,212 @@
+package services
+
+import (
+	"time"
+
+	"worldcup-mate/internal/models"
+	"worldcup-mate/internal/repositories"
+)
+
+type MatchQuery struct {
+	Date     string `form:"date"`
+	TeamID   uint   `form:"teamId"`
+	GroupID  uint   `form:"groupId"`
+	Stage    string `form:"stage"`
+	CityID   uint   `form:"cityId"`
+	Status   string `form:"status"`
+	Keyword  string `form:"keyword"`
+	Page     int
+	PageSize int
+}
+
+func ListMatches(q MatchQuery) ([]models.Match, int64, error) {
+	return repositories.ListMatches(repositories.MatchFilter{
+		Date:     q.Date,
+		TeamID:   q.TeamID,
+		GroupID:  q.GroupID,
+		Stage:    q.Stage,
+		CityID:   q.CityID,
+		Status:   q.Status,
+		Keyword:  q.Keyword,
+		Page:     q.Page,
+		PageSize: q.PageSize,
+	})
+}
+
+func GetMatchByID(id uint) (*models.Match, error) {
+	return repositories.GetMatchByID(id)
+}
+
+func GetTodayMatches() ([]models.Match, error) {
+	now := time.Now().UTC()
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	end := start.AddDate(0, 0, 1)
+	return repositories.GetMatchesByDateRange(start, end)
+}
+
+func GetTomorrowMatches() ([]models.Match, error) {
+	now := time.Now().UTC()
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, 1)
+	end := start.AddDate(0, 0, 1)
+	return repositories.GetMatchesByDateRange(start, end)
+}
+
+func GetUpcomingMatches() ([]models.Match, error) {
+	var matches []models.Match
+	all, _, err := repositories.ListMatches(repositories.MatchFilter{
+		Status:   "scheduled",
+		Page:     1,
+		PageSize: 10,
+	})
+	if err != nil {
+		return nil, err
+	}
+	matches = all
+	return matches, nil
+}
+
+func GetLiveMatches() ([]models.Match, error) {
+	matches, _, err := repositories.ListMatches(repositories.MatchFilter{
+		Status:   "live",
+		Page:     1,
+		PageSize: 100,
+	})
+	return matches, err
+}
+
+func GetRecommendedMatches() ([]models.Match, error) {
+	return repositories.GetRecommendedMatches()
+}
+
+func GetMatchesByTeamID(teamID uint) ([]models.Match, error) {
+	return repositories.GetMatchesByTeamID(teamID)
+}
+
+func GetMatchesByGroupID(groupID uint) ([]models.Match, error) {
+	matches, _, err := repositories.ListMatches(repositories.MatchFilter{
+		GroupID:  groupID,
+		Page:     1,
+		PageSize: 100,
+	})
+	return matches, err
+}
+
+func GetMatchesByStage(stage string) ([]models.Match, error) {
+	matches, _, err := repositories.ListMatches(repositories.MatchFilter{
+		Stage:    stage,
+		Page:     1,
+		PageSize: 100,
+	})
+	return matches, err
+}
+
+type TournamentProgress struct {
+	StageName      string             `json:"stage_name"`
+	TotalMatches   int64              `json:"total_matches"`
+	Completed      int64              `json:"completed"`
+	Live           int64              `json:"live"`
+	Scheduled      int64              `json:"scheduled"`
+	Progress       float64            `json:"progress"`
+	StageDetails   []StageProgress    `json:"stage_details"`
+}
+
+type StageProgress struct {
+	Stage    string  `json:"stage"`
+	StageName string `json:"stage_name"`
+	Total    int64   `json:"total"`
+	Completed int64  `json:"completed"`
+	Live     int64   `json:"live"`
+	Scheduled int64  `json:"scheduled"`
+	Progress float64 `json:"progress"`
+}
+
+func GetTournamentProgress() (*TournamentProgress, error) {
+	data, err := repositories.CountMatchesByStageAndStatus()
+	if err != nil {
+		return nil, err
+	}
+
+	stageNames := map[string]string{
+		"group":         "小组赛",
+		"round_of_32":   "1/8决赛",
+		"round_of_16":   "1/8决赛",
+		"quarter_final": "1/4决赛",
+		"semi_final":    "半决赛",
+		"third_place":   "三四名决赛",
+		"final":         "决赛",
+	}
+
+	stageOrder := []string{"group", "round_of_16", "round_of_32", "quarter_final", "semi_final", "third_place", "final"}
+
+	progress := &TournamentProgress{
+		StageName: "小组赛阶段",
+	}
+
+	var totalAll, completedAll int64
+
+	for _, stage := range stageOrder {
+		statuses, ok := data[stage]
+		if !ok {
+			continue
+		}
+
+		var total, completed, live, scheduled int64
+		for status, count := range statuses {
+			total += count
+			switch status {
+			case "finished":
+				completed = count
+			case "live":
+				live = count
+			case "scheduled":
+				scheduled = count
+			}
+		}
+
+		totalAll += total
+		completedAll += completed
+
+		var stageProgress float64
+		if total > 0 {
+			stageProgress = float64(completed) / float64(total) * 100
+		}
+
+		stageName := stageNames[stage]
+		if stageName == "" {
+			stageName = stage
+		}
+
+		progress.StageDetails = append(progress.StageDetails, StageProgress{
+			Stage:     stage,
+			StageName: stageName,
+			Total:     total,
+			Completed: completed,
+			Live:      live,
+			Scheduled: scheduled,
+			Progress:  stageProgress,
+		})
+	}
+
+	progress.TotalMatches = totalAll
+	progress.Completed = completedAll
+	progress.Live = 0
+	progress.Scheduled = totalAll - completedAll
+	for _, s := range progress.StageDetails {
+		progress.Live += s.Live
+	}
+
+	if totalAll > 0 {
+		progress.Progress = float64(completedAll) / float64(totalAll) * 100
+	}
+
+	if len(progress.StageDetails) > 0 {
+		for _, s := range progress.StageDetails {
+			if s.Total > 0 && s.Completed < s.Total {
+				progress.StageName = s.StageName + "阶段"
+				break
+			}
+		}
+	}
+
+	return progress, nil
+}

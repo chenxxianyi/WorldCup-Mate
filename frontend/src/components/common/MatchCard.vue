@@ -1,0 +1,194 @@
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { useFavoriteStore } from '@/stores/useFavoriteStore'
+import { useReminderStore } from '@/stores/useReminderStore'
+import type { Match } from '@/types/match'
+import TeamFlag from '@/components/common/TeamFlag.vue'
+
+const props = defineProps<{
+  match: Match
+  featured?: boolean
+}>()
+
+const router = useRouter()
+const fav = useFavoriteStore()
+const reminder = useReminderStore()
+
+function goDetail() {
+  router.push(`/matches/${props.match.id}`)
+}
+</script>
+
+<template>
+  <article
+    class="card match-card"
+    :class="{ featured: featured || match.is_featured }"
+  >
+    <div v-if="featured || match.is_featured" class="hot-ribbon">热门比赛</div>
+    <div class="match-top">
+      <span class="tag blue">
+        <template v-if="match.group_name">{{ match.stage === 'group_stage' ? '小组赛' : '淘汰赛' }} · {{ match.group_name }}</template>
+        <template v-else>Match {{ match.match_number }}</template>
+      </span>
+      <span v-if="match.status === 'live'" class="tag live">
+        <i class="live-dot" style="background: #fff"></i> {{ match.minute }}' LIVE
+      </span>
+      <span v-else-if="match.status === 'finished'" class="tag green">已结束</span>
+      <span v-else class="tag">未开始</span>
+    </div>
+    <div class="teams-line" @click="goDetail">
+      <div class="team-side">
+        <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" />
+        <span class="team-name">{{ match.home_team_name }}</span>
+        <span class="team-meta">{{ match.home_team_code }}</span>
+      </div>
+      <div v-if="match.status === 'live' || match.status === 'finished'" class="score">
+        {{ match.home_score }}-{{ match.away_score }}
+      </div>
+      <div v-else class="vs">VS</div>
+      <div class="team-side away">
+        <TeamFlag :value="match.away_flag" :alt="match.away_team_name" :fallback="match.away_team_code" />
+        <span class="team-name">{{ match.away_team_name }}</span>
+        <span class="team-meta">{{ match.away_team_code }}</span>
+      </div>
+    </div>
+    <div class="match-bottom">
+      <div class="where">
+        <template v-if="match.status === 'live'">
+          进行中 · {{ match.minute }}′<br />{{ match.stadium }}
+        </template>
+        <template v-else>
+          {{ match.local_kickoff_time.split(' ')[1] }} · {{ match.city }}<br />{{ match.stadium }}
+        </template>
+      </div>
+      <div class="actions">
+        <button
+          class="icon-action bell"
+          :class="{ active: reminder.hasReminder(match.id) }"
+          title="提醒我"
+          @click.stop="reminder.toggleReminder(match.id)"
+        >
+          <span class="material-symbols-outlined" :style="reminder.hasReminder(match.id) ? 'font-variation-settings: \'FILL\' 1' : ''">notifications</span>
+        </button>
+        <button
+          class="icon-action star"
+          :class="{ active: fav.isMatchFavorite(match.id), ghost: !fav.isMatchFavorite(match.id) }"
+          title="收藏"
+          @click.stop="fav.toggleMatchFavorite(match.id)"
+        >
+          <span class="material-symbols-outlined" :style="fav.isMatchFavorite(match.id) ? 'font-variation-settings: \'FILL\' 1' : ''">star</span>
+        </button>
+      </div>
+    </div>
+  </article>
+</template>
+
+<style scoped>
+.match-card {
+  position: relative;
+  overflow: hidden;
+  padding: 15px;
+}
+
+.match-card.featured {
+  border-color: color-mix(in srgb, var(--hot) 30%, var(--line));
+  padding-top: 28px;
+}
+
+.hot-ribbon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 6px 12px;
+  border-radius: 0 0 0 12px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--hot);
+}
+
+.match-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.match-card.featured .match-top {
+  padding-right: 0;
+}
+
+.teams-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 16px;
+  cursor: pointer;
+}
+
+.team-side {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.team-side.away {
+  text-align: right;
+}
+
+.team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 750;
+  font-size: 16px;
+}
+
+.team-meta {
+  color: var(--weak);
+  font-size: 12px;
+}
+
+.score {
+  min-width: 70px;
+  text-align: center;
+  font-weight: 850;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.vs {
+  min-width: 64px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--card-soft);
+}
+
+.match-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.where {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+</style>

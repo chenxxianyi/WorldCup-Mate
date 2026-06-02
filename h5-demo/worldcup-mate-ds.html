@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+
+<html data-theme="light" lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WorldCup Mate - 2026 世界杯赛程助手设计系统</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        :root {
+            /* 主色 */
+            --color-primary: #DC143C;
+            --color-primary-dark: #B01030;
+            --color-primary-light: #FF4D6D;
+            --color-secondary: #1A237E;
+            --color-accent: #FFD700;
+            
+            /* 浅色模式 */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F5F5F7;
+            --bg-tertiary: #E8E8ED;
+            --text-primary: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --text-tertiary: #A1A1A6;
+            --border-color: #E5E7EB;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            
+            /* 语义色 */
+            --color-success: #34C759;
+            --color-warning: #FF9F0A;
+            --color-error: #FF3B30;
+            --color-info: #007AFF;
+            
+            /* 体育专用 */
+            --color-live: #FF3B30;
+            --color-hot: #FF6B35;
+            --color-group-a: #4F46E5;
+            --color-group-b: #10B981;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #121212;
+            --bg-secondary: #1E1E1E;
+            --bg-tertiary: #2C2C2E;
+            --text-primary: #F5F5F7;
+            --text-secondary: #A1A1A6;
+            --text-tertiary: #6E6E73;
+            --border-color: #333333;
+            --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .ds-section {
+            background-color: var(--bg-primary);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .color-swatch {
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .btn-transition {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .live-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .match-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .match-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .pwa-container {
+            width: 375px;
+            height: 812px;
+            border: 12px solid #333;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            background-color: var(--bg-secondary);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 隐藏滚动条 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="p-8">
+<!-- 1. 顶部 Hero 区 -->
+<header class="max-w-6xl mx-auto mb-12 flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-[#DC143C]/10 to-[#1A237E]/10 p-10 rounded-[32px] border border-[var(--border-color)]">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<iconify-icon class="text-4xl text-[var(--color-primary)]" icon="mdi:soccer"></iconify-icon>
+<h1 class="text-4xl font-black tracking-tighter">WorldCup Mate</h1>
+</div>
+<p class="text-[var(--text-secondary)] text-lg">2026 世界杯赛程助手 · 设计系统 <span class="bg-[var(--color-accent)] text-black text-xs px-2 py-0.5 rounded-full ml-2 font-bold">v1.0</span></p>
+</div>
+<div class="mt-6 md:mt-0 flex items-center gap-4 bg-[var(--bg-primary)] p-2 rounded-2xl shadow-sm border border-[var(--border-color)]">
+<span class="text-sm font-medium px-2">主题切换</span>
+<button class="w-14 h-8 bg-[var(--bg-tertiary)] rounded-full relative p-1 flex items-center transition-colors" id="theme-toggle" onclick="toggleTheme()">
+<div class="w-6 h-6 bg-[var(--color-primary)] rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center" id="toggle-circle">
+<iconify-icon class="text-white text-xs" icon="mdi:white-balance-sunny" id="theme-icon"></iconify-icon>
+</div>
+</button>
+</div>
+</header>
+<main class="max-w-6xl mx-auto">
+<!-- 2. 设计原则区 -->
+<section class="ds-section">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:lightbulb-on-outline"></iconify-icon>
+                设计原则
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+<div class="p-6 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+<iconify-icon class="text-3xl mb-4 text-[var(--color-primary)]" icon="mdi:cellphone"></iconify-icon>
+<h3 class="font-bold mb-2">移动端优先</h3>
+<p class="text-sm text-[var(--text-secondary)]">针对大拇指操作优化的交互区域与导航。</p>
+</div>
+<div class="p-6 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+<iconify-icon class="text-3xl mb-4 text-[var(--color-info)]" icon="mdi:view-dashboard-outline"></iconify-icon>
+<h3 class="font-bold mb-2">信息清晰</h3>
+<p class="text-sm text-[var(--text-secondary)]">严格的信息优先级，让球迷一眼看到比分。</p>
+</div>
+<div class="p-6 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+<iconify-icon class="text-3xl mb-4 text-[var(--color-success)]" icon="mdi:chart-bar"></iconify-icon>
+<h3 class="font-bold mb-2">体育数据感</h3>
+<p class="text-sm text-[var(--text-secondary)]">专业、严谨的数据呈现方式，如同比分板。</p>
+</div>
+<div class="p-6 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+<iconify-icon class="text-3xl mb-4 text-[var(--color-accent)]" icon="mdi:trophy-outline"></iconify-icon>
+<h3 class="font-bold mb-2">世界杯氛围</h3>
+<p class="text-sm text-[var(--text-secondary)]">融合官方色彩与动感元素，增强沉浸感。</p>
+</div>
+<div class="p-6 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+<iconify-icon class="text-3xl mb-4 text-[var(--text-primary)]" icon="mdi:sparkles"></iconify-icon>
+<h3 class="font-bold mb-2">高级简洁</h3>
+<p class="text-sm text-[var(--text-secondary)]">去除冗余装饰，专注内容本身。</p>
+</div>
+</div>
+</section>
+<!-- 3. 色彩系统区 -->
+<section class="ds-section">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:palette-outline"></iconify-icon>
+                色彩系统
+            </h2>
+<div class="space-y-10">
+<div>
+<h4 class="text-sm font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-4">主色 &amp; 强调色</h4>
+<div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+<div class="color-swatch bg-[#DC143C] text-white"><span>Primary Red</span><span>#DC143C</span></div>
+<div class="color-swatch bg-[#1A237E] text-white"><span>Secondary Blue</span><span>#1A237E</span></div>
+<div class="color-swatch bg-[#FFD700] text-black"><span>Accent Gold</span><span>#FFD700</span></div>
+<div class="color-swatch bg-[#FF4D6D] text-white"><span>Primary Light</span><span>#FF4D6D</span></div>
+<div class="color-swatch bg-[#B01030] text-white"><span>Primary Dark</span><span>#B01030</span></div>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-4">中性色 (当前主题)</h4>
+<div class="grid grid-cols-2 md:grid-cols-8 gap-4">
+<div class="color-swatch bg-[var(--bg-primary)] border border-[var(--border-color)]"><span>BG Primary</span></div>
+<div class="color-swatch bg-[var(--bg-secondary)] border border-[var(--border-color)]"><span>BG Secondary</span></div>
+<div class="color-swatch bg-[var(--bg-tertiary)] border border-[var(--border-color)]"><span>BG Tertiary</span></div>
+<div class="color-swatch bg-[var(--text-primary)] text-[var(--bg-primary)]"><span>Text Primary</span></div>
+<div class="color-swatch bg-[var(--text-secondary)] text-[var(--bg-primary)]"><span>Text Secondary</span></div>
+<div class="color-swatch bg-[var(--text-tertiary)] text-[var(--bg-primary)]"><span>Text Tertiary</span></div>
+<div class="color-swatch bg-[var(--border-color)]"><span>Border</span></div>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-4">语义 &amp; 体育专用</h4>
+<div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+<div class="color-swatch bg-[var(--color-success)] text-white"><span>Success</span></div>
+<div class="color-swatch bg-[var(--color-warning)] text-white"><span>Warning</span></div>
+<div class="color-swatch bg-[var(--color-error)] text-white"><span>Error / Live</span></div>
+<div class="color-swatch bg-[var(--color-info)] text-white"><span>Info</span></div>
+<div class="color-swatch bg-[var(--color-hot)] text-white"><span>Hot Match</span></div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. 字体规范区 -->
+<section class="ds-section">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:format-size"></iconify-icon>
+                字体规范
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+<div class="space-y-6">
+<div>
+<p class="text-xs text-[var(--text-tertiary)] mb-1">H1 / Bold / 32px</p>
+<h1 class="text-4xl font-bold">2026 世界杯赛程</h1>
+</div>
+<div>
+<p class="text-xs text-[var(--text-tertiary)] mb-1">H2 / Bold / 24px</p>
+<h2 class="text-2xl font-bold">今日焦点赛事</h2>
+</div>
+<div>
+<p class="text-xs text-[var(--text-tertiary)] mb-1">H3 / Semibold / 20px</p>
+<h3 class="text-xl font-semibold">小组积分榜 - A组</h3>
+</div>
+<div>
+<p class="text-xs text-[var(--text-tertiary)] mb-1">H4 / Semibold / 18px</p>
+<h4 class="text-lg font-semibold">巴西 vs 阿根廷</h4>
+</div>
+</div>
+<div class="space-y-6">
+<div>
+<p class="text-xs text-[var(--text-tertiary)] mb-1">Body / Regular / 16px</p>
+<p class="text-base">世界杯赛程助手为您提供最及时的赛事资讯与比分提醒，不错过任何精彩瞬间。</p>
+</div>
+<div>
+<p class="text-xs text-[var(--text-tertiary)] mb-1">Small / Regular / 14px</p>
+<p class="text-sm text-[var(--text-secondary)]">开球时间：2026年6月12日 20:00 (北京时间)</p>
+</div>
+<div>
+<p class="text-xs text-[var(--text-tertiary)] mb-1">Label / Medium / 12px</p>
+<span class="text-xs font-medium bg-[var(--bg-tertiary)] px-2 py-1 rounded">进行中 LIVE</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. 间距 & 6. 圆角阴影 -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+<section class="ds-section mb-0">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:ruler"></iconify-icon>
+                    间距规范 (4px 基数)
+                </h2>
+<div class="space-y-4">
+<div class="flex items-center gap-4">
+<span class="w-8 text-xs text-[var(--text-tertiary)] text-right">4</span>
+<div class="h-4 bg-[var(--color-primary)] rounded" style="width: 4px"></div>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-8 text-xs text-[var(--text-tertiary)] text-right">8</span>
+<div class="h-4 bg-[var(--color-primary)] rounded" style="width: 8px"></div>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-8 text-xs text-[var(--text-tertiary)] text-right">16</span>
+<div class="h-4 bg-[var(--color-primary)] rounded" style="width: 16px"></div>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-8 text-xs text-[var(--text-tertiary)] text-right">24</span>
+<div class="h-4 bg-[var(--color-primary)] rounded" style="width: 24px"></div>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-8 text-xs text-[var(--text-tertiary)] text-right">32</span>
+<div class="h-4 bg-[var(--color-primary)] rounded" style="width: 32px"></div>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-8 text-xs text-[var(--text-tertiary)] text-right">64</span>
+<div class="h-4 bg-[var(--color-primary)] rounded" style="width: 64px"></div>
+</div>
+</div>
+</section>
+<section class="ds-section mb-0">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:shape-outline"></iconify-icon>
+                    圆角与阴影
+                </h2>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-6 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg shadow-sm">
+<p class="text-xs font-bold mb-2">SM (8px)</p>
+<div class="h-10 bg-[var(--bg-tertiary)] rounded-sm"></div>
+</div>
+<div class="p-6 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-md">
+<p class="text-xs font-bold mb-2">MD (12px)</p>
+<div class="h-10 bg-[var(--bg-tertiary)] rounded-md"></div>
+</div>
+<div class="p-6 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-lg">
+<p class="text-xs font-bold mb-2">LG (16px)</p>
+<div class="h-10 bg-[var(--bg-tertiary)] rounded-lg"></div>
+</div>
+<div class="p-6 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-[24px] shadow-xl">
+<p class="text-xs font-bold mb-2">XL (24px)</p>
+<div class="h-10 bg-[var(--bg-tertiary)] rounded-xl"></div>
+</div>
+</div>
+</section>
+</div>
+<!-- 7. 组件展示区 -->
+<section class="ds-section">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:view-module-outline"></iconify-icon>
+                组件库
+            </h2>
+<!-- 7a. 按钮 -->
+<div class="mb-12">
+<h3 class="text-lg font-bold mb-6 border-b border-[var(--border-color)] pb-2">按钮组件 (Buttons)</h3>
+<div class="flex flex-wrap gap-4 items-end">
+<button class="px-6 py-3 bg-[var(--color-primary)] text-white rounded-2xl font-bold btn-transition hover:opacity-90 active:scale-95">Primary Button</button>
+<button class="px-6 py-3 border-2 border-[var(--color-primary)] text-[var(--color-primary)] rounded-2xl font-bold btn-transition hover:bg-[var(--color-primary)] hover:text-white">Secondary</button>
+<button class="px-6 py-3 text-[var(--text-secondary)] rounded-2xl font-bold btn-transition hover:bg-[var(--bg-tertiary)]">Ghost Button</button>
+<button class="px-4 py-2 bg-[var(--color-info)] text-white rounded-xl text-sm font-bold">Small Button</button>
+<button class="px-6 py-3 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] rounded-2xl font-bold cursor-not-allowed">Disabled</button>
+<button class="p-3 bg-[var(--bg-tertiary)] rounded-2xl flex items-center justify-center">
+<iconify-icon class="text-xl" icon="mdi:bell-outline"></iconify-icon>
+</button>
+</div>
+</div>
+<!-- 7b. 标签 -->
+<div class="mb-12">
+<h3 class="text-lg font-bold mb-6 border-b border-[var(--border-color)] pb-2">标签组件 (Badges)</h3>
+<div class="flex flex-wrap gap-4">
+<span class="px-3 py-1 bg-[var(--color-live)] text-white text-xs font-bold rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-white rounded-full live-pulse"></span>
+                        进行中 LIVE
+                    </span>
+<span class="px-3 py-1 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] text-xs font-bold rounded-full">已结束 FT</span>
+<span class="px-3 py-1 bg-[var(--color-info)]/10 text-[var(--color-info)] text-xs font-bold rounded-full">未开始 Scheduled</span>
+<span class="px-3 py-1 bg-[var(--color-hot)] text-white text-xs font-bold rounded-full flex items-center gap-1">
+<iconify-icon icon="mdi:fire"></iconify-icon>
+                        热门 HOT
+                    </span>
+<span class="px-3 py-1 border border-[var(--border-color)] text-[var(--text-secondary)] text-xs font-bold rounded-lg">小组 A组</span>
+<span class="px-3 py-1 bg-[var(--color-secondary)] text-white text-xs font-bold rounded-lg">淘汰赛 Round of 16</span>
+</div>
+</div>
+<!-- 7c. 核心：比赛卡片 -->
+<div class="mb-12">
+<h3 class="text-lg font-bold mb-6 border-b border-[var(--border-color)] pb-2">核心组件：比赛卡片 (Match Cards)</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- 状态：进行中 -->
+<div class="match-card p-5 rounded-[24px]">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">A组 · 第2轮</span>
+<span class="px-2 py-0.5 bg-[var(--color-live)] text-white text-[10px] font-black rounded-full flex items-center gap-1">
+<span class="w-1 h-1 bg-white rounded-full live-pulse"></span>
+                                67' LIVE
+                            </span>
+</div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🇫🇷</span>
+<span class="font-bold">法国</span>
+<span class="text-[10px] text-[var(--text-tertiary)]">France</span>
+</div>
+<div class="flex flex-col items-center gap-1 px-4">
+<div class="text-3xl font-black tabular-nums">2 - 1</div>
+<div class="text-[10px] font-bold text-[var(--color-live)]">正在比赛</div>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🇩🇪</span>
+<span class="font-bold">德国</span>
+<span class="text-[10px] text-[var(--text-tertiary)]">Germany</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-[var(--border-color)]">
+<div class="flex items-center gap-2 text-[var(--text-secondary)]">
+<iconify-icon icon="mdi:map-marker-outline"></iconify-icon>
+<span class="text-xs">纽约大都会体育场</span>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-[var(--color-primary)]"><iconify-icon class="text-xl" icon="mdi:star"></iconify-icon></button>
+<button class="p-2 text-[var(--text-tertiary)]"><iconify-icon class="text-xl" icon="mdi:bell-outline"></iconify-icon></button>
+</div>
+</div>
+</div>
+<!-- 状态：未开始 (热门) -->
+<div class="match-card p-5 rounded-[24px] relative overflow-hidden">
+<div class="absolute top-0 right-0 px-4 py-1 bg-[var(--color-hot)] text-white text-[10px] font-bold rounded-bl-xl">热门比赛</div>
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">B组 · 焦点战</span>
+<span class="px-2 py-0.5 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] text-[10px] font-bold rounded-full">
+                                06/15 20:00
+                            </span>
+</div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🇧🇷</span>
+<span class="font-bold">巴西</span>
+<span class="text-[10px] text-[var(--text-tertiary)]">Brazil</span>
+</div>
+<div class="flex flex-col items-center gap-1 px-4">
+<div class="text-3xl font-black text-[var(--text-tertiary)]">VS</div>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🇦🇷</span>
+<span class="font-bold">阿根廷</span>
+<span class="text-[10px] text-[var(--text-tertiary)]">Argentina</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-[var(--border-color)]">
+<div class="flex items-center gap-2 text-[var(--text-secondary)]">
+<iconify-icon icon="mdi:television-classic"></iconify-icon>
+<span class="text-xs">CCTV-5 直播</span>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-[var(--text-tertiary)]"><iconify-icon class="text-xl" icon="mdi:star-outline"></iconify-icon></button>
+<button class="p-2 text-[var(--color-primary)]"><iconify-icon class="text-xl" icon="mdi:bell-ring"></iconify-icon></button>
+</div>
+</div>
+</div>
+<!-- 状态：已结束 -->
+<div class="match-card p-5 rounded-[24px] opacity-80">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">C组 · 第1轮</span>
+<span class="px-2 py-0.5 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] text-[10px] font-bold rounded-full">
+                                已结束 FT
+                            </span>
+</div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🇵🇹</span>
+<span class="font-bold">葡萄牙</span>
+</div>
+<div class="flex flex-col items-center gap-1 px-4">
+<div class="text-3xl font-black tabular-nums">0 - 2</div>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🇪🇸</span>
+<span class="font-bold">西班牙</span>
+</div>
+</div>
+<div class="text-center text-[10px] text-[var(--text-secondary)] font-medium">西班牙胜 · 积3分</div>
+</div>
+<!-- 状态：未开始 (常规) -->
+<div class="match-card p-5 rounded-[24px]">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">D组 · 第1轮</span>
+<span class="px-2 py-0.5 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] text-[10px] font-bold rounded-full">
+                                明日 03:00
+                            </span>
+</div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+<span class="font-bold">英格兰</span>
+</div>
+<div class="flex flex-col items-center gap-1 px-4">
+<div class="text-2xl font-bold text-[var(--text-tertiary)]">vs</div>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<span class="text-4xl">🇧🇪</span>
+<span class="font-bold">比利时</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 7d. 输入组件 -->
+<div class="mb-12">
+<h3 class="text-lg font-bold mb-6 border-b border-[var(--border-color)] pb-2">输入组件 (Inputs)</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-2">
+<label class="text-xs font-bold text-[var(--text-secondary)] ml-1">默认输入</label>
+<input class="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all" placeholder="输入球队名..." type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-[var(--text-secondary)] ml-1">搜索框</label>
+<div class="relative">
+<iconify-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] text-xl" icon="mdi:magnify"></iconify-icon>
+<input class="w-full pl-12 pr-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-2xl focus:outline-none focus:border-[var(--color-primary)]" placeholder="搜索比赛、球员、新闻..." type="text"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-[var(--text-secondary)] ml-1">下拉筛选</label>
+<select class="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-2xl focus:outline-none appearance-none">
+<option>全部小组</option>
+<option>A组</option>
+<option>B组</option>
+</select>
+</div>
+</div>
+</div>
+<!-- 7e & 7f. 导航栏 -->
+<div>
+<h3 class="text-lg font-bold mb-6 border-b border-[var(--border-color)] pb-2">导航组件 (Navigation)</h3>
+<div class="space-y-8">
+<!-- 顶部导航 -->
+<div class="w-full max-w-md bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl p-4 flex justify-between items-center shadow-sm">
+<button class="p-2"><iconify-icon class="text-2xl" icon="mdi:menu"></iconify-icon></button>
+<h4 class="font-black text-xl">WorldCup Mate</h4>
+<div class="flex gap-2">
+<button class="p-2"><iconify-icon class="text-2xl" icon="mdi:magnify"></iconify-icon></button>
+<button class="p-2 relative">
+<iconify-icon class="text-2xl" icon="mdi:bell-outline"></iconify-icon>
+<span class="absolute top-1 right-1 w-2 h-2 bg-[var(--color-primary)] rounded-full"></span>
+</button>
+</div>
+</div>
+<!-- 底部 Tab Bar -->
+<div class="w-full max-w-md bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl flex justify-around p-3 shadow-lg">
+<div class="flex flex-col items-center gap-1 text-[var(--color-primary)]">
+<iconify-icon class="text-2xl" icon="mdi:calendar-month"></iconify-icon>
+<span class="text-[10px] font-bold">赛程</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-[var(--text-tertiary)]">
+<iconify-icon class="text-2xl" icon="mdi:trophy-variant"></iconify-icon>
+<span class="text-[10px] font-bold">积分榜</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-[var(--text-tertiary)]">
+<iconify-icon class="text-2xl" icon="mdi:heart-outline"></iconify-icon>
+<span class="text-[10px] font-bold">关注</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-[var(--text-tertiary)]">
+<iconify-icon class="text-2xl" icon="mdi:compass-outline"></iconify-icon>
+<span class="text-[10px] font-bold">发现</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-[var(--text-tertiary)]">
+<iconify-icon class="text-2xl" icon="mdi:account-outline"></iconify-icon>
+<span class="text-[10px] font-bold">我的</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 8. 页面布局样例区 -->
+<section class="ds-section">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:cellphone-screenshot"></iconify-icon>
+                页面布局样例
+            </h2>
+<div class="flex flex-wrap gap-12 justify-center">
+<!-- 首页样例 -->
+<div class="flex flex-col items-center gap-4">
+<p class="font-bold">首页 (Home)</p>
+<div class="pwa-container no-scrollbar overflow-y-auto">
+<!-- 顶部栏 -->
+<div class="p-5 flex justify-between items-center bg-[var(--bg-primary)] sticky top-0 z-10">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-xs">WM</div>
+<span class="font-black text-lg">WorldCup Mate</span>
+</div>
+<div class="flex gap-3">
+<iconify-icon class="text-2xl" icon="mdi:magnify"></iconify-icon>
+<iconify-icon class="text-2xl" icon="mdi:bell-outline"></iconify-icon>
+</div>
+</div>
+<!-- 赛程进度 -->
+<div class="p-5">
+<div class="bg-[var(--bg-primary)] p-4 rounded-2xl shadow-sm border border-[var(--border-color)]">
+<div class="flex justify-between text-xs font-bold mb-2">
+<span>小组赛阶段</span>
+<span>进行中 45%</span>
+</div>
+<div class="w-full h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+<div class="h-full bg-[var(--color-primary)]" style="width: 45%"></div>
+</div>
+</div>
+</div>
+<!-- 正在进行 -->
+<div class="px-5 mb-6">
+<h3 class="font-bold mb-4 flex justify-between items-center">
+                                正在进行的比赛
+                                <span class="text-xs text-[var(--color-primary)]">查看全部</span>
+</h3>
+<div class="flex gap-4 overflow-x-auto no-scrollbar">
+<div class="min-w-[280px] bg-[var(--color-primary)] text-white p-4 rounded-2xl">
+<div class="flex justify-between text-[10px] opacity-80 mb-2">
+<span>A组 · 67'</span>
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 bg-white rounded-full live-pulse"></span> LIVE</span>
+</div>
+<div class="flex justify-around items-center">
+<div class="text-center"><span class="text-2xl">🇫🇷</span><p class="text-xs font-bold mt-1">法国</p></div>
+<div class="text-2xl font-black">2 - 1</div>
+<div class="text-center"><span class="text-2xl">🇩🇪</span><p class="text-xs font-bold mt-1">德国</p></div>
+</div>
+</div>
+</div>
+</div>
+<!-- 焦点战 -->
+<div class="px-5 pb-24">
+<h3 class="font-bold mb-4">今日焦点战</h3>
+<div class="space-y-4">
+<div class="bg-[var(--bg-primary)] p-4 rounded-2xl border border-[var(--border-color)]">
+<div class="flex justify-between text-[10px] text-[var(--text-tertiary)] mb-2"><span>B组 · 20:00</span></div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2"><span class="text-xl">🇧🇷</span><span class="font-bold">巴西</span></div>
+<span class="text-xs font-bold text-[var(--text-tertiary)]">VS</span>
+<div class="flex items-center gap-2 font-bold"><span class="text-xl">🇦🇷</span><span>阿根廷</span></div>
+</div>
+</div>
+</div>
+</div>
+<!-- 底部导航 -->
+<div class="absolute bottom-0 w-full bg-[var(--bg-primary)] border-t border-[var(--border-color)] flex justify-around p-4 pb-8">
+<iconify-icon class="text-2xl text-[var(--color-primary)]" icon="mdi:calendar-month"></iconify-icon>
+<iconify-icon class="text-2xl text-[var(--text-tertiary)]" icon="mdi:trophy-variant"></iconify-icon>
+<iconify-icon class="text-2xl text-[var(--text-tertiary)]" icon="mdi:heart-outline"></iconify-icon>
+<iconify-icon class="text-2xl text-[var(--text-tertiary)]" icon="mdi:account-outline"></iconify-icon>
+</div>
+</div>
+</div>
+<!-- 详情页样例 -->
+<div class="flex flex-col items-center gap-4">
+<p class="font-bold">比赛详情 (Match Detail)</p>
+<div class="pwa-container bg-[var(--bg-primary)]">
+<div class="h-64 bg-gradient-to-br from-[#1A237E] to-[#DC143C] p-5 text-white flex flex-col justify-between">
+<div class="flex justify-between items-center">
+<iconify-icon class="text-2xl" icon="mdi:chevron-left"></iconify-icon>
+<span class="font-bold text-sm">小组赛 · A组</span>
+<iconify-icon class="text-xl" icon="mdi:share-variant"></iconify-icon>
+</div>
+<div class="flex justify-around items-center mb-4">
+<div class="text-center"><span class="text-5xl">🇫🇷</span><p class="font-bold mt-2">法国</p></div>
+<div class="text-center">
+<div class="text-4xl font-black">2 - 1</div>
+<div class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full mt-2">67:45</div>
+</div>
+<div class="text-center"><span class="text-5xl">🇩🇪</span><p class="font-bold mt-2">德国</p></div>
+</div>
+<div class="flex justify-center gap-8 text-[10px] font-bold opacity-80">
+<span>姆巴佩 23' 56'</span>
+<span>穆勒 41'</span>
+</div>
+</div>
+<div class="p-5">
+<div class="flex gap-4 border-b border-[var(--border-color)] mb-6">
+<span class="pb-2 border-b-2 border-[var(--color-primary)] font-bold text-sm">概览</span>
+<span class="pb-2 text-[var(--text-tertiary)] font-bold text-sm">统计数据</span>
+<span class="pb-2 text-[var(--text-tertiary)] font-bold text-sm">阵容</span>
+</div>
+<div class="space-y-6">
+<div class="flex justify-between items-center">
+<span class="text-xs font-bold">控球率</span>
+<div class="flex-1 mx-4 h-1.5 bg-[var(--bg-tertiary)] rounded-full flex overflow-hidden">
+<div class="h-full bg-[var(--color-primary)]" style="width: 58%"></div>
+<div class="h-full bg-[var(--color-secondary)]" style="width: 42%"></div>
+</div>
+<span class="text-xs font-bold text-right">58% / 42%</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-xs font-bold">射门</span>
+<div class="flex-1 mx-4 h-1.5 bg-[var(--bg-tertiary)] rounded-full flex overflow-hidden">
+<div class="h-full bg-[var(--color-primary)]" style="width: 65%"></div>
+<div class="h-full bg-[var(--color-secondary)]" style="width: 35%"></div>
+</div>
+<span class="text-xs font-bold text-right">12 / 7</span>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 left-5 right-5 flex gap-4">
+<button class="flex-1 py-4 bg-[var(--color-primary)] text-white rounded-2xl font-bold">设置进球提醒</button>
+<button class="w-16 h-14 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-2xl flex items-center justify-center">
+<iconify-icon class="text-2xl" icon="mdi:star-outline"></iconify-icon>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 9. 响应式说明 -->
+<section class="ds-section">
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+<iconify-icon class="text-[var(--color-primary)]" icon="mdi:responsive"></iconify-icon>
+                响应式说明
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="flex gap-4 items-start">
+<iconify-icon class="text-4xl text-[var(--color-primary)]" icon="mdi:cellphone"></iconify-icon>
+<div>
+<h4 class="font-bold">移动端 (375px+)</h4>
+<p class="text-sm text-[var(--text-secondary)]">核心体验区。单列布局，底部 Tab Bar 导航，卡片全宽展示。</p>
+</div>
+</div>
+<div class="flex gap-4 items-start">
+<iconify-icon class="text-4xl text-[var(--color-info)]" icon="mdi:tablet"></iconify-icon>
+<div>
+<h4 class="font-bold">平板 (768px+)</h4>
+<p class="text-sm text-[var(--text-secondary)]">双列布局展示。侧边栏导航可选，卡片采用网格布局。</p>
+</div>
+</div>
+<div class="flex gap-4 items-start">
+<iconify-icon class="text-4xl text-[var(--color-success)]" icon="mdi:monitor"></iconify-icon>
+<div>
+<h4 class="font-bold">桌面端 (1280px+)</h4>
+<p class="text-sm text-[var(--text-secondary)]">多列复杂布局。侧边导航常驻，增加更多统计图表展示空间。</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="max-w-6xl mx-auto py-12 border-t border-[var(--border-color)] text-center">
+<p class="text-[var(--text-tertiary)] font-bold tracking-widest uppercase text-xs">WorldCup Mate Design System © 2026</p>
+<p class="text-[var(--text-tertiary)] text-[10px] mt-2">Designed for the ultimate football fans experience.</p>
+</footer>
+<script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            
+            const circle = document.getElementById('toggle-circle');
+            const icon = document.getElementById('theme-icon');
+            
+            if (newTheme === 'dark') {
+                circle.style.transform = 'translateX(24px)';
+                icon.setAttribute('icon', 'mdi:moon-waning-crescent');
+            } else {
+                circle.style.transform = 'translateX(0)';
+                icon.setAttribute('icon', 'mdi:white-balance-sunny');
+            }
+        }
+    </script>
+</body>
+</html>
