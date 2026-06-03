@@ -2,10 +2,12 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"worldcup-mate/internal/models"
 	"worldcup-mate/internal/repositories"
+	"worldcup-mate/internal/utils"
 )
 
 type CreateReminderInput struct {
@@ -97,6 +99,7 @@ func ScanAndSendReminders() {
 		title := fmt.Sprintf("比赛提醒：%s vs %s", match.HomeTeam.Name, match.AwayTeam.Name)
 		content := fmt.Sprintf("比赛即将在 %d 分钟后开始", r.RemindBeforeMinutes)
 
+		// Always create in-app notification
 		notification := &models.Notification{
 			UserID:  r.UserID,
 			Title:   title,
@@ -104,6 +107,29 @@ func ScanAndSendReminders() {
 			Type:    "reminder",
 		}
 		_ = repositories.CreateNotification(notification)
+
+		// Send email if channel is "email"
+		// Use NotificationEmail if set, fallback to registration Email
+		toEmail := r.User.NotificationEmail
+		if toEmail == "" {
+			toEmail = r.User.Email
+		}
+		if r.Channel == "email" && toEmail != "" {
+			subject := fmt.Sprintf("⚽ %s", title)
+			htmlBody := fmt.Sprintf(`<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:20px;">
+<h2 style="color:#1a1a2e;">⚽ %s</h2>
+<p style="font-size:16px;color:#333;">%s</p>
+<div style="background:#f0f4ff;padding:16px;border-radius:12px;margin:16px 0;">
+<p style="margin:0;font-size:14px;color:#555;">🏟️ %s</p>
+<p style="margin:8px 0 0;font-size:14px;color:#555;">📍 %s</p>
+</div>
+<p style="font-size:12px;color:#999;">来自 WorldCup Mate 比赛提醒</p>
+</div>`, title, content, match.HomeTeam.Name+" vs "+match.AwayTeam.Name, match.Stadium)
+			if err := utils.SendEmail(toEmail, subject, htmlBody); err != nil {
+				log.Printf("Email send failed for reminder %d: %v", r.ID, err)
+			}
+		}
+
 		r.Status = "sent"
 		_ = repositories.UpdateReminder(&r)
 	}

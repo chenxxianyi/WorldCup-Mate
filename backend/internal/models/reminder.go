@@ -9,6 +9,7 @@ import (
 type Reminder struct {
 	ID                  uint           `gorm:"primaryKey" json:"id"`
 	UserID              uint           `gorm:"not null" json:"user_id"`
+	User                User           `gorm:"foreignKey:UserID" json:"-"`
 	MatchID             uint           `gorm:"not null" json:"match_id"`
 	Match               Match          `gorm:"foreignKey:MatchID" json:"match,omitempty"`
 	RemindBeforeMinutes int            `gorm:"default:30" json:"remind_before_minutes"`

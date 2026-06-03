@@ -6,6 +6,7 @@ export interface ApiUser {
   timezone: string
   language: string
   role: string
+  notification_email: string
 }
 
 export interface User {
@@ -15,6 +16,7 @@ export interface User {
   avatar: string
   timezone: string
   language: string
+  notificationEmail: string
   followed_teams?: number[]
   favorite_matches?: number[]
 }
@@ -27,5 +29,6 @@ export function normalizeUser(u: ApiUser): User {
     avatar: u.avatar || u.username.charAt(0).toUpperCase(),
     timezone: u.timezone,
     language: u.language,
+    notificationEmail: u.notification_email || '',
   }
 }

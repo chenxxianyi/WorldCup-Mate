@@ -48,7 +48,46 @@ func GetAllStandings() ([]models.GroupStanding, error) {
 }
 
 func GetBestThird() ([]models.GroupStanding, error) {
-	return repositories.GetBestThird()
+	standings, err := repositories.GetBestThird()
+	if err != nil {
+		return nil, err
+	}
+
+	// If no third-place standings exist, generate initial data from each group's third team
+	if len(standings) == 0 {
+		groups, err := repositories.ListGroups()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, group := range groups {
+			// Get all teams in this group
+			teams, err := repositories.GetTeamsByGroupID(group.ID)
+			if err != nil || len(teams) < 3 {
+				continue
+			}
+			// Third team (index 2) is the third-place team
+			thirdTeam := teams[2]
+			standings = append(standings, models.GroupStanding{
+				GroupID:            group.ID,
+				Group:              group,
+				TeamID:             thirdTeam.ID,
+				Team:               thirdTeam,
+				Played:             0,
+				Won:                0,
+				Drawn:              0,
+				Lost:               0,
+				GoalsFor:           0,
+				GoalsAgainst:       0,
+				GoalDifference:     0,
+				Points:             0,
+				Rank:               3,
+				QualificationStatus: "unknown",
+			})
+		}
+	}
+
+	return standings, nil
 }
 
 func RecalculateGroupStanding(groupID uint) error {

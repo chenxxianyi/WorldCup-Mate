@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useReminderStore } from '@/stores/useReminderStore'
+import { useSettingStore } from '@/stores/useSettingStore'
 import type { Match } from '@/types/match'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 
@@ -13,6 +15,22 @@ const props = defineProps<{
 const router = useRouter()
 const fav = useFavoriteStore()
 const reminder = useReminderStore()
+const settings = useSettingStore()
+
+const showChannelPicker = ref(false)
+
+function onBellClick() {
+  if (reminder.hasReminder(props.match.id)) {
+    reminder.toggleReminder(props.match.id)
+  } else {
+    showChannelPicker.value = !showChannelPicker.value
+  }
+}
+
+function createWithChannel(channel: string) {
+  reminder.toggleReminder(props.match.id, 30, channel)
+  showChannelPicker.value = false
+}
 
 function goDetail() {
   router.push(`/matches/${props.match.id}`)
@@ -23,6 +41,7 @@ function goDetail() {
   <article
     class="card match-card"
     :class="{ featured: featured || match.is_featured }"
+    @click="showChannelPicker = false"
   >
     <div v-if="featured || match.is_featured" class="hot-ribbon">热门比赛</div>
     <div class="match-top">
@@ -66,14 +85,27 @@ function goDetail() {
         </template>
       </div>
       <div class="actions">
-        <button
-          class="icon-action bell"
-          :class="{ active: reminder.hasReminder(match.id) }"
-          title="提醒我"
-          @click.stop="reminder.toggleReminder(match.id)"
-        >
-          <span class="material-symbols-outlined" :style="reminder.hasReminder(match.id) ? 'font-variation-settings: \'FILL\' 1' : ''">notifications</span>
-        </button>
+        <div class="bell-wrap">
+          <button
+            class="icon-action bell"
+            :class="{ active: reminder.hasReminder(match.id) }"
+            title="提醒我"
+            @click.stop="onBellClick"
+          >
+            <span class="material-symbols-outlined" :style="reminder.hasReminder(match.id) ? 'font-variation-settings: \'FILL\' 1' : ''">notifications</span>
+          </button>
+          <div v-if="showChannelPicker && !reminder.hasReminder(match.id)" class="channel-popover" @click.stop>
+            <div class="channel-title">提醒方式</div>
+            <button class="channel-option" @click="createWithChannel('site')">
+              <span class="material-symbols-outlined">notifications</span>
+              <span>站内通知</span>
+            </button>
+            <button class="channel-option" @click="createWithChannel('email')">
+              <span class="material-symbols-outlined">mail</span>
+              <span>邮件通知</span>
+            </button>
+          </div>
+        </div>
         <button
           class="icon-action star"
           :class="{ active: fav.isMatchFavorite(match.id), ghost: !fav.isMatchFavorite(match.id) }"
@@ -205,5 +237,52 @@ function goDetail() {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.bell-wrap {
+  position: relative;
+}
+
+.channel-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  min-width: 140px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--line);
+}
+
+.channel-title {
+  padding: 4px 8px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--weak);
+}
+
+.channel-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.channel-option:hover {
+  background: var(--card-soft);
+}
+
+.channel-option .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--primary);
 }
 </style>

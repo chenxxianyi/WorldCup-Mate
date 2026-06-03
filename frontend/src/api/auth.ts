@@ -16,7 +16,7 @@ export function apiGetProfile() {
   return request.get('/user/profile') as Promise<any>
 }
 
-export function apiUpdateProfile(data: { avatar?: string; timezone?: string; language?: string }) {
+export function apiUpdateProfile(data: { avatar?: string; timezone?: string; language?: string; notification_email?: string }) {
   return request.put('/user/profile', data) as Promise<any>
 }
 

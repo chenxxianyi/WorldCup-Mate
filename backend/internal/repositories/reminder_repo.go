@@ -34,7 +34,7 @@ func DeleteReminder(id uint) error {
 
 func GetPendingReminders(now time.Time) ([]models.Reminder, error) {
 	var reminders []models.Reminder
-	err := database.DB.Preload("Match").
+	err := database.DB.Preload("Match").Preload("Match.HomeTeam").Preload("Match.AwayTeam").Preload("User").
 		Where("status = ? AND remind_at <= ?", "pending", now).
 		Find(&reminders).Error
 	return reminders, err

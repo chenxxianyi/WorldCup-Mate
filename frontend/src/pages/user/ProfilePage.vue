@@ -6,12 +6,43 @@ import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useReminderStore } from '@/stores/useReminderStore'
 import { useTeamStore } from '@/stores/useTeamStore'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { apiUpdateProfile } from '@/api/auth'
 
 const settings = useSettingStore()
 const fav = useFavoriteStore()
 const reminder = useReminderStore()
 const teamStore = useTeamStore()
 const auth = useAuthStore()
+
+// Notification email editing
+const editingEmail = ref(false)
+const notificationEmail = ref('')
+const emailSaving = ref(false)
+
+function startEditEmail() {
+  notificationEmail.value = auth.user?.notificationEmail || ''
+  editingEmail.value = true
+}
+
+function cancelEditEmail() {
+  editingEmail.value = false
+  notificationEmail.value = ''
+}
+
+async function saveEmail() {
+  emailSaving.value = true
+  try {
+    await apiUpdateProfile({ notification_email: notificationEmail.value })
+    if (auth.user) {
+      auth.user.notificationEmail = notificationEmail.value
+    }
+    editingEmail.value = false
+  } catch {
+    alert('保存失败')
+  } finally {
+    emailSaving.value = false
+  }
+}
 
 const followedTeamNames = computed(() =>
   teamStore.teams
@@ -129,6 +160,30 @@ onMounted(() => {
       <div class="card settings-list">
         <div class="setting-item"><b>我的关注</b><span>{{ followedTeamNames }}</span></div>
         <div class="setting-item"><b>我的提醒</b><span>{{ reminder.count }} 个待发送</span></div>
+        <div class="setting-item">
+          <b>默认提醒渠道</b>
+          <select class="channel-select" :value="settings.defaultReminderChannel" @change="settings.setDefaultReminderChannel(($event.target as HTMLSelectElement).value)">
+            <option value="site">站内通知</option>
+            <option value="email">邮件通知</option>
+          </select>
+        </div>
+        <div class="setting-item" v-if="!editingEmail">
+          <b>通知邮箱</b>
+          <span @click="startEditEmail" style="cursor:pointer">
+            {{ auth.user?.notificationEmail || auth.user?.email || '未设置' }} <span class="muted-arrow">›</span>
+          </span>
+        </div>
+        <div class="setting-item email-edit-row" v-else>
+          <div class="email-edit-form">
+            <input v-model="notificationEmail" type="email" placeholder="输入通知邮箱" class="email-input" />
+            <div class="email-edit-actions">
+              <button class="pill-btn" @click="cancelEditEmail">取消</button>
+              <button class="pill-btn primary" :disabled="emailSaving" @click="saveEmail">
+                {{ emailSaving ? '保存中...' : '保存' }}
+              </button>
+            </div>
+          </div>
+        </div>
         <div class="setting-item"><b>时区</b><span>{{ settings.timezone }}</span></div>
         <div class="setting-item">
           <b>深色模式</b>
@@ -352,6 +407,49 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.channel-select {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card-soft);
+  font-size: 13px;
+  color: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.email-edit-row {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 12px 16px !important;
+}
+
+.email-edit-form {
+  width: 100%;
+}
+
+.email-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 14px;
+  background: var(--card-soft);
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.email-input:focus {
+  border-color: var(--primary);
+}
+
+.email-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .pill-btn.primary {

@@ -29,9 +29,10 @@ type LoginInput struct {
 }
 
 type UpdateProfileInput struct {
-	Avatar   string `json:"avatar"`
-	Timezone string `json:"timezone"`
-	Language string `json:"language"`
+	Avatar            string `json:"avatar"`
+	Timezone          string `json:"timezone"`
+	Language          string `json:"language"`
+	NotificationEmail string `json:"notification_email"`
 }
 
 func Register(input RegisterInput) (*models.User, error) {
@@ -96,6 +97,9 @@ func UpdateProfile(userID uint, input UpdateProfileInput) (*models.User, error) 
 	}
 	if input.Language != "" {
 		user.Language = input.Language
+	}
+	if input.NotificationEmail != "" {
+		user.NotificationEmail = input.NotificationEmail
 	}
 	if err := repositories.UpdateUser(user); err != nil {
 		return nil, err

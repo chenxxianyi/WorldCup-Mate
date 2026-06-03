@@ -11,6 +11,7 @@ export interface ReminderItem {
   id: number
   match_id: number
   remind_before_minutes: number
+  channel: string
   match: Match | null
 }
 
@@ -26,6 +27,7 @@ export const useReminderStore = defineStore('reminder', () => {
         id: r.id,
         match_id: r.match_id,
         remind_before_minutes: r.remind_before_minutes,
+        channel: r.channel || 'site',
         match: r.match ? normalizeMatch(r.match) : null,
       }))
       matchReminderIds.value = new Set(reminders.value.map((r) => r.match_id))
@@ -39,7 +41,7 @@ export const useReminderStore = defineStore('reminder', () => {
     return matchReminderIds.value.has(matchId)
   }
 
-  async function toggleReminder(matchId: number, minutesBefore = 30) {
+  async function toggleReminder(matchId: number, minutesBefore = 30, channel = 'site') {
     const existing = reminders.value.find((r) => r.match_id === matchId)
     if (existing) {
       reminders.value = reminders.value.filter((r) => r.match_id !== matchId)
@@ -52,11 +54,12 @@ export const useReminderStore = defineStore('reminder', () => {
       }
     } else {
       try {
-        const res = await apiCreateReminder({ matchId, remindBeforeMinutes: minutesBefore }) as any
+        const res = await apiCreateReminder({ matchId, remindBeforeMinutes: minutesBefore, channel }) as any
         reminders.value.push({
           id: res.id,
           match_id: matchId,
           remind_before_minutes: minutesBefore,
+          channel,
           match: null,
         })
         matchReminderIds.value.add(matchId)

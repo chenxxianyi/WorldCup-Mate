@@ -8,6 +8,7 @@ export const useSettingStore = defineStore('setting', () => {
     localStorage.getItem('wm-timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
   )
   const language = ref<string>(localStorage.getItem('wm-language') || 'zh-CN')
+  const defaultReminderChannel = ref<string>(localStorage.getItem('wm-reminder-channel') || 'site')
 
   function toggleTheme() {
     theme.value = theme.value === 'dark' ? 'light' : 'dark'
@@ -29,5 +30,10 @@ export const useSettingStore = defineStore('setting', () => {
     localStorage.setItem('wm-language', lang)
   }
 
-  return { theme, timezone, language, toggleTheme, setTheme, setTimezone, setLanguage }
+  function setDefaultReminderChannel(ch: string) {
+    defaultReminderChannel.value = ch
+    localStorage.setItem('wm-reminder-channel', ch)
+  }
+
+  return { theme, timezone, language, defaultReminderChannel, toggleTheme, setTheme, setTimezone, setLanguage, setDefaultReminderChannel }
 })

@@ -22,6 +22,11 @@ type Config struct {
 	DataSyncFullIntervalHours   int
 	FootballDataAPIKey          string
 	FootballDataBaseURL         string
+	SMTPHost                    string
+	SMTPPort                    int
+	SMTPUsername                string
+	SMTPPassword                string
+	SMTPFrom                    string
 }
 
 func Load() *Config {
@@ -42,6 +47,11 @@ func Load() *Config {
 		DataSyncFullIntervalHours:   getIntEnv("DATA_SYNC_FULL_INTERVAL_HOURS", 6),
 		FootballDataAPIKey:          getEnv("FOOTBALL_DATA_API_KEY", ""),
 		FootballDataBaseURL:         getEnv("FOOTBALL_DATA_BASE_URL", "https://api.football-data.org/v4"),
+		SMTPHost:                    getEnv("SMTP_HOST", ""),
+		SMTPPort:                    getIntEnv("SMTP_PORT", 587),
+		SMTPUsername:                getEnv("SMTP_USERNAME", ""),
+		SMTPPassword:                getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:                    getEnv("SMTP_FROM", ""),
 	}
 }
 

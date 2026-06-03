@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import Countdown from '@/components/common/Countdown.vue'
 import MatchCard from '@/components/common/MatchCard.vue'
 import { useMatchStore } from '@/stores/useMatchStore'
@@ -15,7 +15,30 @@ const matchStore = useMatchStore()
 const teamStore = useTeamStore()
 const fav = useFavoriteStore()
 const auth = useAuthStore()
-const groupAStandings = ref<Standing[]>([])
+
+const groups = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E', 'Group F', 'Group G', 'Group H', 'Group I', 'Group J', 'Group K', 'Group L']
+const activeGroupIndex = ref(0)
+const activeGroupName = computed(() => groups[activeGroupIndex.value])
+const groupStandings = ref<Standing[]>([])
+
+function swipeGroup(direction: 'left' | 'right') {
+  if (direction === 'left' && activeGroupIndex.value < groups.length - 1) {
+    activeGroupIndex.value++
+  } else if (direction === 'right' && activeGroupIndex.value > 0) {
+    activeGroupIndex.value--
+  }
+}
+
+async function loadGroupStandings() {
+  try {
+    const res = await apiGetGroupStandings(activeGroupIndex.value + 1) as any[]
+    groupStandings.value = res.map(normalizeStanding)
+  } catch {
+    groupStandings.value = []
+  }
+}
+
+watch(activeGroupIndex, loadGroupStandings)
 
 interface TournamentProgress {
   stage_name: string
@@ -70,10 +93,7 @@ onMounted(async () => {
   if (auth.isLoggedIn) {
     fav.fetchFavoriteTeams()
   }
-  try {
-    const res = await apiGetGroupStandings(1) as any[]
-    groupAStandings.value = res.map(normalizeStanding)
-  } catch {}
+  loadGroupStandings()
   try {
     const res = await apiGetTournamentProgress()
     if (res) {
@@ -175,13 +195,17 @@ onMounted(async () => {
       <section class="section">
         <div class="section-head">
           <h2>积分速览</h2>
-          <span>Group A</span>
+          <div class="group-nav">
+            <button class="nav-btn" :disabled="activeGroupIndex === 0" @click="swipeGroup('right')">‹</button>
+            <span class="group-label" @click="swipeGroup('left')">{{ activeGroupName }}</span>
+            <button class="nav-btn" :disabled="activeGroupIndex === groups.length - 1" @click="swipeGroup('left')">›</button>
+          </div>
         </div>
         <div class="card table-card">
           <table class="standing-table" style="min-width: 0">
             <tbody>
               <tr
-                v-for="(s, i) in groupAStandings"
+                v-for="(s, i) in groupStandings"
                 :key="s.team_id"
                 :class="{
                   'rank-ok': s.status === '晋级',
@@ -383,6 +407,47 @@ tr:last-child td {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.group-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.nav-btn:not(:disabled):hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.group-label {
+  min-width: 70px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
 }
 
 @media (min-width: 768px) {
