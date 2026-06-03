@@ -142,7 +142,6 @@ onMounted(async () => {
       <section class="section">
         <div class="section-head">
           <h2>热门推荐</h2>
-          <span>importance_level ≥ 1</span>
         </div>
         <div class="stack">
           <MatchCard

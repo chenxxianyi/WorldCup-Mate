@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"worldcup-mate/internal/models"
@@ -101,12 +102,12 @@ func seedStadiums() {
 
 func seedTeams() {
 	type teamSeed struct {
-		Name     string
-		NameEn   string
-		Code     string
-		Flag     string
+		Name      string
+		NameEn    string
+		Code      string
+		Flag      string
 		Continent string
-		Group    string
+		Group     string
 	}
 	seeds := []teamSeed{
 		{"墨西哥", "Mexico", "MEX", "🇲🇽", "北美洲", "Group A"},
@@ -141,6 +142,10 @@ func seedTeams() {
 }
 
 func seedMatches() {
+	if os.Getenv("DATA_SYNC_ENABLED") == "true" {
+		return
+	}
+
 	// Delete existing matches with zero kickoff time (from old seed)
 	DB.Where("kickoff_time_utc = ?", time.Time{}).Delete(&models.Match{})
 
@@ -196,7 +201,7 @@ func seedMatches() {
 	grpD := getGroup("Group D")
 
 	now := time.Now().UTC()
-	today9am := time.Date(now.Year(), now.Month(), now.Day(), 1, 0, 0, 0, time.UTC) // 09:00 CST = 01:00 UTC
+	today9am := time.Date(now.Year(), now.Month(), now.Day(), 1, 0, 0, 0, time.UTC)   // 09:00 CST = 01:00 UTC
 	today21pm := time.Date(now.Year(), now.Month(), now.Day(), 13, 0, 0, 0, time.UTC) // 21:00 CST = 13:00 UTC
 	tomorrow18pm := today9am.Add(33 * time.Hour)
 	dayAfter3am := today9am.Add(42 * time.Hour)

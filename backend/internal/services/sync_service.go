@@ -135,6 +135,9 @@ func SyncMatches(ctx context.Context, cfg MatchSyncConfig, reason string) (*Matc
 			finishedGroups[*groupID] = true
 		}
 	}
+	if result.Created+result.Updated > 0 {
+		_ = repositories.DeleteSeedDemoMatches()
+	}
 
 	for groupID := range finishedGroups {
 		_ = RecalculateGroupStanding(groupID)
@@ -283,6 +286,7 @@ func findOrCreateTeam(team footballdata.Team, matchGroupID *uint) (*models.Team,
 	if nameEn == "" {
 		nameEn = name
 	}
+	localizedName, localizedContinent := localizeTeam(code, name)
 
 	var existing models.Team
 	result := database.DB.Where("fifa_code = ?", code).Limit(1).Find(&existing)
@@ -290,16 +294,15 @@ func findOrCreateTeam(team footballdata.Team, matchGroupID *uint) (*models.Team,
 		return nil, result.Error
 	}
 	if result.RowsAffected > 0 {
-		if existing.Name == "" || existing.Name == "TBD" {
-			existing.Name = name
-		}
-		if existing.NameEn == "" || existing.NameEn == "TBD" {
-			existing.NameEn = nameEn
-		}
+		existing.Name = localizedName
+		existing.NameEn = nameEn
 		if existing.FlagURL == "" && team.Crest != "" {
 			existing.FlagURL = team.Crest
 		}
-		if existing.GroupID == 0 && matchGroupID != nil {
+		if localizedContinent != "" {
+			existing.Continent = localizedContinent
+		}
+		if matchGroupID != nil {
 			existing.GroupID = *matchGroupID
 		}
 		return &existing, database.DB.Save(&existing).Error
@@ -311,11 +314,12 @@ func findOrCreateTeam(team footballdata.Team, matchGroupID *uint) (*models.Team,
 	}
 
 	created := models.Team{
-		GroupID:  groupID,
-		Name:     name,
-		NameEn:   nameEn,
-		FIFACode: code,
-		FlagURL:  team.Crest,
+		GroupID:   groupID,
+		Name:      localizedName,
+		NameEn:    nameEn,
+		FIFACode:  code,
+		FlagURL:   team.Crest,
+		Continent: localizedContinent,
 	}
 	if err := repositories.CreateTeam(&created); err != nil {
 		return nil, err

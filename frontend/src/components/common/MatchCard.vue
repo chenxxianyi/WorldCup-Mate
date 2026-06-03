@@ -39,17 +39,21 @@ function goDetail() {
     <div class="teams-line" @click="goDetail">
       <div class="team-side">
         <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" />
-        <span class="team-name">{{ match.home_team_name }}</span>
-        <span class="team-meta">{{ match.home_team_code }}</span>
+        <div class="team-copy">
+          <span class="team-name">{{ match.home_team_name }}</span>
+          <span class="team-meta">{{ match.home_team_code }}</span>
+        </div>
       </div>
       <div v-if="match.status === 'live' || match.status === 'finished'" class="score">
         {{ match.home_score }}-{{ match.away_score }}
       </div>
       <div v-else class="vs">VS</div>
       <div class="team-side away">
+        <div class="team-copy">
+          <span class="team-name">{{ match.away_team_name }}</span>
+          <span class="team-meta">{{ match.away_team_code }}</span>
+        </div>
         <TeamFlag :value="match.away_flag" :alt="match.away_team_name" :fallback="match.away_team_code" />
-        <span class="team-name">{{ match.away_team_name }}</span>
-        <span class="team-meta">{{ match.away_team_code }}</span>
       </div>
     </div>
     <div class="match-bottom">
@@ -122,22 +126,32 @@ function goDetail() {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   margin: 18px 0 16px;
   cursor: pointer;
 }
 
 .team-side {
   min-width: 0;
-  display: grid;
-  gap: 6px;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .team-side.away {
+  justify-content: flex-end;
   text-align: right;
 }
 
+.team-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
 .team-name {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -146,6 +160,7 @@ function goDetail() {
 }
 
 .team-meta {
+  display: block;
   color: var(--weak);
   font-size: 12px;
 }

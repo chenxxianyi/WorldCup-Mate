@@ -97,8 +97,9 @@ func CountMatchesInSyncWindow(now time.Time) (int64, error) {
 func GetRecommendedMatches() ([]models.Match, error) {
 	var matches []models.Match
 	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City").
-		Where("importance_level >= 1 AND status != ?", "finished").
-		Order("importance_level DESC, kickoff_time_utc ASC").
+		Where("status = ? OR (status != ? AND kickoff_time_utc >= ?)", "live", "finished", time.Now().UTC()).
+		Order("CASE WHEN status = 'live' THEN 0 ELSE 1 END, kickoff_time_utc ASC").
+		Limit(3).
 		Find(&matches).Error
 	return matches, err
 }
@@ -121,6 +122,11 @@ func UpdateMatch(match *models.Match) error {
 
 func DeleteMatch(id uint) error {
 	return database.DB.Delete(&models.Match{}, id).Error
+}
+
+func DeleteSeedDemoMatches() error {
+	return database.DB.Where("(external_provider = ? OR external_provider IS NULL) AND (external_id = ? OR external_id IS NULL) AND match_no IN ?", "", "", []int{1, 2, 3, 4}).
+		Delete(&models.Match{}).Error
 }
 
 func CountMatches() int64 {
