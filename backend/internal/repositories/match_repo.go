@@ -10,15 +10,16 @@ import (
 )
 
 type MatchFilter struct {
-	Date     string
-	TeamID   uint
-	GroupID  uint
-	Stage    string
-	CityID   uint
-	Status   string
-	Keyword  string
-	Page     int
-	PageSize int
+	Date      string
+	TeamID    uint
+	GroupID   uint
+	GroupName string
+	Stage     string
+	CityID    uint
+	Status    string
+	Keyword   string
+	Page      int
+	PageSize  int
 }
 
 func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
@@ -38,6 +39,10 @@ func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
 	}
 	if f.GroupID > 0 {
 		q = q.Where("group_id = ?", f.GroupID)
+	}
+	if f.GroupName != "" {
+		q = q.Joins("LEFT JOIN groups ON groups.id = matches.group_id").
+			Where("groups.name = ?", f.GroupName)
 	}
 	if f.Stage != "" {
 		q = q.Where("stage = ?", f.Stage)

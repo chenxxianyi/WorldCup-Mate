@@ -19,3 +19,15 @@ export function apiGetProfile() {
 export function apiUpdateProfile(data: { avatar?: string; timezone?: string; language?: string }) {
   return request.put('/user/profile', data) as Promise<any>
 }
+
+export function apiUploadAvatar(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/user/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }) as Promise<{ avatar: string }>
+}
+
+export function apiChangePassword(data: { old_password: string; new_password: string }) {
+  return request.put('/user/password', data) as Promise<any>
+}

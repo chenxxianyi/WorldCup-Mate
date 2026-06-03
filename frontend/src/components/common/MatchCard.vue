@@ -27,7 +27,7 @@ function goDetail() {
     <div v-if="featured || match.is_featured" class="hot-ribbon">热门比赛</div>
     <div class="match-top">
       <span class="tag blue">
-        <template v-if="match.group_name">{{ match.stage === 'group_stage' ? '小组赛' : '淘汰赛' }} · {{ match.group_name }}</template>
+        <template v-if="match.group_name">{{ match.stage === 'group' || match.stage === 'group_stage' ? '小组赛' : '淘汰赛' }} · {{ match.group_name }}</template>
         <template v-else>Match {{ match.match_number }}</template>
       </span>
       <span v-if="match.status === 'live'" class="tag live">
@@ -62,7 +62,7 @@ function goDetail() {
           进行中 · {{ match.minute }}′<br />{{ match.stadium }}
         </template>
         <template v-else>
-          {{ match.local_kickoff_time.split(' ')[1] }} · {{ match.city }}<br />{{ match.stadium }}
+          {{ match.local_kickoff_time.includes(' ') ? match.local_kickoff_time.split(' ')[1] : match.local_kickoff_time || 'TBD' }} · {{ match.city || 'TBD' }}<br />{{ match.stadium || 'TBD' }}
         </template>
       </div>
       <div class="actions">

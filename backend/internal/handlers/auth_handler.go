@@ -68,3 +68,32 @@ func UpdateProfile(c *gin.Context) {
 	}
 	utils.Success(c, user)
 }
+
+func ChangePassword(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+	var input services.ChangePasswordInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.Error(c, 400, err.Error())
+		return
+	}
+	if err := services.ChangePassword(userID, input); err != nil {
+		utils.Error(c, 400, err.Error())
+		return
+	}
+	utils.Success(c, nil)
+}
+
+func UploadAvatar(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+	file, err := c.FormFile("file")
+	if err != nil {
+		utils.Error(c, 400, "请选择要上传的文件")
+		return
+	}
+	avatarURL, err := services.UploadAvatar(userID, file)
+	if err != nil {
+		utils.Error(c, 400, err.Error())
+		return
+	}
+	utils.Success(c, gin.H{"avatar": avatarURL})
+}

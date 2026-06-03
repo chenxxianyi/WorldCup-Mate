@@ -20,17 +20,23 @@ const router = useRouter()
       </div>
       <div>
         <h1 class="brand-title">WorldCup Mate</h1>
-        <p class="brand-sub">2026 世界杯赛程助手 · 设计系统 <span class="version-badge">v1.0</span></p>
+        <p class="brand-sub">2026 世界杯赛程助手 <span class="version-badge">美加墨</span></p>
       </div>
     </div>
     <div class="top-actions">
       <template v-if="auth.isLoggedIn">
         <button class="icon-btn user-btn" title="个人中心" @click="router.push('/profile')">
           <span>{{ auth.user?.username || '用户' }}</span>
-          <span class="user-avatar">{{ auth.user?.avatar || 'U' }}</span>
+          <template v-if="auth.user?.avatar && auth.user.avatar.startsWith('/')">
+            <img class="user-avatar-img" :src="auth.user.avatar" alt="头像" />
+          </template>
+          <template v-else>
+            <span class="user-avatar">{{ auth.user?.avatar || 'U' }}</span>
+          </template>
         </button>
         <button class="icon-btn logout-btn" title="退出登录" @click="auth.logout()">
           <span>退出</span>
+          <span class="theme-knob logout-knob">⏻</span>
         </button>
       </template>
       <template v-else>
@@ -191,10 +197,21 @@ const router = useRouter()
   font-weight: 800;
 }
 
+.user-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
 .logout-btn {
   min-width: auto;
   padding: 6px 14px;
   color: var(--muted);
+}
+
+.logout-knob {
+  background: #dc3545;
 }
 
 .login-btn {

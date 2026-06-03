@@ -63,12 +63,16 @@ export interface Match {
 
 /** Convert UTC time string to Beijing time (UTC+8), format: "MM-DD HH:mm" */
 function formatBeijingTime(utcStr: string): string {
+  if (!utcStr) return ''
   const d = new Date(utcStr)
-  d.setMinutes(d.getMinutes() + 8 * 60)
-  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(d.getUTCDate()).padStart(2, '0')
-  const hh = String(d.getUTCHours()).padStart(2, '0')
-  const mi = String(d.getUTCMinutes()).padStart(2, '0')
+  if (isNaN(d.getTime())) return ''
+  const utcMs = d.getTime() + d.getTimezoneOffset() * 60 * 1000
+  const bjMs = utcMs + 8 * 60 * 60 * 1000
+  const bj = new Date(bjMs)
+  const mm = String(bj.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(bj.getUTCDate()).padStart(2, '0')
+  const hh = String(bj.getUTCHours()).padStart(2, '0')
+  const mi = String(bj.getUTCMinutes()).padStart(2, '0')
   return `${mm}-${dd} ${hh}:${mi}`
 }
 

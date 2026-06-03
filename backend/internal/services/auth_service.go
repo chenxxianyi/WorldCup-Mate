@@ -2,6 +2,13 @@ package services
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"mime/multipart"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"worldcup-mate/internal/models"
 	"worldcup-mate/internal/repositories"
@@ -94,4 +101,71 @@ func UpdateProfile(userID uint, input UpdateProfileInput) (*models.User, error) 
 		return nil, err
 	}
 	return user, nil
+}
+
+type ChangePasswordInput struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
+
+func ChangePassword(userID uint, input ChangePasswordInput) error {
+	user, err := repositories.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	if !utils.CheckPassword(input.OldPassword, user.PasswordHash) {
+		return errors.New("旧密码错误")
+	}
+	hash, err := utils.HashPassword(input.NewPassword)
+	if err != nil {
+		return err
+	}
+	user.PasswordHash = hash
+	return repositories.UpdateUser(user)
+}
+
+var allowedExts = map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
+
+func UploadAvatar(userID uint, file *multipart.FileHeader) (string, error) {
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if !allowedExts[ext] {
+		return "", errors.New("不支持的文件格式，仅支持 jpg/png/gif/webp")
+	}
+	if file.Size > 5*1024*1024 {
+		return "", errors.New("文件大小不能超过 5MB")
+	}
+
+	dir := "uploads/avatars"
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+	filename := fmt.Sprintf("%d_%d%s", userID, time.Now().UnixMilli(), ext)
+	dst := filepath.Join(dir, filename)
+
+	src, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+	if _, err = io.Copy(out, src); err != nil {
+		return "", err
+	}
+
+	avatarURL := "/uploads/avatars/" + filename
+
+	user, err := repositories.GetUserByID(userID)
+	if err != nil {
+		return "", err
+	}
+	user.Avatar = avatarURL
+	if err := repositories.UpdateUser(user); err != nil {
+		return "", err
+	}
+	return avatarURL, nil
 }

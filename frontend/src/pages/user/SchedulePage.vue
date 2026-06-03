@@ -44,16 +44,16 @@ const filteredMatches = computed(() => {
   if (activeFilter.value === '今日') {
     const now = new Date()
     const key = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    list = list.filter((m) => m.local_kickoff_time.startsWith(key))
+    list = list.filter((m) => (m.local_kickoff_time || '').startsWith(key))
   } else if (activeFilter.value === '明日') {
     const tmr = new Date()
     tmr.setDate(tmr.getDate() + 1)
     const key = `${String(tmr.getMonth() + 1).padStart(2, '0')}-${String(tmr.getDate()).padStart(2, '0')}`
-    list = list.filter((m) => m.local_kickoff_time.startsWith(key))
+    list = list.filter((m) => (m.local_kickoff_time || '').startsWith(key))
   } else if (activeFilter.value.startsWith('Group')) {
     list = list.filter((m) => m.group_name === activeFilter.value)
   } else if (activeFilter.value === '淘汰赛') {
-    list = list.filter((m) => m.stage !== 'group_stage')
+    list = list.filter((m) => m.stage !== 'group' && m.stage !== 'group_stage')
   } else if (activeFilter.value === '未开始') {
     list = list.filter((m) => m.status === 'upcoming')
   }
@@ -75,9 +75,15 @@ const filteredMatches = computed(() => {
 const groupedByDate = computed(() => {
   const groups: Record<string, typeof filteredMatches.value> = {}
   for (const m of filteredMatches.value) {
-    const md = m.local_kickoff_time.split(' ')[0] // "MM-DD"
-    const [mm, dd] = md.split('-')
-    const date = `${Number(mm)}月${Number(dd)}日`
+    let date = '其他日期'
+    const timeStr = m.local_kickoff_time || ''
+    if (timeStr.includes(' ')) {
+      const md = timeStr.split(' ')[0]
+      const parts = md.split('-')
+      if (parts.length === 2) {
+        date = `${Number(parts[0])}月${Number(parts[1])}日`
+      }
+    }
     if (!groups[date]) groups[date] = []
     groups[date].push(m)
   }

@@ -9,7 +9,38 @@ import (
 )
 
 func GetStandingsByGroupID(groupID uint) ([]models.GroupStanding, error) {
-	return repositories.GetStandingsByGroupID(groupID)
+	standings, err := repositories.GetStandingsByGroupID(groupID)
+	if err != nil {
+		return nil, err
+	}
+
+	// If no standings exist, generate initial standings from teams in the group
+	if len(standings) == 0 {
+		teams, err := repositories.GetTeamsByGroupID(groupID)
+		if err != nil {
+			return nil, err
+		}
+
+		for i, team := range teams {
+			standings = append(standings, models.GroupStanding{
+				GroupID:            groupID,
+				TeamID:             team.ID,
+				Team:               team,
+				Played:             0,
+				Won:                0,
+				Drawn:              0,
+				Lost:               0,
+				GoalsFor:           0,
+				GoalsAgainst:       0,
+				GoalDifference:     0,
+				Points:             0,
+				Rank:               i + 1,
+				QualificationStatus: "unknown",
+			})
+		}
+	}
+
+	return standings, nil
 }
 
 func GetAllStandings() ([]models.GroupStanding, error) {

@@ -7,7 +7,7 @@ import { apiGetGroupStandings, apiGetAllStandings, apiGetBestThird } from '@/api
 import { normalizeStanding, type Standing } from '@/types/standing'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 
-const groupOptions = ['Group A', 'Group B', 'Group C', 'Group D', '最佳第三名']
+const groupOptions = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E', 'Group F', 'Group G', 'Group H', 'Group I', 'Group J', 'Group K', 'Group L', '最佳第三名']
 const activeGroup = ref('Group A')
 const currentStandings = ref<Standing[]>([])
 const bestThird = ref<any[]>([])

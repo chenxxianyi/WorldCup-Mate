@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types/user'
 import { normalizeUser } from '@/types/user'
-import { apiLogin as apiLoginReq, apiRegister as apiRegisterReq, apiGetProfile, apiLogout as apiLogoutReq } from '@/api/auth'
+import { apiLogin as apiLoginReq, apiRegister as apiRegisterReq, apiGetProfile, apiLogout as apiLogoutReq, apiUploadAvatar, apiChangePassword } from '@/api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('wm-token'))
@@ -42,5 +42,15 @@ export const useAuthStore = defineStore('auth', () => {
     try { apiLogoutReq() } catch {}
   }
 
-  return { token, user, isLoggedIn, login, register, logout, fetchProfile }
+  async function uploadAvatar(file: File) {
+    const res = await apiUploadAvatar(file) as any
+    if (user.value) user.value.avatar = res.avatar
+    return res.avatar
+  }
+
+  async function changePassword(oldPassword: string, newPassword: string) {
+    await apiChangePassword({ old_password: oldPassword, new_password: newPassword })
+  }
+
+  return { token, user, isLoggedIn, login, register, logout, fetchProfile, uploadAvatar, changePassword }
 })

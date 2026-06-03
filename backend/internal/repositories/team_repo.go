@@ -40,3 +40,9 @@ func UpdateTeam(team *models.Team) error {
 func DeleteTeam(id uint) error {
 	return database.DB.Delete(&models.Team{}, id).Error
 }
+
+func GetTeamsByGroupID(groupID uint) ([]models.Team, error) {
+	var teams []models.Team
+	err := database.DB.Where("group_id = ?", groupID).Order("id ASC").Find(&teams).Error
+	return teams, err
+}

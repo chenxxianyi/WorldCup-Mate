@@ -74,6 +74,8 @@ func Setup() *gin.Engine {
 	{
 		authRequired.GET("/user/profile", handlers.GetProfile)
 		authRequired.PUT("/user/profile", handlers.UpdateProfile)
+		authRequired.PUT("/user/password", handlers.ChangePassword)
+		authRequired.POST("/user/avatar", handlers.UploadAvatar)
 
 		// Favorites
 		fav := authRequired.Group("/favorites")
