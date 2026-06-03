@@ -61,6 +61,17 @@ export interface Match {
   minute: number | null
 }
 
+/** Convert UTC time string to Beijing time (UTC+8), format: "MM-DD HH:mm" */
+function formatBeijingTime(utcStr: string): string {
+  const d = new Date(utcStr)
+  d.setMinutes(d.getMinutes() + 8 * 60)
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(d.getUTCDate()).padStart(2, '0')
+  const hh = String(d.getUTCHours()).padStart(2, '0')
+  const mi = String(d.getUTCMinutes()).padStart(2, '0')
+  return `${mm}-${dd} ${hh}:${mi}`
+}
+
 /** Transform backend match to frontend match */
 export function normalizeMatch(m: ApiMatch): Match {
   return {
@@ -80,7 +91,7 @@ export function normalizeMatch(m: ApiMatch): Match {
     away_score: m.away_score,
     status: m.status,
     kickoff_time_utc: m.kickoff_time_utc,
-    local_kickoff_time: m.kickoff_time_utc,
+    local_kickoff_time: formatBeijingTime(m.kickoff_time_utc),
     city: m.city?.name || '',
     stadium: m.stadium?.name || '',
     importance_level: m.importance_level,

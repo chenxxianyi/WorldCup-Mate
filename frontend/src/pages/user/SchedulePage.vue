@@ -9,7 +9,11 @@ const matchStore = useMatchStore()
 const search = ref('')
 const activeFilter = ref('全部')
 
-const filterOptions = ['全部', '今日', '明日', 'Group A', '小组赛', '淘汰赛', '未开始']
+const filterOptions = [
+  '全部', '今日', '明日', '未开始', '淘汰赛',
+  'Group A', 'Group B', 'Group C', 'Group D', 'Group E', 'Group F',
+  'Group G', 'Group H', 'Group I', 'Group J', 'Group K', 'Group L'
+]
 
 function loadMatches() {
   const params: Record<string, any> = {}
@@ -21,10 +25,7 @@ function loadMatches() {
     tmr.setDate(tmr.getDate() + 1)
     params.date = `${tmr.getFullYear()}-${String(tmr.getMonth() + 1).padStart(2, '0')}-${String(tmr.getDate()).padStart(2, '0')}`
   } else if (activeFilter.value.startsWith('Group')) {
-    const groupNum = activeFilter.value.charCodeAt(6) - 64
-    params.groupId = groupNum
-  } else if (activeFilter.value === '小组赛') {
-    params.stage = 'group'
+    params.groupName = activeFilter.value
   } else if (activeFilter.value === '淘汰赛') {
     params.stage = 'round_of_16'
   } else if (activeFilter.value === '未开始') {
@@ -41,13 +42,16 @@ const filteredMatches = computed(() => {
   let list = matchStore.matches
 
   if (activeFilter.value === '今日') {
-    list = list.filter((m) => m.local_kickoff_time.startsWith('2026-06-12'))
+    const now = new Date()
+    const key = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    list = list.filter((m) => m.local_kickoff_time.startsWith(key))
   } else if (activeFilter.value === '明日') {
-    list = list.filter((m) => m.local_kickoff_time.startsWith('2026-06-13'))
+    const tmr = new Date()
+    tmr.setDate(tmr.getDate() + 1)
+    const key = `${String(tmr.getMonth() + 1).padStart(2, '0')}-${String(tmr.getDate()).padStart(2, '0')}`
+    list = list.filter((m) => m.local_kickoff_time.startsWith(key))
   } else if (activeFilter.value.startsWith('Group')) {
     list = list.filter((m) => m.group_name === activeFilter.value)
-  } else if (activeFilter.value === '小组赛') {
-    list = list.filter((m) => m.stage === 'group_stage')
   } else if (activeFilter.value === '淘汰赛') {
     list = list.filter((m) => m.stage !== 'group_stage')
   } else if (activeFilter.value === '未开始') {
@@ -71,7 +75,9 @@ const filteredMatches = computed(() => {
 const groupedByDate = computed(() => {
   const groups: Record<string, typeof filteredMatches.value> = {}
   for (const m of filteredMatches.value) {
-    const date = m.local_kickoff_time.split(' ')[0]
+    const md = m.local_kickoff_time.split(' ')[0] // "MM-DD"
+    const [mm, dd] = md.split('-')
+    const date = `${Number(mm)}月${Number(dd)}日`
     if (!groups[date]) groups[date] = []
     groups[date].push(m)
   }

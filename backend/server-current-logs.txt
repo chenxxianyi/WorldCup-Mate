@@ -1,3 +1,0 @@
-D:\project\WorldCup Mate\backend\server-check-20260602-161722.out.log
-D:\project\WorldCup Mate\backend\server-check-20260602-161722.err.log
-28548

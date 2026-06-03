@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+const teamIconModules = import.meta.glob('../../assets/team-icons/*.png', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
+const teamIcons = Object.fromEntries(
+  Object.entries(teamIconModules).map(([path, url]) => {
+    const filename = path.split('/').pop() || ''
+    return [filename.replace(/\.png$/i, '').toUpperCase(), url]
+  }),
+)
+
 const props = withDefaults(defineProps<{
   value?: string | null
   alt?: string
@@ -15,7 +27,7 @@ const props = withDefaults(defineProps<{
 
 const failed = ref(false)
 
-watch(() => props.value, () => {
+watch(() => [props.value, props.fallback], () => {
   failed.value = false
 })
 
@@ -40,19 +52,22 @@ const artCodes = new Set([
 ])
 const artClass = computed(() => artCodes.has(code.value) ? `flag-${code.value.toLowerCase()}` : '')
 const isImage = computed(() => /^(https?:\/\/|\/)/i.test(source.value))
+const localIcon = computed(() => code.value ? teamIcons[code.value] : '')
+const imageSrc = computed(() => localIcon.value || (isImage.value ? source.value : ''))
+const isLocalIcon = computed(() => Boolean(localIcon.value && !failed.value))
 </script>
 
 <template>
-  <span class="team-flag" :class="size" aria-hidden="true">
-    <span v-if="artClass" class="flag-art" :class="artClass"></span>
+  <span class="team-flag" :class="[size, { 'has-local-icon': isLocalIcon }]" aria-hidden="true">
     <img
-      v-else-if="isImage && !failed"
-      :src="source"
+      v-if="imageSrc && !failed"
+      :src="imageSrc"
       :alt="alt"
       loading="lazy"
       decoding="async"
       @error="failed = true"
     />
+    <span v-else-if="artClass" class="flag-art" :class="artClass"></span>
     <span v-else-if="source && !isImage" class="flag-text">{{ source }}</span>
     <span v-else class="flag-fallback">{{ fallbackText }}</span>
   </span>
@@ -63,6 +78,8 @@ const isImage = computed(() => /^(https?:\/\/|\/)/i.test(source.value))
   --flag-size: 34px;
   width: var(--flag-size);
   height: var(--flag-size);
+  min-width: var(--flag-size);
+  aspect-ratio: 1 / 1;
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
@@ -87,12 +104,23 @@ const isImage = computed(() => /^(https?:\/\/|\/)/i.test(source.value))
   --flag-size: 54px;
 }
 
+.team-flag.has-local-icon {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .team-flag img {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: inherit;
+}
+
+.team-flag.has-local-icon img {
+  object-position: center;
 }
 
 .flag-art {
@@ -149,15 +177,22 @@ const isImage = computed(() => /^(https?:\/\/|\/)/i.test(source.value))
   width: 54%;
   height: 54%;
   background:
-    radial-gradient(circle at 22% 25%, #fff 0 2px, transparent 2px),
-    radial-gradient(circle at 46% 42%, #fff 0 2px, transparent 2px),
-    radial-gradient(circle at 70% 25%, #fff 0 2px, transparent 2px),
+    radial-gradient(circle at 22% 25%, #fff 0 4%, transparent 4.5%),
+    radial-gradient(circle at 46% 42%, #fff 0 4%, transparent 4.5%),
+    radial-gradient(circle at 70% 25%, #fff 0 4%, transparent 4.5%),
+    radial-gradient(circle at 26% 68%, #fff 0 4%, transparent 4.5%),
+    radial-gradient(circle at 68% 70%, #fff 0 4%, transparent 4.5%),
     #3c3b6e;
 }
 
 .flag-nzl,
 .flag-aus {
-  background: #00247d;
+  background:
+    radial-gradient(circle at 74% 28%, #fff 0 3.4%, transparent 3.8%),
+    radial-gradient(circle at 84% 47%, #fff 0 3.4%, transparent 3.8%),
+    radial-gradient(circle at 67% 66%, #fff 0 3.4%, transparent 3.8%),
+    radial-gradient(circle at 86% 75%, #fff 0 3.4%, transparent 3.8%),
+    #00247d;
 }
 
 .flag-nzl::before,
@@ -176,13 +211,7 @@ const isImage = computed(() => /^(https?:\/\/|\/)/i.test(source.value))
 
 .flag-nzl::after,
 .flag-aus::after {
-  right: 18%;
-  top: 25%;
-  width: 8%;
-  height: 8%;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 10px 12px 0 #fff, -2px 25px 0 #fff, 16px 31px 0 #fff;
+  display: none;
 }
 
 .flag-jpn {
