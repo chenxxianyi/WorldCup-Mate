@@ -9,6 +9,10 @@ func GetNotifications(userID uint, page, pageSize int) ([]models.Notification, i
 	return repositories.GetNotificationsByUserID(userID, page, pageSize)
 }
 
+func CountUnreadNotifications(userID uint) (int64, error) {
+	return repositories.CountUnreadNotifications(userID)
+}
+
 func MarkNotificationRead(id uint) error {
 	return repositories.MarkNotificationRead(id)
 }

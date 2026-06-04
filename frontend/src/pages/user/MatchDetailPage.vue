@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMatchStore } from '@/stores/useMatchStore'
-import { useFavoriteStore } from '@/stores/useFavoriteStore'
-import { useReminderStore } from '@/stores/useReminderStore'
-import { useAuthStore } from '@/stores/useAuthStore'
-import { toLocalTime, toUTCTime } from '@/utils/timezone'
-import { useSettingStore } from '@/stores/useSettingStore'
 import { apiGetGroupStandings } from '@/api/standings'
-import { normalizeStanding, type Standing } from '@/types/standing'
+import ReminderControl from '@/components/common/ReminderControl.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { useFavoriteStore } from '@/stores/useFavoriteStore'
+import { useMatchStore } from '@/stores/useMatchStore'
+import { useReminderStore } from '@/stores/useReminderStore'
+import { useSettingStore } from '@/stores/useSettingStore'
+import { normalizeStanding, type Standing } from '@/types/standing'
+import { toLocalTime, toUTCTime } from '@/utils/timezone'
 
 const route = useRoute()
 const matchStore = useMatchStore()
@@ -17,6 +18,7 @@ const fav = useFavoriteStore()
 const reminder = useReminderStore()
 const auth = useAuthStore()
 const settings = useSettingStore()
+
 const match = ref<any>(null)
 const groupStandings = ref<Standing[]>([])
 
@@ -33,7 +35,9 @@ onMounted(async () => {
     try {
       const res = await apiGetGroupStandings(groupNum) as any[]
       groupStandings.value = res.map(normalizeStanding)
-    } catch {}
+    } catch {
+      groupStandings.value = []
+    }
   }
 })
 
@@ -55,6 +59,7 @@ function rowClass(status: string) {
         <span v-else-if="match.status === 'finished'" class="tag green">已结束</span>
         <span v-else class="tag">未开始</span>
       </div>
+
       <div class="detail-score">
         <div class="detail-team">
           <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" size="lg" />
@@ -73,28 +78,28 @@ function rowClass(status: string) {
           <p class="team-meta">{{ match.away_team_code }}</p>
         </div>
       </div>
+
       <div class="info-grid">
         <div class="info-cell"><span>本地时间</span><strong>{{ toLocalTime(match.kickoff_time_utc, settings.timezone) }}</strong></div>
         <div class="info-cell"><span>UTC 时间</span><strong>{{ toUTCTime(match.kickoff_time_utc) }}</strong></div>
-        <div class="info-cell"><span>城市</span><strong>{{ match.city }}</strong></div>
-        <div class="info-cell"><span>球场</span><strong>{{ match.stadium }}</strong></div>
+        <div class="info-cell"><span>城市</span><strong>{{ match.city || 'TBD' }}</strong></div>
+        <div class="info-cell"><span>球场</span><strong>{{ match.stadium || 'TBD' }}</strong></div>
       </div>
+
       <div class="actions">
         <button
           class="pill-btn"
           :class="{ active: fav.isMatchFavorite(match.id) }"
           @click="fav.toggleMatchFavorite(match.id)"
         >
-          <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: -4px" :style="fav.isMatchFavorite(match.id) ? 'font-variation-settings: \'FILL\' 1' : ''">star</span>
+          <span
+            class="material-symbols-outlined"
+            style="font-size: 18px; vertical-align: -4px"
+            :style="fav.isMatchFavorite(match.id) ? 'font-variation-settings: \'FILL\' 1' : ''"
+          >star</span>
           {{ fav.isMatchFavorite(match.id) ? '已收藏' : '收藏' }}
         </button>
-        <button
-          class="pill-btn primary"
-          @click="reminder.toggleReminder(match.id)"
-        >
-          <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: -4px">notifications</span>
-          {{ reminder.hasReminder(match.id) ? '取消提醒' : '设置提醒' }}
-        </button>
+        <ReminderControl :match-id="match.id" mode="pill" />
       </div>
     </article>
 
@@ -134,6 +139,7 @@ function rowClass(status: string) {
 <style scoped>
 .detail-hero {
   padding: 18px;
+  overflow: visible;
 }
 
 .match-top {
@@ -205,6 +211,7 @@ function rowClass(status: string) {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 16px;
 }
@@ -246,7 +253,8 @@ function rowClass(status: string) {
   min-width: 520px;
 }
 
-th, td {
+th,
+td {
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
   text-align: left;

@@ -324,7 +324,7 @@ WorldCup Mate 当前已经具备世界杯赛程、球队、积分榜、收藏、
 9. 做性能优化。
 10. 做生产安全检查。
 
-### 7.2 任务 0：开发前基线检查
+### 7.2 任务 0：开发前基线检查（已完成）
 
 #### 目标
 
@@ -356,7 +356,24 @@ WorldCup Mate 当前已经具备世界杯赛程、球队、积分榜、收藏、
 - 明确哪些接口需要新增。
 - 前端构建问题和后端测试问题有记录。
 
-### 7.3 任务 1：球队详情页
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 已确认可复用接口：
+  - `GET /api/teams/:id`
+  - `GET /api/teams/:id/matches`
+  - `GET /api/groups/:id/standings`
+- 已确认可复用前端模块：
+  - `useTeamStore.fetchTeamDetail`
+  - `apiGetTeamMatches`
+  - `apiGetGroupStandings`
+  - `MatchCard`
+  - `StandingTable`
+- 验证结果：
+  - `npm run build` 通过。
+  - `go test ./...` 通过。
+
+### 7.3 任务 1：球队详情页（已完成）
 
 #### 目标
 
@@ -406,7 +423,28 @@ GET /api/groups/:id/standings
 - `npm run build` 通过。
 - `go test ./...` 通过。
 
-### 7.4 任务 2：赛程页“只看关注”
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 新增页面：
+  - `frontend/src/pages/user/TeamDetailPage.vue`
+- 修改文件：
+  - `frontend/src/router/index.ts`
+  - `frontend/src/components/common/TeamCard.vue`
+  - `frontend/src/types/team.ts`
+- 实现内容：
+  - 新增 `/teams/:id` 用户端路由。
+  - 球队卡片点击进入球队详情页。
+  - 收藏按钮阻止冒泡，不触发页面跳转。
+  - 球队详情页展示队徽、名称、英文名、FIFA code、大洲、小组。
+  - 球队详情页展示关注按钮、下一场比赛、球队完整赛程、所在小组积分。
+  - 未登录点击关注会跳转登录页。
+  - 球队不存在、加载失败、暂无赛程均有页面状态。
+- 验证结果：
+  - `npm run build` 通过。
+  - `go test ./...` 通过。
+
+### 7.4 任务 2：赛程页“只看关注”（已完成）
 
 #### 目标
 
@@ -449,7 +487,23 @@ GET /api/matches?followed_only=true
 - 未登录和无关注场景有清晰提示。
 - `npm run build` 通过。
 
-### 7.5 任务 3：首页关注球队赛程模块
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 修改文件：
+  - `frontend/src/pages/user/SchedulePage.vue`
+- 实现内容：
+  - 新增“只看关注”筛选项。
+  - 登录用户会先拉取关注球队 ID，再过滤主客队包含关注球队的比赛。
+  - 未登录用户选择“只看关注”时展示登录引导。
+  - 已登录但未关注球队时展示去关注球队的引导。
+  - 保留最近三天默认展示、下滑提示、延迟加载、返回顶部能力。
+  - 搜索关键词和“只看关注”可以组合生效。
+  - 分页参数从 `pageSize` 修正为后端实际读取的 `page_size`。
+- 验证结果：
+  - `npm run build` 通过。
+
+### 7.5 任务 3：首页关注球队赛程模块（已完成）
 
 #### 目标
 
@@ -493,7 +547,25 @@ GET /api/user/followed-team-matches?limit=5
 - 未登录、无关注、无比赛都有对应状态。
 - `npm run build` 通过。
 
-### 7.6 任务 4：提醒配置弹层升级
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 修改文件：
+  - `frontend/src/pages/user/HomePage.vue`
+- 实现内容：
+  - 首页新增“我的关注赛程”模块。
+  - 登录用户会根据关注球队筛选未开始比赛。
+  - 优先展示关注球队的下一场比赛。
+  - 如果今天还有其他关注球队比赛，会展示轻量快捷入口。
+  - 未登录时展示登录引导。
+  - 已登录但无关注球队时展示去关注球队引导。
+  - 有关注但暂无未开始比赛时展示查看全部赛程入口。
+  - 首页侧栏“我的关注”球队卡片支持点击进入球队详情。
+  - 保留下一场倒计时、赛事进度、今日比赛、热门推荐、积分速览能力。
+- 验证结果：
+  - `npm run build` 通过。
+
+### 7.6 任务 4：提醒配置弹层升级（已完成）
 
 #### 目标
 
@@ -551,7 +623,34 @@ POST /api/reminders/batch
 - `go test ./...` 通过。
 - `npm run build` 通过。
 
-### 7.7 任务 5：通知未读数和红点
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 新增文件：
+  - `frontend/src/components/common/ReminderControl.vue`
+- 修改文件：
+  - `frontend/src/api/reminders.ts`
+  - `frontend/src/stores/useReminderStore.ts`
+  - `frontend/src/components/common/MatchCard.vue`
+  - `frontend/src/pages/user/MatchDetailPage.vue`
+  - `backend/internal/services/reminder_service.go`
+  - `backend/internal/handlers/reminder_handler.go`
+  - `backend/internal/routes/router.go`
+- 实现内容：
+  - 新增 `POST /api/reminders/batch` 批量创建提醒接口。
+  - 支持赛前 1 天、赛前 1 小时、赛前 15 分钟多选。
+  - 支持站内通知和邮件通知渠道。
+  - 后端拒绝已开始、已结束、已取消比赛的提醒创建。
+  - 后端拒绝已经过期的提醒时间。
+  - 后端会跳过同一用户、同一比赛、同一时间、同一渠道的重复提醒。
+  - 前端新增通用 `ReminderControl`，赛程卡片和比赛详情页共用同一套提醒弹层。
+  - 已设置提醒时再次点击会取消该比赛下的全部提醒。
+  - 邮件提醒缺少邮箱目标时，前端会提示先设置通知邮箱。
+- 验证结果：
+  - `go test ./...` 通过。
+  - `npm run build` 通过。
+
+### 7.7 任务 5：通知未读数和红点（已完成）
 
 #### 目标
 
@@ -589,7 +688,34 @@ PUT /api/notifications/read-all
 - 全部已读后未读数为 0。
 - 未登录用户不请求通知接口。
 
-### 7.8 任务 6：数据更新时间和同步状态展示
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 新增文件：
+  - `frontend/src/api/notifications.ts`
+  - `frontend/src/stores/useNotificationStore.ts`
+  - `frontend/src/components/common/NotificationList.vue`
+- 修改文件：
+  - `frontend/src/api/index.ts`
+  - `frontend/src/components/common/TopBar.vue`
+  - `frontend/src/pages/user/ProfilePage.vue`
+  - `backend/internal/repositories/notification_repo.go`
+  - `backend/internal/services/notification_service.go`
+  - `backend/internal/handlers/notification_handler.go`
+  - `backend/internal/routes/router.go`
+- 实现内容：
+  - 新增 `GET /api/notifications/unread-count`。
+  - 顶部栏登录状态下自动拉取未读通知数量。
+  - 个人中心入口显示未读红点。
+  - 个人中心新增通知列表。
+  - 支持点击单条通知标记已读。
+  - 支持全部标记已读。
+  - 未登录状态不请求通知接口。
+- 验证结果：
+  - `go test ./...` 通过。
+  - `npm run build` 通过。
+
+### 7.8 任务 6：数据更新时间和同步状态展示（已完成）
 
 #### 目标
 
@@ -640,7 +766,29 @@ GET /api/sync/status
 - 后台能看到同步失败原因。
 - 同步状态接口失败时，前端不影响主内容展示。
 
-### 7.9 任务 7：后台管理基础页面
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 新增文件：
+  - `frontend/src/api/sync.ts`
+  - `frontend/src/components/common/SyncStatusBadge.vue`
+- 修改文件：
+  - `frontend/src/api/index.ts`
+  - `frontend/src/pages/user/SchedulePage.vue`
+  - `frontend/src/pages/user/StandingsPage.vue`
+  - `frontend/src/pages/admin/AdminDashboard.vue`
+- 实现内容：
+  - 复用现有 `GET /api/sync/status`。
+  - 赛程页顶部展示数据同步状态和最近更新时间。
+  - 积分榜页顶部展示数据同步状态和最近更新时间。
+  - 后台看板展示同步状态卡片。
+  - 后台同步失败时展示最近失败原因。
+  - 同步状态接口失败时显示“演示数据或未同步”，不影响主内容渲染。
+  - 后台看板进入页面时加载比赛列表。
+- 验证结果：
+  - `npm run build` 通过。
+
+### 7.9 任务 7：后台管理基础页面（已完成）
 
 #### 目标
 
@@ -683,7 +831,30 @@ GET /api/admin/sync/logs
 - 管理员可以修改比分和比赛状态。
 - 修改比赛结果后积分榜可重算。
 
-### 7.10 任务 8：性能优化
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 新增文件：
+  - `frontend/src/api/admin.ts`
+  - `frontend/src/pages/admin/AdminTeamsPage.vue`
+  - `frontend/src/pages/admin/AdminMatchesPage.vue`
+  - `frontend/src/pages/admin/AdminStandingsPage.vue`
+  - `frontend/src/pages/admin/AdminSyncPage.vue`
+- 修改文件：
+  - `frontend/src/api/index.ts`
+  - `frontend/src/router/index.ts`
+  - `frontend/src/layouts/AdminLayout.vue`
+  - `frontend/src/pages/admin/AdminDashboard.vue`
+- 实现内容：
+  - 后台侧边栏接入真实路由，并支持当前菜单高亮。
+  - 新增球队管理、比赛管理、积分榜管理、同步管理基础页面。
+  - 球队和比赛页面支持列表、搜索、筛选和分页。
+  - 积分榜页面支持小组筛选和手动重算。
+  - 同步页面展示同步状态，并支持手动触发比赛同步。
+- 验证结果：
+  - `npm run build` 通过。
+
+### 7.10 任务 8：性能优化（已完成）
 
 #### 目标
 
@@ -714,7 +885,32 @@ GET /api/admin/sync/logs
 - 赛程页滚动加载稳定。
 - 列表接口默认分页。
 
-### 7.11 任务 9：生产安全检查
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 修改文件：
+  - `frontend/src/main.ts`
+  - `backend/internal/models/match.go`
+  - `backend/internal/models/team.go`
+  - `backend/internal/models/stadium.go`
+  - `backend/internal/models/reminder.go`
+  - `backend/internal/models/notification.go`
+- 实现内容：
+  - 移除入口文件中未使用的 Element Plus 全量注册和全量 CSS 引入。
+  - 保留现有路由级懒加载，避免后台页面进入用户端首屏主包。
+  - 为赛程列表常用筛选字段增加索引：开球时间、状态、阶段、小组、主队、客队、城市、球场。
+  - 为球队列表常用筛选字段增加索引：名称、英文名、洲、小组。
+  - 为提醒扫描和通知未读数查询增加索引。
+  - 保留赛程页现有分页和渐进加载策略。
+- 构建体积变化：
+  - 首屏 `index` JS 从约 `1085.94 kB` 降到 `158.12 kB`。
+  - 首屏 `index` CSS 从约 `372.62 kB` 降到 `13.90 kB`。
+  - Vite 大 chunk 警告已消失。
+- 验证结果：
+  - `npm run build` 通过。
+  - `go test ./...` 通过。
+
+### 7.11 任务 9：生产安全检查（已完成）
 
 #### 目标
 
@@ -747,6 +943,38 @@ GET /api/admin/sync/logs
 - 非图片文件不能作为头像上传。
 - 登录页生产环境不展示默认账号。
 - `.env` 没有被 Git 跟踪。
+
+#### 完成记录
+
+- 完成时间：2026-06-04
+- 新增文件：
+  - `.gitignore`
+- 删除文件：
+  - `backend/internal/database/seed.go.1026024177`
+- 修改文件：
+  - `frontend/src/pages/user/LoginPage.vue`
+  - `frontend/src/pages/user/ProfilePage.vue`
+  - `frontend/src/api/request.ts`
+  - `backend/cmd/server/main.go`
+  - `backend/internal/config/config.go`
+  - `backend/internal/database/seed.go`
+  - `backend/internal/middleware/cors.go`
+  - `backend/internal/services/auth_service.go`
+- 实现内容：
+  - 登录页测试账号提示仅在开发环境显示，生产构建隐藏。
+  - 前端统一把 5xx 和网络错误转成通用提示，避免直接暴露后端内部错误信息。
+  - 头像上传前端限制 `JPG/PNG/GIF/WebP` 和 `5MB` 大小。
+  - 头像上传后端同时校验扩展名、文件大小和真实 MIME 类型。
+  - 生产环境启动时拒绝默认 `JWT_SECRET`、空 `CORS_ALLOWED_ORIGINS` 和长度不足的 JWT 密钥。
+  - 生产环境启动时检查默认管理员密码，发现 `admin123456` 会拒绝启动。
+  - 生产环境不再自动创建默认管理员账号。
+  - CORS 在开发环境默认开放，在生产环境按 `CORS_ALLOWED_ORIGINS` 白名单放行。
+  - 根目录 `.env` 已从 Git 索引移除，并通过 `.gitignore` 防止再次提交。
+  - 删除一个已跟踪的临时 seed 备份文件，避免把默认账号信息重复留在仓库。
+- 验证结果：
+  - `go test ./...` 通过。
+  - `npm run build` 通过。
+  - `git ls-files -- .env backend/.env` 无输出。
 
 ## 8. Agent 执行规范
 

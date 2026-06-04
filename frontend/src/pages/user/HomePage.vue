@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import Countdown from '@/components/common/Countdown.vue'
 import MatchCard from '@/components/common/MatchCard.vue'
+import TeamFlag from '@/components/common/TeamFlag.vue'
+import { apiGetGroupStandings } from '@/api/standings'
+import { apiGetTournamentProgress, apiGetUpcomingMatches, apiListMatches } from '@/api/matches'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useMatchStore } from '@/stores/useMatchStore'
 import { useTeamStore } from '@/stores/useTeamStore'
-import { useFavoriteStore } from '@/stores/useFavoriteStore'
-import { useAuthStore } from '@/stores/useAuthStore'
-import { apiGetGroupStandings } from '@/api/standings'
-import { apiGetTournamentProgress, apiGetUpcomingMatches } from '@/api/matches'
+import { normalizeMatch, type Match } from '@/types/match'
 import { normalizeStanding, type Standing } from '@/types/standing'
-import TeamFlag from '@/components/common/TeamFlag.vue'
 
+const router = useRouter()
 const matchStore = useMatchStore()
 const teamStore = useTeamStore()
 const fav = useFavoriteStore()
@@ -25,8 +28,58 @@ const groupSwipeStartY = ref(0)
 const groupSwipeActive = ref(false)
 const groupSlideDirection = ref<'left' | 'right'>('left')
 const groupTransitionName = computed(() =>
-  groupSlideDirection.value === 'left' ? 'standings-next' : 'standings-prev'
+  groupSlideDirection.value === 'left' ? 'standings-next' : 'standings-prev',
 )
+
+interface TournamentProgress {
+  stage_name: string
+  total_matches: number
+  completed: number
+  live: number
+  scheduled: number
+  progress: number
+}
+
+const progress = ref<TournamentProgress>({
+  stage_name: '小组赛阶段',
+  total_matches: 0,
+  completed: 0,
+  live: 0,
+  scheduled: 0,
+  progress: 0,
+})
+
+const nextMatch = ref<Match | null>(null)
+const followedSchedule = ref<Match[]>([])
+
+const todayMatches = computed(() => matchStore.todayMatches)
+const recommended = computed(() => matchStore.recommendedMatches)
+const followedTeams = computed(() =>
+  teamStore.teams.filter((team) => fav.isTeamFollowed(team.id)),
+)
+
+const nextMatchLocalTime = computed(() => {
+  if (!nextMatch.value) return ''
+  return nextMatch.value.local_kickoff_time || '时间待定'
+})
+
+const sortedFollowedSchedule = computed(() =>
+  [...followedSchedule.value].sort((a, b) =>
+    new Date(a.kickoff_time_utc).getTime() - new Date(b.kickoff_time_utc).getTime(),
+  ),
+)
+
+const nextFollowedMatch = computed(() => sortedFollowedSchedule.value[0] || null)
+const todayFollowedMatches = computed(() => {
+  const todayKey = localDayKey()
+  return sortedFollowedSchedule.value.filter((match) => match.local_kickoff_time.startsWith(todayKey))
+})
+
+function localDayKey(offset = 0) {
+  const d = new Date()
+  d.setDate(d.getDate() + offset)
+  return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 function swipeGroup(direction: 'left' | 'right') {
   if (direction === 'left' && activeGroupIndex.value < groups.length - 1) {
@@ -56,10 +109,7 @@ function finishGroupSwipe(event: PointerEvent) {
   const minDistance = 48
   const maxVerticalDrift = 64
 
-  if (Math.abs(deltaX) < minDistance || Math.abs(deltaY) > maxVerticalDrift) {
-    return
-  }
-
+  if (Math.abs(deltaX) < minDistance || Math.abs(deltaY) > maxVerticalDrift) return
   swipeGroup(deltaX < 0 ? 'left' : 'right')
 }
 
@@ -79,96 +129,69 @@ async function loadGroupStandings() {
   }
 }
 
-watch(activeGroupIndex, loadGroupStandings)
-
-interface TournamentProgress {
-  stage_name: string
-  total_matches: number
-  completed: number
-  live: number
-  scheduled: number
-  progress: number
-}
-
-const progress = ref<TournamentProgress>({
-  stage_name: '小组赛阶段',
-  total_matches: 0,
-  completed: 0,
-  live: 0,
-  scheduled: 0,
-  progress: 0
-})
-
-interface NextMatch {
-  id: number
-  home_team: { name: string; flag_url: string }
-  away_team: { name: string; flag_url: string }
-  kickoff_time_utc: string
-  stadium: { name: string }
-  city: { name: string }
-  recommend_tag: string
-}
-
-const nextMatch = ref<NextMatch | null>(null)
-
-const nextMatchLocalTime = computed(() => {
-  if (!nextMatch.value) return ''
-  const date = new Date(nextMatch.value.kickoff_time_utc)
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${month}月${day}日 ${hours}:${minutes}`
-})
-
-const todayMatches = computed(() => matchStore.todayMatches)
-const recommended = computed(() => matchStore.recommendedMatches)
-const followedTeams = computed(() =>
-  teamStore.teams.filter((t) => fav.isTeamFollowed(t.id))
-)
-
-onMounted(async () => {
-  matchStore.fetchTodayMatches()
-  matchStore.fetchRecommendedMatches()
-  teamStore.fetchTeams()
-  if (auth.isLoggedIn) {
-    fav.fetchFavoriteTeams()
-  }
-  loadGroupStandings()
-  try {
-    const res = await apiGetTournamentProgress()
-    if (res) {
-      progress.value = res
-    }
-  } catch {}
+async function loadNextMatch() {
   try {
     const res = await apiGetUpcomingMatches() as any[]
-    if (res && res.length > 0) {
-      nextMatch.value = res[0]
-    }
+    nextMatch.value = res?.length ? normalizeMatch(res[0]) : null
+  } catch {
+    nextMatch.value = null
+  }
+}
+
+async function loadFollowedSchedule() {
+  followedSchedule.value = []
+  if (!auth.isLoggedIn || fav.followedTeamIds.length === 0) return
+
+  try {
+    const res = await apiListMatches({ status: 'scheduled', page: 1, page_size: 100 }) as any
+    const list = (res.list || res || []).map(normalizeMatch)
+    const followedIds = new Set(fav.followedTeamIds)
+    followedSchedule.value = list.filter(
+      (match: Match) => followedIds.has(match.home_team_id) || followedIds.has(match.away_team_id),
+    )
+  } catch {
+    followedSchedule.value = []
+  }
+}
+
+async function loadHomeData() {
+  matchStore.fetchTodayMatches()
+  matchStore.fetchRecommendedMatches()
+  teamStore.fetchTeams({ page_size: 100 })
+  loadGroupStandings()
+  loadNextMatch()
+
+  try {
+    const res = await apiGetTournamentProgress()
+    if (res) progress.value = res
   } catch {}
-})
+
+  if (auth.isLoggedIn) {
+    await fav.fetchFavoriteTeams()
+    await loadFollowedSchedule()
+  }
+}
+
+watch(activeGroupIndex, loadGroupStandings)
+
+onMounted(loadHomeData)
 </script>
 
 <template>
   <div class="dashboard-grid">
     <div>
-      <!-- Countdown -->
       <Countdown v-if="nextMatch" :targetTime="nextMatch.kickoff_time_utc">
         <span class="eyebrow"><i class="live-dot next-dot"></i> 下一场比赛</span>
         <div class="countdown-title">
           <div>
-            <h2>{{ nextMatch.home_team.name }} vs {{ nextMatch.away_team.name }}</h2>
+            <h2>{{ nextMatch.home_team_name }} vs {{ nextMatch.away_team_name }}</h2>
             <p>{{ nextMatchLocalTime }} 开球 · 本地时间</p>
           </div>
-          <span v-if="nextMatch.recommend_tag" class="tag gold">{{ nextMatch.recommend_tag }}</span>
+          <span v-if="nextMatch.is_featured" class="tag gold">推荐</span>
         </div>
       </Countdown>
-      <article v-else class="card" style="padding: 20px; text-align: center; color: var(--muted)">
-        暂无即将到来的比赛
-      </article>
+      <article v-else class="card empty-card">暂无即将到来的比赛</article>
 
-      <!-- Stage Progress -->
       <article class="card stage-card">
         <div class="stage-head">
           <span>{{ progress.stage_name }}</span>
@@ -184,46 +207,73 @@ onMounted(async () => {
         </div>
       </article>
 
-      <!-- Today Matches -->
+      <section class="section">
+        <div class="section-head">
+          <h2>我的关注赛程</h2>
+          <span v-if="auth.isLoggedIn">{{ followedTeams.length }} 支球队</span>
+        </div>
+
+        <div v-if="!auth.isLoggedIn" class="card follow-state">
+          <span>登录后可以查看关注球队的下一场比赛</span>
+          <button class="pill-btn primary" @click="router.push('/login')">去登录</button>
+        </div>
+        <div v-else-if="followedTeams.length === 0" class="card follow-state">
+          <span>还没有关注球队</span>
+          <button class="pill-btn primary" @click="router.push('/teams')">去关注</button>
+        </div>
+        <div v-else-if="!nextFollowedMatch" class="card follow-state">
+          <span>关注球队暂无未开始比赛</span>
+          <button class="pill-btn" @click="router.push('/schedule')">查看全部赛程</button>
+        </div>
+        <div v-else class="stack">
+          <MatchCard :match="nextFollowedMatch" featured />
+          <div v-if="todayFollowedMatches.length > 1" class="mini-list">
+            <button
+              v-for="match in todayFollowedMatches.slice(1, 4)"
+              :key="match.id"
+              class="mini-match"
+              @click="router.push(`/matches/${match.id}`)"
+            >
+              <span>{{ match.home_team_name }} vs {{ match.away_team_name }}</span>
+              <b>{{ match.local_kickoff_time.split(' ')[1] || 'TBD' }}</b>
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section class="section">
         <div class="section-head">
           <h2>今日比赛</h2>
           <span>{{ todayMatches.length }} 场</span>
         </div>
         <div class="match-strip">
-          <MatchCard
-            v-for="m in todayMatches"
-            :key="m.id"
-            :match="m"
-          />
+          <MatchCard v-for="m in todayMatches" :key="m.id" :match="m" />
         </div>
       </section>
 
-      <!-- Recommended -->
       <section class="section">
         <div class="section-head">
           <h2>热门推荐</h2>
         </div>
         <div class="stack">
-          <MatchCard
-            v-for="m in recommended"
-            :key="m.id"
-            :match="m"
-            featured
-          />
+          <MatchCard v-for="m in recommended" :key="m.id" :match="m" featured />
         </div>
       </section>
     </div>
 
-    <!-- Desktop Sidebar -->
     <aside class="desktop-side">
       <section class="section" style="margin-top: 0">
         <div class="section-head">
           <h2>我的关注</h2>
           <span>{{ followedTeams.length }} 支球队</span>
         </div>
-        <div class="stack">
-          <article v-for="t in followedTeams" :key="t.id" class="card profile-card">
+        <div v-if="followedTeams.length" class="stack">
+          <article
+            v-for="t in followedTeams"
+            :key="t.id"
+            class="card profile-card"
+            @click="router.push(`/teams/${t.id}`)"
+          >
             <TeamFlag :value="t.flag" :alt="t.name" :fallback="t.code" size="lg" />
             <div>
               <h2>{{ t.name }}</h2>
@@ -231,6 +281,7 @@ onMounted(async () => {
             </div>
           </article>
         </div>
+        <div v-else class="card empty-card">暂无关注球队</div>
       </section>
 
       <section class="section">
@@ -251,24 +302,24 @@ onMounted(async () => {
         >
           <Transition :name="groupTransitionName" mode="out-in">
             <table :key="activeGroupName" class="standing-table" style="min-width: 0">
-            <tbody>
-              <tr
-                v-for="(s, i) in groupStandings"
-                :key="s.team_id"
-                :class="{
-                  'rank-ok': s.status === '晋级',
-                  'rank-mid': s.status === '待定',
-                  'rank-out': s.status === '淘汰',
-                }"
-              >
-                <td>{{ i + 1 }}</td>
-                <td class="team-cell">
-                  <TeamFlag :value="s.flag" :alt="s.team_name" :fallback="s.team_code" size="sm" />
-                  <span>{{ s.team_name }}</span>
-                </td>
-                <td><b>{{ s.points }}</b></td>
-              </tr>
-            </tbody>
+              <tbody>
+                <tr
+                  v-for="(s, i) in groupStandings"
+                  :key="s.team_id"
+                  :class="{
+                    'rank-ok': s.status === '晋级',
+                    'rank-mid': s.status === '待定',
+                    'rank-out': s.status === '淘汰',
+                  }"
+                >
+                  <td>{{ i + 1 }}</td>
+                  <td class="team-cell">
+                    <TeamFlag :value="s.flag" :alt="s.team_name" :fallback="s.team_code" size="sm" />
+                    <span>{{ s.team_name }}</span>
+                  </td>
+                  <td><b>{{ s.points }}</b></td>
+                </tr>
+              </tbody>
             </table>
           </Transition>
         </div>
@@ -375,10 +426,6 @@ onMounted(async () => {
   font-weight: 750;
 }
 
-.stage-head span:last-child {
-  color: var(--primary);
-}
-
 .stage-track {
   height: 7px;
   overflow: hidden;
@@ -401,11 +448,49 @@ onMounted(async () => {
   font-size: 11px;
 }
 
+.follow-state,
+.empty-card {
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.mini-list {
+  display: grid;
+  gap: 8px;
+}
+
+.mini-match {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  background: var(--card);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mini-match span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .profile-card {
   padding: 16px;
   display: flex;
   align-items: center;
   gap: 13px;
+  cursor: pointer;
 }
 
 .profile-card h2 {
@@ -424,7 +509,8 @@ onMounted(async () => {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
   text-align: left;
@@ -496,8 +582,8 @@ tr:last-child td {
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--card);
   color: var(--text);
+  background: var(--card);
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -510,17 +596,17 @@ tr:last-child td {
 }
 
 .nav-btn:not(:disabled):hover {
-  background: var(--primary);
   color: #fff;
   border-color: var(--primary);
+  background: var(--primary);
 }
 
 .group-label {
   min-width: 70px;
   text-align: center;
+  color: var(--primary);
   font-size: 13px;
   font-weight: 600;
-  color: var(--primary);
   cursor: pointer;
 }
 
@@ -531,9 +617,9 @@ tr:last-child td {
   }
 
   .match-strip {
-    grid-auto-columns: minmax(320px, 1fr);
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-auto-flow: row;
+    grid-auto-columns: initial;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow: visible;
     padding-bottom: 0;
   }

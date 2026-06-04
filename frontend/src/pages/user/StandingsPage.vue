@@ -1,30 +1,52 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import ChipFilter from '@/components/common/ChipFilter.vue'
 import StandingTable from '@/components/common/StandingTable.vue'
 import StatCard from '@/components/common/StatCard.vue'
-import { apiGetGroupStandings, apiGetAllStandings, apiGetBestThird } from '@/api/standings'
-import { normalizeStanding, type Standing } from '@/types/standing'
+import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
+import { apiGetBestThird, apiGetGroupStandings } from '@/api/standings'
+import { normalizeStanding, type Standing } from '@/types/standing'
 
-const groupOptions = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E', 'Group F', 'Group G', 'Group H', 'Group I', 'Group J', 'Group K', 'Group L', '最佳第三名']
+const BEST_THIRD = '最佳第三名'
+const groupOptions = [
+  'Group A',
+  'Group B',
+  'Group C',
+  'Group D',
+  'Group E',
+  'Group F',
+  'Group G',
+  'Group H',
+  'Group I',
+  'Group J',
+  'Group K',
+  'Group L',
+  BEST_THIRD,
+]
+
 const activeGroup = ref('Group A')
 const currentStandings = ref<Standing[]>([])
 const bestThird = ref<any[]>([])
-const showBestThird = computed(() => activeGroup.value === '最佳第三名')
+const showBestThird = computed(() => activeGroup.value === BEST_THIRD)
 
 async function loadStandings() {
-  if (activeGroup.value === '最佳第三名') {
+  if (showBestThird.value) {
     try {
       const res = await apiGetBestThird() as any[]
       bestThird.value = res
-    } catch { bestThird.value = [] }
-  } else {
-    const groupNum = activeGroup.value.charCodeAt(6) - 64
-    try {
-      const res = await apiGetGroupStandings(groupNum) as any[]
-      currentStandings.value = res.map(normalizeStanding)
-    } catch { currentStandings.value = [] }
+    } catch {
+      bestThird.value = []
+    }
+    return
+  }
+
+  const groupNum = activeGroup.value.charCodeAt(6) - 64
+  try {
+    const res = await apiGetGroupStandings(groupNum) as any[]
+    currentStandings.value = res.map(normalizeStanding)
+  } catch {
+    currentStandings.value = []
   }
 }
 
@@ -39,6 +61,7 @@ watch(activeGroup, loadStandings)
         <h2>小组积分榜</h2>
         <span>Group A - Group L</span>
       </div>
+      <SyncStatusBadge />
     </div>
     <ChipFilter v-model="activeGroup" :options="groupOptions" />
 
@@ -127,7 +150,8 @@ watch(activeGroup, loadStandings)
   min-width: 520px;
 }
 
-th, td {
+th,
+td {
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
   text-align: left;
@@ -155,16 +179,7 @@ tr:last-child td {
   border-bottom: 0;
 }
 
-.rank-ok td:first-child {
-  border-left: 4px solid var(--success);
-}
-
 .rank-mid td:first-child {
   border-left: 4px solid var(--gold);
-}
-
-.rank-out {
-  color: var(--weak);
-  opacity: 0.66;
 }
 </style>

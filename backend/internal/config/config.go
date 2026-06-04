@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -53,6 +55,22 @@ func Load() *Config {
 		SMTPPassword:                getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:                    getEnv("SMTP_FROM", ""),
 	}
+}
+
+func (c *Config) ValidateProduction() error {
+	if !strings.EqualFold(c.AppEnv, "production") {
+		return nil
+	}
+	if strings.TrimSpace(c.JWTSecret) == "" || c.JWTSecret == "default_secret" {
+		return fmt.Errorf("JWT_SECRET must be configured with a strong non-default value in production")
+	}
+	if len(c.JWTSecret) < 32 {
+		return fmt.Errorf("JWT_SECRET must be at least 32 characters in production")
+	}
+	if strings.TrimSpace(os.Getenv("CORS_ALLOWED_ORIGINS")) == "" {
+		return fmt.Errorf("CORS_ALLOWED_ORIGINS must be configured in production")
+	}
+	return nil
 }
 
 func getEnv(key, fallback string) string {

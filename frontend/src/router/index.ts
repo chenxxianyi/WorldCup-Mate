@@ -11,6 +11,7 @@ const router = createRouter({
         { path: 'schedule', name: 'schedule', component: () => import('@/pages/user/SchedulePage.vue') },
         { path: 'matches/:id', name: 'match-detail', component: () => import('@/pages/user/MatchDetailPage.vue') },
         { path: 'teams', name: 'teams', component: () => import('@/pages/user/TeamsPage.vue') },
+        { path: 'teams/:id', name: 'team-detail', component: () => import('@/pages/user/TeamDetailPage.vue') },
         { path: 'standings', name: 'standings', component: () => import('@/pages/user/StandingsPage.vue') },
         { path: 'profile', name: 'profile', component: () => import('@/pages/user/ProfilePage.vue') },
         { path: 'login', name: 'login', component: () => import('@/pages/user/LoginPage.vue') },
@@ -21,6 +22,10 @@ const router = createRouter({
       component: () => import('@/layouts/AdminLayout.vue'),
       children: [
         { path: '', name: 'admin', component: () => import('@/pages/admin/AdminDashboard.vue') },
+        { path: 'teams', name: 'admin-teams', component: () => import('@/pages/admin/AdminTeamsPage.vue') },
+        { path: 'matches', name: 'admin-matches', component: () => import('@/pages/admin/AdminMatchesPage.vue') },
+        { path: 'standings', name: 'admin-standings', component: () => import('@/pages/admin/AdminStandingsPage.vue') },
+        { path: 'sync', name: 'admin-sync', component: () => import('@/pages/admin/AdminSyncPage.vue') },
       ],
     },
   ],

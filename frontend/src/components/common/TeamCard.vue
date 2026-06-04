@@ -1,21 +1,31 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import type { Team } from '@/types/team'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 
-defineProps<{ team: Team }>()
+const props = defineProps<{ team: Team }>()
 
+const router = useRouter()
 const fav = useFavoriteStore()
+
+function goDetail() {
+  router.push(`/teams/${props.team.id}`)
+}
 </script>
 
 <template>
-  <article class="card team-card">
+  <article class="card team-card" tabindex="0" @click="goDetail" @keydown.enter="goDetail">
     <button
       class="fav-mini"
       :class="{ active: fav.isTeamFollowed(team.id) }"
-      @click="fav.toggleTeamFollow(team.id)"
+      title="关注球队"
+      @click.stop="fav.toggleTeamFollow(team.id)"
     >
-      {{ fav.isTeamFollowed(team.id) ? '★' : '☆' }}
+      <span
+        class="material-symbols-outlined"
+        :style="fav.isTeamFollowed(team.id) ? 'font-variation-settings: \'FILL\' 1' : ''"
+      >star</span>
     </button>
     <TeamFlag :value="team.flag" :alt="team.name" :fallback="team.code" size="lg" />
     <h3>{{ team.name }}</h3>
@@ -31,6 +41,12 @@ const fav = useFavoriteStore()
   overflow: hidden;
   padding: 15px;
   min-height: 152px;
+  cursor: pointer;
+}
+
+.team-card:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .team-card h3 {
@@ -57,7 +73,11 @@ const fav = useFavoriteStore()
   border-radius: 999px;
   color: var(--weak);
   background: var(--card);
-  font-size: 16px;
+  cursor: pointer;
+}
+
+.fav-mini .material-symbols-outlined {
+  font-size: 18px;
 }
 
 .fav-mini.active {

@@ -12,6 +12,7 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
+const showTestAccount = import.meta.env.DEV
 
 async function handleSubmit() {
   error.value = ''
@@ -57,7 +58,7 @@ async function handleSubmit() {
         {{ isRegister ? '已有账号？' : '没有账号？' }}
         <a href="#" @click.prevent="isRegister = !isRegister">{{ isRegister ? '去登录' : '去注册' }}</a>
       </p>
-      <p class="hint">测试账号：admin@worldcup.local / admin123456</p>
+      <p v-if="showTestAccount" class="hint">测试账号：admin@worldcup.local / admin123456</p>
     </article>
   </div>
 </template>

@@ -24,7 +24,8 @@ request.interceptors.response.use(
         auth.logout()
         router.push('/')
       }
-      return Promise.reject(new Error(data.message || 'request failed'))
+      const message = data.code >= 500 ? '服务暂时不可用，请稍后重试' : data.message || '请求失败'
+      return Promise.reject(new Error(message))
     }
     return data.data
   },
@@ -33,7 +34,10 @@ request.interceptors.response.use(
       const auth = useAuthStore()
       auth.logout()
     }
-    return Promise.reject(err)
+    const message = err.response?.status >= 500 || !err.response
+      ? '服务暂时不可用，请稍后重试'
+      : err.response?.data?.message || '请求失败'
+    return Promise.reject(new Error(message))
   }
 )
 

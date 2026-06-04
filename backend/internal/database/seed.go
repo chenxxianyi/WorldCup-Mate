@@ -1,12 +1,17 @@
 package database
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"worldcup-mate/internal/models"
 	"worldcup-mate/internal/utils"
+
+	"gorm.io/gorm"
 )
 
 func Seed() {
@@ -18,7 +23,29 @@ func Seed() {
 	seedMatches()
 }
 
+func EnsureNoDefaultAdminPassword(appEnv string) error {
+	if !strings.EqualFold(appEnv, "production") {
+		return nil
+	}
+	var admin models.User
+	err := DB.Where("email = ?", "admin@worldcup.local").First(&admin).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	if utils.CheckPassword("admin123456", admin.PasswordHash) {
+		return fmt.Errorf("default admin password is not allowed in production")
+	}
+	return nil
+}
+
 func seedAdmin() {
+	if os.Getenv("APP_ENV") == "production" {
+		log.Println("skip default admin seed in production")
+		return
+	}
 	var count int64
 	DB.Model(&models.User{}).Where("email = ?", "admin@worldcup.local").Count(&count)
 	if count > 0 {

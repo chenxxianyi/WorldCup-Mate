@@ -16,33 +16,69 @@ type CreateReminderInput struct {
 	Channel             string `json:"channel"`
 }
 
+type CreateReminderBatchInput struct {
+	MatchID uint   `json:"match_id" binding:"required"`
+	Minutes []int  `json:"minutes" binding:"required"`
+	Channel string `json:"channel"`
+}
+
 func CreateReminder(userID uint, input CreateReminderInput) (*models.Reminder, error) {
 	match, err := repositories.GetMatchByID(input.MatchID)
 	if err != nil {
 		return nil, fmt.Errorf("match not found")
 	}
 
-	minutes := input.RemindBeforeMinutes
-	if minutes <= 0 {
-		minutes = 30
-	}
-	channel := input.Channel
-	if channel == "" {
-		channel = "site"
-	}
-
-	reminder := &models.Reminder{
-		UserID:              userID,
-		MatchID:             input.MatchID,
-		RemindBeforeMinutes: minutes,
-		RemindAt:            match.KickoffTimeUTC.Add(-time.Duration(minutes) * time.Minute),
-		Channel:             channel,
-		Status:              "pending",
+	reminder, err := buildReminder(userID, match, input.RemindBeforeMinutes, input.Channel)
+	if err != nil {
+		return nil, err
 	}
 	if err := repositories.CreateReminder(reminder); err != nil {
 		return nil, err
 	}
 	return reminder, nil
+}
+
+func CreateReminderBatch(userID uint, input CreateReminderBatchInput) ([]models.Reminder, error) {
+	match, err := repositories.GetMatchByID(input.MatchID)
+	if err != nil {
+		return nil, fmt.Errorf("match not found")
+	}
+
+	existing, err := repositories.GetRemindersByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	existingKeys := map[string]bool{}
+	for _, item := range existing {
+		existingKeys[reminderKey(item.MatchID, item.RemindBeforeMinutes, item.Channel)] = true
+	}
+
+	seenMinutes := map[int]bool{}
+	var created []models.Reminder
+	for _, minutes := range input.Minutes {
+		if seenMinutes[minutes] {
+			continue
+		}
+		seenMinutes[minutes] = true
+
+		reminder, err := buildReminder(userID, match, minutes, input.Channel)
+		if err != nil {
+			return nil, err
+		}
+		key := reminderKey(reminder.MatchID, reminder.RemindBeforeMinutes, reminder.Channel)
+		if existingKeys[key] {
+			continue
+		}
+		if err := repositories.CreateReminder(reminder); err != nil {
+			return nil, err
+		}
+		created = append(created, *reminder)
+	}
+
+	if len(created) == 0 {
+		return nil, fmt.Errorf("reminder already exists")
+	}
+	return created, nil
 }
 
 func GetReminders(userID uint) ([]models.Reminder, error) {
@@ -83,6 +119,39 @@ func DeleteReminder(id uint, userID uint) error {
 		return fmt.Errorf("unauthorized")
 	}
 	return repositories.DeleteReminder(id)
+}
+
+func buildReminder(userID uint, match *models.Match, minutes int, channel string) (*models.Reminder, error) {
+	if match.Status == "live" || match.Status == "finished" || match.Status == "cancelled" {
+		return nil, fmt.Errorf("match already started or ended")
+	}
+	if minutes <= 0 {
+		minutes = 30
+	}
+	if channel == "" {
+		channel = "site"
+	}
+	if channel != "site" && channel != "email" {
+		return nil, fmt.Errorf("unsupported reminder channel")
+	}
+
+	remindAt := match.KickoffTimeUTC.Add(-time.Duration(minutes) * time.Minute)
+	if !remindAt.After(time.Now().UTC()) {
+		return nil, fmt.Errorf("reminder time has passed")
+	}
+
+	return &models.Reminder{
+		UserID:              userID,
+		MatchID:             match.ID,
+		RemindBeforeMinutes: minutes,
+		RemindAt:            remindAt,
+		Channel:             channel,
+		Status:              "pending",
+	}, nil
+}
+
+func reminderKey(matchID uint, minutes int, channel string) string {
+	return fmt.Sprintf("%d:%d:%s", matchID, minutes, channel)
 }
 
 func ScanAndSendReminders() {

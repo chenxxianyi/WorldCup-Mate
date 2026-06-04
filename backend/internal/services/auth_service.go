@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -129,6 +130,12 @@ func ChangePassword(userID uint, input ChangePasswordInput) error {
 }
 
 var allowedExts = map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
+var allowedAvatarMIMEs = map[string]bool{
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/gif":  true,
+	"image/webp": true,
+}
 
 func UploadAvatar(userID uint, file *multipart.FileHeader) (string, error) {
 	ext := strings.ToLower(filepath.Ext(file.Filename))
@@ -151,6 +158,18 @@ func UploadAvatar(userID uint, file *multipart.FileHeader) (string, error) {
 		return "", err
 	}
 	defer src.Close()
+	header := make([]byte, 512)
+	n, err := src.Read(header)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	mimeType := http.DetectContentType(header[:n])
+	if !allowedAvatarMIMEs[mimeType] {
+		return "", errors.New("不支持的文件内容类型，仅支持 jpg/png/gif/webp")
+	}
+	if _, err := src.Seek(0, io.SeekStart); err != nil {
+		return "", err
+	}
 
 	out, err := os.Create(dst)
 	if err != nil {

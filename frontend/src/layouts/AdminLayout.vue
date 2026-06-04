@@ -1,7 +1,21 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
+
+const navItems = [
+  { label: '数据看板', path: '/admin' },
+  { label: '球队管理', path: '/admin/teams' },
+  { label: '比赛管理', path: '/admin/matches' },
+  { label: '积分榜管理', path: '/admin/standings' },
+  { label: '同步管理', path: '/admin/sync' },
+]
+
+function isActive(path: string) {
+  if (path === '/admin') return route.path === '/admin'
+  return route.path.startsWith(path)
+}
 </script>
 
 <template>
@@ -12,10 +26,15 @@ const router = useRouter()
         <span>Admin</span>
       </div>
       <nav class="sidebar-nav">
-        <button class="sidebar-link active" @click="router.push('/admin')">数据看板</button>
-        <button class="sidebar-link" @click="router.push('/admin')">球队管理</button>
-        <button class="sidebar-link" @click="router.push('/admin')">比赛管理</button>
-        <button class="sidebar-link" @click="router.push('/admin')">积分榜管理</button>
+        <button
+          v-for="item in navItems"
+          :key="item.path"
+          class="sidebar-link"
+          :class="{ active: isActive(item.path) }"
+          @click="router.push(item.path)"
+        >
+          {{ item.label }}
+        </button>
       </nav>
       <button class="sidebar-link" @click="router.push('/')">返回前台</button>
     </aside>
@@ -82,6 +101,7 @@ const router = useRouter()
   font-size: 14px;
   font-weight: 600;
   transition: all 180ms ease;
+  cursor: pointer;
 }
 
 .sidebar-link:hover {

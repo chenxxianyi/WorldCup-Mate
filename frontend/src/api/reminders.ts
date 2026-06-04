@@ -4,6 +4,10 @@ export function apiCreateReminder(data: { matchId: number; remindBeforeMinutes?:
   return request.post('/reminders', data) as Promise<any>
 }
 
+export function apiCreateReminderBatch(data: { match_id: number; minutes: number[]; channel?: string }) {
+  return request.post('/reminders/batch', data) as Promise<any[]>
+}
+
 export function apiListReminders() {
   return request.get('/reminders') as Promise<any[]>
 }

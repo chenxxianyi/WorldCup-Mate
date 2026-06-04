@@ -91,6 +91,7 @@ func Setup() *gin.Engine {
 		// Reminders
 		rem := authRequired.Group("/reminders")
 		{
+			rem.POST("/batch", handlers.CreateReminderBatch)
 			rem.POST("", handlers.CreateReminder)
 			rem.GET("", handlers.ListReminders)
 			rem.PUT("/:id", handlers.UpdateReminder)
@@ -101,6 +102,7 @@ func Setup() *gin.Engine {
 		notif := authRequired.Group("/notifications")
 		{
 			notif.GET("", handlers.ListNotifications)
+			notif.GET("/unread-count", handlers.CountUnreadNotifications)
 			notif.PUT("/:id/read", handlers.MarkNotificationRead)
 			notif.PUT("/read-all", handlers.MarkAllNotificationsRead)
 		}

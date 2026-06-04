@@ -20,6 +20,14 @@ func GetNotificationsByUserID(userID uint, page, pageSize int) ([]models.Notific
 	return notifications, total, err
 }
 
+func CountUnreadNotifications(userID uint) (int64, error) {
+	var total int64
+	err := database.DB.Model(&models.Notification{}).
+		Where("user_id = ? AND is_read = ?", userID, false).
+		Count(&total).Error
+	return total, err
+}
+
 func MarkNotificationRead(id uint) error {
 	return database.DB.Model(&models.Notification{}).Where("id = ?", id).Update("is_read", true).Error
 }

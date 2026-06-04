@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import { onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettingStore } from '@/stores/useSettingStore'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useNotificationStore } from '@/stores/useNotificationStore'
+import { useSettingStore } from '@/stores/useSettingStore'
 
 const settings = useSettingStore()
 const auth = useAuthStore()
+const notification = useNotificationStore()
 const router = useRouter()
+
+function refreshUnread() {
+  if (auth.isLoggedIn) notification.fetchUnreadCount()
+}
+
+onMounted(refreshUnread)
+watch(() => auth.isLoggedIn, refreshUnread)
 </script>
 
 <template>
@@ -23,10 +33,12 @@ const router = useRouter()
         <p class="brand-sub">2026 世界杯赛程助手 <span class="version-badge">美加墨</span></p>
       </div>
     </div>
+
     <div class="top-actions">
       <template v-if="auth.isLoggedIn">
         <button class="icon-btn user-btn" title="个人中心" @click="router.push('/profile')">
-          <span>{{ auth.user?.username || '用户' }}</span>
+          <span class="btn-label">{{ auth.user?.username || '用户' }}</span>
+          <span v-if="notification.unreadCount > 0" class="badge-dot">{{ notification.unreadCount > 9 ? '9+' : notification.unreadCount }}</span>
           <template v-if="auth.user?.avatar && auth.user.avatar.startsWith('/')">
             <img class="user-avatar-img" :src="auth.user.avatar" alt="头像" />
           </template>
@@ -35,19 +47,39 @@ const router = useRouter()
           </template>
         </button>
         <button class="icon-btn logout-btn" title="退出登录" @click="auth.logout()">
-          <span>退出</span>
-          <span class="theme-knob logout-knob">⏻</span>
+          <span class="btn-label">退出</span>
+          <span class="action-orb logout-orb" aria-hidden="true">
+            <svg class="action-icon" viewBox="0 0 24 24">
+              <path d="M10 5H6.8A1.8 1.8 0 0 0 5 6.8v10.4A1.8 1.8 0 0 0 6.8 19H10" />
+              <path d="M14 8l4 4-4 4" />
+              <path d="M18 12H9" />
+            </svg>
+          </span>
         </button>
       </template>
       <template v-else>
         <button class="icon-btn login-btn" title="登录" @click="router.push('/login')">
-          <span>登录</span>
-          <span class="theme-knob" style="background: var(--green)">→</span>
+          <span class="btn-label">登录</span>
+          <span class="action-orb login-orb" aria-hidden="true">
+            <svg class="action-icon" viewBox="0 0 24 24">
+              <path d="M14 8l4 4-4 4" />
+              <path d="M18 12H9" />
+              <path d="M10 19h7.2a1.8 1.8 0 0 0 1.8-1.8V6.8A1.8 1.8 0 0 0 17.2 5H10" />
+            </svg>
+          </span>
         </button>
       </template>
-      <button class="icon-btn" title="切换主题" @click="settings.toggleTheme">
-        <span>主题切换</span>
-        <span class="theme-knob">{{ settings.theme === 'dark' ? '☾' : '☀' }}</span>
+      <button class="icon-btn theme-btn" :title="settings.theme === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="settings.toggleTheme">
+        <span class="btn-label">{{ settings.theme === 'dark' ? '深色' : '浅色' }}</span>
+        <span class="action-orb theme-orb" :class="{ dark: settings.theme === 'dark' }" aria-hidden="true">
+          <svg v-if="settings.theme === 'dark'" class="action-icon" viewBox="0 0 24 24">
+            <path d="M19 14.2A7 7 0 0 1 9.8 5a7.5 7.5 0 1 0 9.2 9.2Z" />
+          </svg>
+          <svg v-else class="action-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
+          </svg>
+        </span>
       </button>
     </div>
   </header>
@@ -148,6 +180,7 @@ const router = useRouter()
 }
 
 .icon-btn {
+  position: relative;
   width: auto;
   min-width: 146px;
   height: 44px;
@@ -158,7 +191,7 @@ const router = useRouter()
   padding: 6px 8px 6px 14px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 18px;
-  color: #111111;
+  color: #111;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 8px 18px rgba(30, 30, 40, 0.12);
   backdrop-filter: blur(16px);
@@ -166,6 +199,7 @@ const router = useRouter()
   transition: transform 180ms ease-out, box-shadow 180ms ease-out;
   font-size: 14px;
   font-weight: 850;
+  cursor: pointer;
 }
 
 .icon-btn:hover {
@@ -173,18 +207,24 @@ const router = useRouter()
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.09);
 }
 
-.theme-knob {
-  width: 32px;
-  height: 32px;
+.badge-dot {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
   display: grid;
   place-items: center;
+  padding: 0 5px;
+  border: 2px solid #fff;
   border-radius: 999px;
   color: #fff;
   background: var(--primary);
-  box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.08);
-  font-size: 16px;
+  font-size: 10px;
+  line-height: 1;
 }
 
+.action-orb,
 .user-avatar {
   width: 32px;
   height: 32px;
@@ -192,6 +232,46 @@ const router = useRouter()
   place-items: center;
   border-radius: 999px;
   color: #fff;
+  background: var(--primary);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  font-size: 16px;
+}
+
+.action-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-orb {
+  color: #fff;
+  background:
+    radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.28) 0 18%, transparent 19%),
+    linear-gradient(145deg, var(--green-2), var(--green));
+}
+
+.theme-orb.dark {
+  color: #fff;
+  background:
+    radial-gradient(circle at 68% 34%, rgba(255, 255, 255, 0.22) 0 9%, transparent 10%),
+    linear-gradient(145deg, #00a66b, #004d35);
+}
+
+.login-orb {
+  background: linear-gradient(145deg, var(--green), var(--green-2));
+}
+
+.logout-orb {
+  color: #fff;
+  background: linear-gradient(145deg, #e5484d, #b4232c);
+}
+
+.user-avatar {
   background: linear-gradient(145deg, var(--primary), var(--secondary));
   font-size: 14px;
   font-weight: 800;
@@ -210,12 +290,12 @@ const router = useRouter()
   color: var(--muted);
 }
 
-.logout-knob {
-  background: #dc3545;
-}
-
 .login-btn {
   min-width: 100px;
+}
+
+.theme-btn {
+  min-width: 116px;
 }
 
 [data-theme='dark'] .topbar {
@@ -278,13 +358,21 @@ const router = useRouter()
     font-size: 16px;
   }
 
-  .icon-btn span:first-child {
+  .btn-label {
     display: none;
   }
 
-  .theme-knob {
+  .action-orb,
+  .user-avatar,
+  .user-avatar-img {
     width: 30px;
     height: 30px;
+  }
+
+  .logout-btn,
+  .theme-btn {
+    border-color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.86);
   }
 }
 </style>

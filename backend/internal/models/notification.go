@@ -4,10 +4,10 @@ import "time"
 
 type Notification struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
-	UserID    uint      `gorm:"not null;index" json:"user_id"`
+	UserID    uint      `gorm:"not null;index;index:idx_notifications_user_read,priority:1" json:"user_id"`
 	Title     string    `gorm:"size:200;not null" json:"title"`
 	Content   string    `gorm:"type:text" json:"content"`
 	Type      string    `gorm:"size:30;default:reminder" json:"type"`
-	IsRead    bool      `gorm:"default:false" json:"is_read"`
-	CreatedAt time.Time `json:"created_at"`
+	IsRead    bool      `gorm:"default:false;index:idx_notifications_user_read,priority:2" json:"is_read"`
+	CreatedAt time.Time `gorm:"index" json:"created_at"`
 }

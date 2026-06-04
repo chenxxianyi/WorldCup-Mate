@@ -9,21 +9,21 @@ import (
 type Match struct {
 	ID               uint           `gorm:"primaryKey" json:"id"`
 	MatchNo          int            `gorm:"not null" json:"match_no"`
-	HomeTeamID       uint           `json:"home_team_id"`
-	AwayTeamID       uint           `json:"away_team_id"`
+	HomeTeamID       uint           `gorm:"index" json:"home_team_id"`
+	AwayTeamID       uint           `gorm:"index" json:"away_team_id"`
 	HomeTeam         Team           `gorm:"foreignKey:HomeTeamID" json:"home_team,omitempty"`
 	AwayTeam         Team           `gorm:"foreignKey:AwayTeamID" json:"away_team,omitempty"`
-	GroupID          *uint          `json:"group_id"`
+	GroupID          *uint          `gorm:"index" json:"group_id"`
 	Group            *Group         `gorm:"foreignKey:GroupID" json:"group,omitempty"`
-	Stage            string         `gorm:"size:30;default:group" json:"stage"`
-	StadiumID        uint           `json:"stadium_id"`
+	Stage            string         `gorm:"size:30;default:group;index" json:"stage"`
+	StadiumID        uint           `gorm:"index" json:"stadium_id"`
 	Stadium          Stadium        `gorm:"foreignKey:StadiumID" json:"stadium,omitempty"`
-	CityID           uint           `json:"city_id"`
+	CityID           uint           `gorm:"index" json:"city_id"`
 	City             City           `gorm:"foreignKey:CityID" json:"city,omitempty"`
-	KickoffTimeUTC   time.Time      `gorm:"not null" json:"kickoff_time_utc"`
+	KickoffTimeUTC   time.Time      `gorm:"not null;index" json:"kickoff_time_utc"`
 	HomeScore        *int           `json:"home_score"`
 	AwayScore        *int           `json:"away_score"`
-	Status           string         `gorm:"size:20;default:scheduled" json:"status"`
+	Status           string         `gorm:"size:20;default:scheduled;index" json:"status"`
 	StatusDetail     string         `gorm:"size:30" json:"status_detail"`
 	LiveMinute       *int           `json:"live_minute"`
 	WinnerTeamID     *uint          `json:"winner_team_id"`

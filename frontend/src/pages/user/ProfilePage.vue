@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import NotificationList from '@/components/common/NotificationList.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import { useSettingStore } from '@/stores/useSettingStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
@@ -54,6 +55,8 @@ const followedTeamNames = computed(() =>
 // Avatar upload
 const fileInput = ref<HTMLInputElement>()
 const uploading = ref(false)
+const avatarTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const maxAvatarSize = 5 * 1024 * 1024
 
 function triggerUpload() {
   fileInput.value?.click()
@@ -63,6 +66,16 @@ async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  if (!avatarTypes.includes(file.type)) {
+    alert('仅支持 JPG、PNG、GIF、WebP 图片')
+    input.value = ''
+    return
+  }
+  if (file.size > maxAvatarSize) {
+    alert('头像不能超过 5MB')
+    input.value = ''
+    return
+  }
   uploading.value = true
   try {
     await auth.uploadAvatar(file)
@@ -141,7 +154,7 @@ onMounted(() => {
           <span v-else class="material-symbols-outlined">photo_camera</span>
         </div>
       </div>
-      <input ref="fileInput" type="file" accept="image/*" hidden @change="onFileChange" />
+      <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden @change="onFileChange" />
       <div>
         <h2>{{ auth.user?.nickname || auth.user?.username || '未登录' }}</h2>
         <p>{{ settings.timezone }} · 已关注 {{ fav.followedTeamIds.length }} 支球队</p>
@@ -195,6 +208,8 @@ onMounted(() => {
         </div>
       </div>
     </section>
+
+    <NotificationList />
 
     <!-- Password Modal -->
     <Teleport to="body">

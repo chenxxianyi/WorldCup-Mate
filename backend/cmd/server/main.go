@@ -18,6 +18,9 @@ import (
 
 func main() {
 	cfg := config.Load()
+	if err := cfg.ValidateProduction(); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
 
 	utils.SetJWTSecret(cfg.JWTSecret)
 	utils.InitEmail(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom)
@@ -51,6 +54,9 @@ func main() {
 	)
 	if err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
+	}
+	if err := database.EnsureNoDefaultAdminPassword(cfg.AppEnv); err != nil {
+		log.Fatalf("security validation failed: %v", err)
 	}
 
 	// Seed data

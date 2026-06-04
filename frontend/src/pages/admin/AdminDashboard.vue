@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import StatCard from '@/components/common/StatCard.vue'
+import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 import { useMatchStore } from '@/stores/useMatchStore'
 
 const matchStore = useMatchStore()
+
+onMounted(() => {
+  matchStore.fetchMatches({ page: 1, page_size: 20 })
+})
 </script>
 
 <template>
@@ -21,7 +27,9 @@ const matchStore = useMatchStore()
         <StatCard :value="48" label="球队数量" />
         <StatCard :value="286" label="提醒总数" />
       </div>
+      <SyncStatusBadge mode="card" />
     </article>
+
     <div class="card table-card table-scroll">
       <table class="admin-table">
         <thead>
@@ -49,6 +57,9 @@ const matchStore = useMatchStore()
             <td>
               <button class="pill-btn">编辑</button>
             </td>
+          </tr>
+          <tr v-if="!matchStore.matches.length">
+            <td colspan="6" class="empty-row">暂无比赛数据</td>
           </tr>
         </tbody>
       </table>
@@ -106,7 +117,8 @@ const matchStore = useMatchStore()
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
   text-align: left;
@@ -125,6 +137,11 @@ td {
 
 tr:last-child td {
   border-bottom: 0;
+}
+
+.empty-row {
+  color: var(--muted);
+  text-align: center;
 }
 
 @media (min-width: 768px) {

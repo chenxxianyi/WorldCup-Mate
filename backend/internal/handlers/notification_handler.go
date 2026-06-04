@@ -21,6 +21,16 @@ func ListNotifications(c *gin.Context) {
 	utils.Paginated(c, notifications, total, page, pageSize)
 }
 
+func CountUnreadNotifications(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+	total, err := services.CountUnreadNotifications(userID)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+	utils.Success(c, gin.H{"count": total})
+}
+
 func MarkNotificationRead(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {

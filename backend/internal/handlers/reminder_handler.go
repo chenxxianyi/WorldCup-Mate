@@ -24,6 +24,21 @@ func CreateReminder(c *gin.Context) {
 	utils.Success(c, reminder)
 }
 
+func CreateReminderBatch(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+	var input services.CreateReminderBatchInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.Error(c, 400, err.Error())
+		return
+	}
+	reminders, err := services.CreateReminderBatch(userID, input)
+	if err != nil {
+		utils.Error(c, 400, err.Error())
+		return
+	}
+	utils.Success(c, reminders)
+}
+
 func ListReminders(c *gin.Context) {
 	userID := c.MustGet("user_id").(uint)
 	reminders, err := services.GetReminders(userID)

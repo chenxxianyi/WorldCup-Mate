@@ -8,7 +8,7 @@ export interface ApiTeam {
   fifa_code: string
   flag_url: string
   continent: string
-  group_id: number
+  group_id?: number
   group: { id: number; name: string } | null
   description: string
   coach: string
@@ -21,6 +21,7 @@ export interface Team {
   name_en: string
   code: string
   flag: string
+  group_id?: number
   group_name: string
   continent: Continent
   is_followed?: boolean
@@ -33,6 +34,7 @@ export function normalizeTeam(t: ApiTeam): Team {
     name_en: t.name_en,
     code: t.fifa_code,
     flag: t.flag_url,
+    group_id: t.group_id,
     group_name: t.group?.name || '',
     continent: t.continent as Continent,
   }
