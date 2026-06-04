@@ -41,11 +41,15 @@ func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
 		q = q.Where("group_id = ?", f.GroupID)
 	}
 	if f.GroupName != "" {
-		q = q.Joins("LEFT JOIN groups ON groups.id = matches.group_id").
-			Where("groups.name = ?", f.GroupName)
+		q = q.Joins("LEFT JOIN `groups` ON `groups`.`id` = `matches`.`group_id`").
+			Where("`groups`.`name` = ?", f.GroupName)
 	}
 	if f.Stage != "" {
-		q = q.Where("stage = ?", f.Stage)
+		if f.Stage == "knockout" {
+			q = q.Where("stage NOT IN ?", []string{"group", "group_stage"})
+		} else {
+			q = q.Where("stage = ?", f.Stage)
+		}
 	}
 	if f.CityID > 0 {
 		q = q.Where("city_id = ?", f.CityID)
@@ -54,8 +58,16 @@ func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
 		q = q.Where("status = ?", f.Status)
 	}
 	if f.Keyword != "" {
-		q = q.Joins("LEFT JOIN teams ON teams.id = matches.home_team_id OR teams.id = matches.away_team_id").
-			Where("teams.name LIKE ? OR teams.name_en LIKE ?", "%"+f.Keyword+"%", "%"+f.Keyword+"%")
+		keyword := "%" + f.Keyword + "%"
+		q = q.Joins("LEFT JOIN teams home_team_search ON home_team_search.id = matches.home_team_id").
+			Joins("LEFT JOIN teams away_team_search ON away_team_search.id = matches.away_team_id").
+			Joins("LEFT JOIN cities city_search ON city_search.id = matches.city_id").
+			Joins("LEFT JOIN stadia stadium_search ON stadium_search.id = matches.stadium_id").
+			Where(`home_team_search.name LIKE ? OR home_team_search.name_en LIKE ?
+				OR away_team_search.name LIKE ? OR away_team_search.name_en LIKE ?
+				OR city_search.name LIKE ? OR city_search.name_en LIKE ?
+				OR stadium_search.name LIKE ? OR stadium_search.name_en LIKE ?`,
+				keyword, keyword, keyword, keyword, keyword, keyword, keyword, keyword)
 	}
 
 	q.Count(&total)

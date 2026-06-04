@@ -121,15 +121,16 @@ const isLocalIcon = computed(() => Boolean(localIcon.value && !failed.value))
 
 .team-flag.has-local-icon img {
   object-position: center;
+  border-radius: 50%;
 }
 
 .flag-art {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 66%;
+  height: 66%;
   display: block;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: 50%;
   background: #f8fafc;
 }
 

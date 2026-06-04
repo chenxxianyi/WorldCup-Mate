@@ -9,14 +9,39 @@ const teamStore = useTeamStore()
 const search = ref('')
 const activeFilter = ref('全部')
 
-const filterOptions = ['全部', '亚洲', '欧洲', '南美洲', '北美洲', 'Group A', 'Group B', 'Group C', 'Group D']
+const filterOptions = [
+  '全部',
+  '亚洲',
+  '欧洲',
+  '南美洲',
+  '北美洲',
+  '非洲',
+  '大洋洲',
+  'Group A',
+  'Group B',
+  'Group C',
+  'Group D',
+  'Group E',
+  'Group F',
+  'Group G',
+  'Group H',
+  'Group I',
+  'Group J',
+  'Group K',
+  'Group L',
+]
 
 onMounted(() => {
-  teamStore.fetchTeams()
+  teamStore.fetchTeams({ page_size: 100 })
 })
 
+function isPlaceholderTeam(team: (typeof teamStore.teams)[number]) {
+  const code = team.code.toUpperCase()
+  return code === 'TBD' || code.startsWith('TBD') || team.name === 'TBD' || team.name_en === 'TBD'
+}
+
 const filteredTeams = computed(() => {
-  let list = teamStore.teams
+  let list = teamStore.teams.filter((team) => !isPlaceholderTeam(team))
 
   if (activeFilter.value !== '全部') {
     if (activeFilter.value.startsWith('Group')) {
