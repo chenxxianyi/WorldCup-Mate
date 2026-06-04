@@ -5,7 +5,7 @@ WorldCup Mate 是一个面向 2026 世界杯的赛事助手与赛事数据管理
 ## 当前代码状态
 
 - `frontend/` 是 Vue 3 + TypeScript + Vite 应用，包含用户端页面和后台管理页面。
-- `backend/` 是 Go 1.23 + Gin + GORM API 服务，包含认证、赛事、球队、积分榜、收藏、提醒、通知、后台管理和数据同步模块。
+- `backend/` 是 Go 1.23 + Gin + GORM API 服务，包含认证、赛事、球队、积分榜、收藏、提醒、通知、后台管理、数据同步和 AI 助手模块。
 - 后端启动入口为 `backend/cmd/server/main.go`，启动时会加载配置、连接 MySQL/Redis、执行 `AutoMigrate`、写入 seed 数据、注册路由、挂载 `/uploads` 静态目录，并启动提醒扫描和比赛同步后台任务。
 - 根目录 `README.md` 已按当前代码重新整理；仓库中部分中文 seed 数据和前端提示文案仍存在历史编码异常，需要后续单独修复。
 - 当前 `docker-compose.yml` 不能直接按生产配置启动后端：`APP_ENV=production` 时需要足够强的 `JWT_SECRET` 和 `CORS_ALLOWED_ORIGINS`，同时 MySQL 服务用户与后端 `MYSQL_DSN` 中的 `xxladmin` 用户不一致。
@@ -38,6 +38,7 @@ WorldCup Mate 是一个面向 2026 世界杯的赛事助手与赛事数据管理
 - 积分计算：小组积分重算、最佳第三名计算、晋级状态标记。
 - 数据同步：通过 football-data.org 同步 2026 世界杯比赛、球队、比分和状态。
 - 提醒通知：定时扫描比赛提醒，生成站内通知，并可按配置发送邮件通知。
+- AI 助手：支持 mock 和 OpenAI-compatible Provider，提供比赛看点、今日推荐、小组解读、规则解释、分享文案和登录用户聊天会话。
 
 ## 技术栈
 
@@ -67,6 +68,7 @@ WorldCup Mate 是一个面向 2026 世界杯的赛事助手与赛事数据管理
 │   └── vite.config.ts         # Vite 配置和开发代理
 ├── backend/                   # Go 后端 API
 │   ├── cmd/server/            # 后端启动入口
+│   ├── internal/ai/           # AI Provider、Prompt、Parser、Safety、上下文构建
 │   ├── internal/config/       # 环境变量配置
 │   ├── internal/database/     # MySQL、Redis、seed 数据
 │   ├── internal/handlers/     # Gin handlers
@@ -150,7 +152,18 @@ DATA_SYNC_IDLE_INTERVAL_MINUTES=30
 DATA_SYNC_FULL_INTERVAL_HOURS=6
 FOOTBALL_DATA_API_KEY=
 FOOTBALL_DATA_BASE_URL=https://api.football-data.org/v4
+AI_PROVIDER=mock
+AI_BASE_URL=https://api.openai.com/v1
+AI_API_KEY=
+AI_MODEL=gpt-4o-mini
+AI_TIMEOUT_SECONDS=60
+AI_DAILY_LIMIT_USER=50
+AI_TEMPERATURE=0.7
+AI_MAX_TOKENS=1200
+AI_CACHE_ENABLED=true
 ```
+
+AI 默认使用 `mock`，无需外网或 API Key 即可联调前端页面。切换真实 OpenAI-compatible 服务时设置 `AI_PROVIDER=openai` 或供应商名、`AI_BASE_URL`、`AI_API_KEY` 和 `AI_MODEL`；后端不会把 API Key 写入响应或 usage log。
 
 ### 启动后端
 
@@ -169,7 +182,7 @@ http://localhost:8080
 启动流程：
 
 1. 加载 `.env` 和系统环境变量。
-2. 初始化 JWT、邮件和比赛同步配置。
+2. 初始化 JWT、邮件、比赛同步和 AI Provider 配置。
 3. 连接 MySQL 和 Redis。
 4. 执行 GORM `AutoMigrate`。
 5. 写入基础 seed 数据。
@@ -237,6 +250,15 @@ docker compose up -d --build
 | `DATA_SYNC_FULL_INTERVAL_HOURS` | 全量同步间隔 |
 | `FOOTBALL_DATA_API_KEY` | football-data.org API Key |
 | `FOOTBALL_DATA_BASE_URL` | football-data.org API Base URL |
+| `AI_PROVIDER` | AI Provider，默认 `mock` |
+| `AI_BASE_URL` | OpenAI-compatible API Base URL |
+| `AI_API_KEY` | AI Provider API Key，mock 模式可为空 |
+| `AI_MODEL` | AI 模型名称 |
+| `AI_TIMEOUT_SECONDS` | AI 调用超时时间 |
+| `AI_DAILY_LIMIT_USER` | 登录用户每日 AI 调用上限 |
+| `AI_TEMPERATURE` | AI 生成温度 |
+| `AI_MAX_TOKENS` | AI 单次最大输出 token |
+| `AI_CACHE_ENABLED` | 是否启用 AI 缓存 |
 | `SMTP_HOST` | SMTP 主机 |
 | `SMTP_PORT` | SMTP 端口 |
 | `SMTP_USERNAME` | SMTP 用户名 |
@@ -276,6 +298,11 @@ docker compose up -d --build
 - `GET /api/stadiums`
 - `GET /api/stadiums/:id`
 - `GET /api/sync/status`
+- `POST /api/ai/match-insight`
+- `POST /api/ai/today-recommendations`
+- `POST /api/ai/group-analysis`
+- `POST /api/ai/explain`
+- `POST /api/ai/share-copy`
 
 ### 登录后接口
 
@@ -298,6 +325,10 @@ docker compose up -d --build
 - `GET /api/notifications/unread-count`
 - `PUT /api/notifications/:id/read`
 - `PUT /api/notifications/read-all`
+- `POST /api/ai/chat`
+- `GET /api/ai/conversations`
+- `GET /api/ai/conversations/:id`
+- `DELETE /api/ai/conversations/:id`
 
 ### 管理接口
 
@@ -373,6 +404,10 @@ FOOTBALL_DATA_API_KEY=your_api_key
 | `/teams` | 球队 |
 | `/teams/:id` | 球队详情 |
 | `/standings` | 积分榜 |
+| `/ai` | AI 助手首页 |
+| `/ai/chat` | AI 聊天助手 |
+| `/ai/match/:id` | AI 比赛看点 |
+| `/ai/share-copy` | AI 分享文案 |
 | `/profile` | 我的 |
 | `/login` | 登录/注册 |
 | `/admin` | 后台看板 |

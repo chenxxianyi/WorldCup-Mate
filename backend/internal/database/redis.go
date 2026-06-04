@@ -20,7 +20,9 @@ func InitRedis(addr, password, dbStr string) {
 	})
 
 	if err := RDB.Ping(context.Background()).Err(); err != nil {
-		log.Fatalf("failed to connect redis: %v", err)
+		log.Printf("redis unavailable, continuing without cache: %v", err)
+		RDB = nil
+		return
 	}
 	fmt.Println("Redis connected")
 }

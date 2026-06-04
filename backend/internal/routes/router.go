@@ -68,6 +68,16 @@ func Setup() *gin.Engine {
 	api.GET("/stadiums/:id", handlers.GetStadiumDetail)
 	api.GET("/sync/status", handlers.GetSyncStatus)
 
+	// AI generation (public with optional user context)
+	aiPublic := api.Group("/ai")
+	{
+		aiPublic.POST("/match-insight", handlers.AIMatchInsight)
+		aiPublic.POST("/today-recommendations", handlers.AITodayRecommendations)
+		aiPublic.POST("/group-analysis", handlers.AIGroupAnalysis)
+		aiPublic.POST("/explain", handlers.AIExplain)
+		aiPublic.POST("/share-copy", handlers.AIShareCopy)
+	}
+
 	// Authenticated routes
 	authRequired := api.Group("")
 	authRequired.Use(middleware.JWTAuth())
@@ -105,6 +115,15 @@ func Setup() *gin.Engine {
 			notif.GET("/unread-count", handlers.CountUnreadNotifications)
 			notif.PUT("/:id/read", handlers.MarkNotificationRead)
 			notif.PUT("/read-all", handlers.MarkAllNotificationsRead)
+		}
+
+		// AI chat history
+		aiAuth := authRequired.Group("/ai")
+		{
+			aiAuth.POST("/chat", handlers.AIChat)
+			aiAuth.GET("/conversations", handlers.AIListConversations)
+			aiAuth.GET("/conversations/:id", handlers.AIGetConversation)
+			aiAuth.DELETE("/conversations/:id", handlers.AIDeleteConversation)
 		}
 	}
 

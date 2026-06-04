@@ -29,6 +29,15 @@ type Config struct {
 	SMTPUsername                string
 	SMTPPassword                string
 	SMTPFrom                    string
+	AIProvider                  string
+	AIBaseURL                   string
+	AIAPIKey                    string
+	AIModel                     string
+	AITimeoutSeconds            int
+	AIDailyLimitUser            int
+	AITemperature               float64
+	AIMaxTokens                 int
+	AICacheEnabled              bool
 }
 
 func Load() *Config {
@@ -54,6 +63,15 @@ func Load() *Config {
 		SMTPUsername:                getEnv("SMTP_USERNAME", ""),
 		SMTPPassword:                getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:                    getEnv("SMTP_FROM", ""),
+		AIProvider:                  getEnv("AI_PROVIDER", "mock"),
+		AIBaseURL:                   getEnv("AI_BASE_URL", "https://api.openai.com/v1"),
+		AIAPIKey:                    getEnv("AI_API_KEY", ""),
+		AIModel:                     getEnv("AI_MODEL", "gpt-4o-mini"),
+		AITimeoutSeconds:            getIntEnv("AI_TIMEOUT_SECONDS", 60),
+		AIDailyLimitUser:            getIntEnv("AI_DAILY_LIMIT_USER", 50),
+		AITemperature:               getFloatEnv("AI_TEMPERATURE", 0.7),
+		AIMaxTokens:                 getIntEnv("AI_MAX_TOKENS", 1200),
+		AICacheEnabled:              getBoolEnv("AI_CACHE_ENABLED", true),
 	}
 }
 
@@ -99,6 +117,18 @@ func getIntEnv(key string, fallback int) int {
 	}
 	parsed, err := strconv.Atoi(v)
 	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return parsed
+}
+
+func getFloatEnv(key string, fallback float64) float64 {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseFloat(v, 64)
+	if err != nil {
 		return fallback
 	}
 	return parsed

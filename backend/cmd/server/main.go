@@ -33,6 +33,19 @@ func main() {
 		IdleInterval:        time.Duration(cfg.DataSyncIdleIntervalMinutes) * time.Minute,
 		FullInterval:        time.Duration(cfg.DataSyncFullIntervalHours) * time.Hour,
 	})
+	if err := services.ConfigureAI(services.AIServiceConfig{
+		Provider:       cfg.AIProvider,
+		BaseURL:        cfg.AIBaseURL,
+		APIKey:         cfg.AIAPIKey,
+		Model:          cfg.AIModel,
+		TimeoutSeconds: cfg.AITimeoutSeconds,
+		DailyLimitUser: cfg.AIDailyLimitUser,
+		Temperature:    cfg.AITemperature,
+		MaxTokens:      cfg.AIMaxTokens,
+		CacheEnabled:   cfg.AICacheEnabled,
+	}); err != nil {
+		log.Fatalf("AI config failed: %v", err)
+	}
 
 	database.InitMySQL(cfg.MySQLDSN)
 	database.InitRedis(cfg.RedisAddr, cfg.RedisPass, cfg.RedisDB)
@@ -51,6 +64,10 @@ func main() {
 		&models.GroupStanding{},
 		&models.Notification{},
 		&models.SyncState{},
+		&models.AIConversation{},
+		&models.AIMessage{},
+		&models.AIGeneratedContent{},
+		&models.AIUsageLog{},
 	)
 	if err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
