@@ -25,8 +25,9 @@ type RegisterInput struct {
 }
 
 type LoginInput struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email      string `json:"email" binding:"required,email"`
+	Password   string `json:"password" binding:"required"`
+	RememberMe bool   `json:"remember_me"`
 }
 
 type UpdateProfileInput struct {
@@ -74,7 +75,11 @@ func Login(input LoginInput) (string, *models.User, error) {
 		return "", nil, errors.New("invalid email or password")
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Role)
+	tokenTTL := 72 * time.Hour
+	if input.RememberMe {
+		tokenTTL = 30 * 24 * time.Hour
+	}
+	token, err := utils.GenerateTokenWithTTL(user.ID, user.Role, tokenTTL)
 	if err != nil {
 		return "", nil, err
 	}

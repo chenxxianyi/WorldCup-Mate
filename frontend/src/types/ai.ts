@@ -107,6 +107,13 @@ export interface AIChatResponse {
   message: AIChatMessage
 }
 
+export interface AIChatStreamEvent {
+  type: 'start' | 'delta' | 'done' | 'error'
+  conversation_id?: number
+  delta?: string
+  message?: AIChatMessage
+}
+
 export interface AIConversation {
   id: number
   title: string

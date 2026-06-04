@@ -34,6 +34,19 @@ type Provider interface {
 	Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error)
 }
 
+type StreamDelta struct {
+	Content  string
+	Done     bool
+	Response *ChatResponse
+}
+
+type StreamCallback func(delta StreamDelta) error
+
+type StreamingProvider interface {
+	Provider
+	ChatStream(ctx context.Context, req ChatRequest, cb StreamCallback) (*ChatResponse, error)
+}
+
 type ProviderConfig struct {
 	Provider       string
 	BaseURL        string
@@ -79,5 +92,9 @@ func (p *UnavailableProvider) Name() string {
 }
 
 func (p *UnavailableProvider) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
+	return nil, fmt.Errorf("AI provider is not configured: %s", p.reason)
+}
+
+func (p *UnavailableProvider) ChatStream(ctx context.Context, req ChatRequest, cb StreamCallback) (*ChatResponse, error) {
 	return nil, fmt.Errorf("AI provider is not configured: %s", p.reason)
 }

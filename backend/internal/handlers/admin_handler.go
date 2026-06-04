@@ -17,6 +17,7 @@ func AdminLogin(c *gin.Context) {
 		utils.Error(c, 400, err.Error())
 		return
 	}
+	input.RememberMe = false
 	token, user, err := services.Login(input)
 	if err != nil {
 		utils.Error(c, 401, err.Error())

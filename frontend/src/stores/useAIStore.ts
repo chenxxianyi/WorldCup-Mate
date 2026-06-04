@@ -8,7 +8,7 @@ import {
   apiGenerateTodayRecommendations,
   apiGetAIConversation,
   apiListAIConversations,
-  apiSendAIChat,
+  apiSendAIChatStream,
 } from '@/api/ai'
 import type {
   AIChatMessage,
@@ -28,6 +28,8 @@ function friendlyError(err: unknown) {
     ? err.message
     : 'AI 服务暂时不可用，请稍后再试'
 }
+
+const ACTIVE_CONVERSATION_KEY = 'wm-ai-active-conversation'
 
 export const useAIStore = defineStore('ai', () => {
   const currentMatchInsight = ref<MatchInsight | null>(null)
@@ -53,6 +55,14 @@ export const useAIStore = defineStore('ai', () => {
   const shareCopyError = ref('')
 
   const hasMatchInsight = computed(() => !!currentMatchInsight.value)
+
+  function rememberActiveConversation(id?: number | null) {
+    if (id && id > 0) {
+      localStorage.setItem(ACTIVE_CONVERSATION_KEY, String(id))
+    } else {
+      localStorage.removeItem(ACTIVE_CONVERSATION_KEY)
+    }
+  }
 
   async function generateMatchInsight(matchId: number, forceRefresh = false) {
     matchInsightLoading.value = true
@@ -147,10 +157,50 @@ export const useAIStore = defineStore('ai', () => {
 
     chatLoading.value = true
     chatError.value = ''
-    chatMessages.value = [...chatMessages.value, { role: 'user', content: text }]
+    chatMessages.value = [
+      ...chatMessages.value,
+      { role: 'user', content: text },
+      { role: 'assistant', content: '' },
+    ]
+    const assistantIndex = chatMessages.value.length - 1
+    let conversationId = payload.conversation_id || activeConversation.value?.id || 0
+
+    function updateAssistant(updater: (message: AIChatMessage) => AIChatMessage) {
+      const next = [...chatMessages.value]
+      const current = next[assistantIndex]
+      if (!current || current.role !== 'assistant') return
+      next[assistantIndex] = updater(current)
+      chatMessages.value = next
+    }
+
     try {
-      const res = await apiSendAIChat({ ...payload, message: text })
-      chatMessages.value = [...chatMessages.value, res.message]
+      const res = await apiSendAIChatStream({ ...payload, message: text }, (event) => {
+        if (event.type === 'start' && event.conversation_id) {
+          conversationId = event.conversation_id
+          rememberActiveConversation(conversationId)
+          if (!activeConversation.value || activeConversation.value.id !== conversationId) {
+            activeConversation.value = {
+              id: conversationId,
+              title: text.slice(0, 24),
+              context_type: payload.context_type || 'general',
+              context_id: payload.context_id,
+              last_message: '',
+            }
+          }
+        }
+
+        if (event.type === 'delta' && event.delta) {
+          updateAssistant((message) => ({ ...message, content: message.content + event.delta }))
+        }
+
+        if (event.type === 'done' && event.message) {
+          updateAssistant(() => event.message as AIChatMessage)
+          if (activeConversation.value && event.conversation_id) {
+            activeConversation.value.last_message = event.message.content
+          }
+        }
+      })
+      updateAssistant(() => res.message)
       if (!activeConversation.value || activeConversation.value.id !== res.conversation_id) {
         activeConversation.value = {
           id: res.conversation_id,
@@ -159,10 +209,18 @@ export const useAIStore = defineStore('ai', () => {
           context_id: payload.context_id,
           last_message: res.message.content,
         }
+      } else {
+        activeConversation.value.last_message = res.message.content
       }
+      rememberActiveConversation(res.conversation_id)
       return res
     } catch (err) {
       chatError.value = friendlyError(err)
+      updateAssistant((message) => (
+        message.content
+          ? message
+          : { ...message, content: 'AI 回复失败，请稍后再试。' }
+      ))
       throw err
     } finally {
       chatLoading.value = false
@@ -177,7 +235,30 @@ export const useAIStore = defineStore('ai', () => {
   async function fetchConversation(id: number) {
     activeConversation.value = await apiGetAIConversation(id)
     chatMessages.value = activeConversation.value.messages || []
+    rememberActiveConversation(activeConversation.value.id)
     return activeConversation.value
+  }
+
+  async function restoreLatestConversation() {
+    if (chatMessages.value.length > 0 || chatLoading.value) {
+      return activeConversation.value
+    }
+
+    chatError.value = ''
+    const savedID = Number(localStorage.getItem(ACTIVE_CONVERSATION_KEY) || 0)
+    if (savedID > 0) {
+      try {
+        return await fetchConversation(savedID)
+      } catch {
+        rememberActiveConversation(null)
+      }
+    }
+
+    const list = await fetchConversations()
+    if (list.length === 0) {
+      return null
+    }
+    return fetchConversation(list[0].id)
   }
 
   async function deleteConversation(id: number) {
@@ -186,6 +267,7 @@ export const useAIStore = defineStore('ai', () => {
     if (activeConversation.value?.id === id) {
       activeConversation.value = null
       chatMessages.value = []
+      rememberActiveConversation(null)
     }
   }
 
@@ -193,6 +275,7 @@ export const useAIStore = defineStore('ai', () => {
     activeConversation.value = null
     chatMessages.value = []
     chatError.value = ''
+    rememberActiveConversation(null)
   }
 
   return {
@@ -223,6 +306,7 @@ export const useAIStore = defineStore('ai', () => {
     sendChatMessage,
     fetchConversations,
     fetchConversation,
+    restoreLatestConversation,
     deleteConversation,
     startNewConversation,
   }

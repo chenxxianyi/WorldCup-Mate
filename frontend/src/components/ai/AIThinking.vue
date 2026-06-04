@@ -1,8 +1,9 @@
 <template>
-  <div class="thinking">
-    <span></span>
-    <span></span>
-    <span></span>
+  <div class="thinking" role="status" aria-label="AI 正在回复">
+    <span class="dot blue"></span>
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
   </div>
 </template>
 
@@ -10,36 +11,58 @@
 .thinking {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  min-height: 20px;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 0;
 }
 
-.thinking span {
-  width: 6px;
-  height: 6px;
+.dot {
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
-  background: var(--primary);
-  opacity: 0.35;
-  animation: bounce 1.1s infinite ease-in-out;
+  opacity: 0.36;
+  transform: scale(0.72);
+  animation: gemini-pulse 1.35s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.thinking span:nth-child(2) {
-  animation-delay: 0.15s;
+.dot.blue {
+  background: #4285f4;
 }
 
-.thinking span:nth-child(3) {
-  animation-delay: 0.3s;
+.dot.red {
+  background: #ea4335;
+  animation-delay: 0.14s;
 }
 
-@keyframes bounce {
-  0%, 80%, 100% {
-    transform: translateY(0);
-    opacity: 0.35;
+.dot.yellow {
+  background: #fbbc04;
+  animation-delay: 0.28s;
+}
+
+.dot.green {
+  background: #34a853;
+  animation-delay: 0.42s;
+}
+
+@keyframes gemini-pulse {
+  0%,
+  70%,
+  100% {
+    opacity: 0.32;
+    transform: translateY(0) scale(0.72);
   }
 
-  40% {
-    transform: translateY(-5px);
+  28% {
     opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none;
+    opacity: 0.8;
+    transform: none;
   }
 }
 </style>

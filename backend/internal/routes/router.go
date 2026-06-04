@@ -121,6 +121,7 @@ func Setup() *gin.Engine {
 		aiAuth := authRequired.Group("/ai")
 		{
 			aiAuth.POST("/chat", handlers.AIChat)
+			aiAuth.POST("/chat/stream", handlers.AIChatStream)
 			aiAuth.GET("/conversations", handlers.AIListConversations)
 			aiAuth.GET("/conversations/:id", handlers.AIGetConversation)
 			aiAuth.DELETE("/conversations/:id", handlers.AIDeleteConversation)

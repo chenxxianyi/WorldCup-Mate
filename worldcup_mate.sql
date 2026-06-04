@@ -1,21 +1,164 @@
 /*
- Navicat Premium Dump SQL
+ Navicat Premium Data Transfer
 
- Source Server         : dev
+ Source Server         : localhost_3306
  Source Server Type    : MySQL
- Source Server Version : 80032 (8.0.32)
- Source Host           : localhost:3310
+ Source Server Version : 80039 (8.0.39)
+ Source Host           : localhost:3306
  Source Schema         : worldcup_mate
 
  Target Server Type    : MySQL
- Target Server Version : 80032 (8.0.32)
+ Target Server Version : 80039 (8.0.39)
  File Encoding         : 65001
 
- Date: 04/06/2026 15:31:36
+ Date: 04/06/2026 22:41:42
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for ai_conversations
+-- ----------------------------
+DROP TABLE IF EXISTS `ai_conversations`;
+CREATE TABLE `ai_conversations`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `context_type` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'general',
+  `context_id` bigint UNSIGNED NULL DEFAULT 0,
+  `last_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `created_at` datetime(3) NULL DEFAULT NULL,
+  `updated_at` datetime(3) NULL DEFAULT NULL,
+  `deleted_at` datetime(3) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_ai_conversations_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_ai_conversations_context_type`(`context_type` ASC) USING BTREE,
+  INDEX `idx_ai_conversations_context_id`(`context_id` ASC) USING BTREE,
+  INDEX `idx_ai_conversations_deleted_at`(`deleted_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ai_conversations
+-- ----------------------------
+INSERT INTO `ai_conversations` VALUES (1, 2, '我想看葡萄牙队的比赛，葡萄牙的26人大名单都有谁', 'general', 0, '以下是葡萄牙队参加2022年卡塔尔世界杯的26人大名单（若你问的是其他赛事，请补充说明）：\n\n- **门将**：迪奥戈·科斯塔、若泽·萨、帕特里西奥  \n- **后卫**：坎塞洛、达洛特、佩佩、鲁本·迪亚斯、安东尼奥·席尔瓦、丹尼洛·佩雷拉、努诺·门德斯、格雷罗  \n- **中场**：B席、B费、鲁本·内维斯、帕利尼亚、若昂·马里奥、奥塔维奥、维蒂尼亚、马特乌斯·努内斯  \n- **前锋**：C罗、菲利克斯、莱奥、拉莫斯、奥尔塔、若塔（因伤未入选，实际由里卡多·奥尔塔替代）\n\n注意：若塔因伤最终未入选，名单以官方最终提交为准。', '2026-06-04 20:23:01.575', '2026-06-04 20:23:05.835', NULL);
+INSERT INTO `ai_conversations` VALUES (2, 2, 'c罗是哪个球队的？', 'general', 0, 'C罗目前效力于沙特阿拉伯的利雅得胜利（Al Nassr）俱乐部。\n\n- 他于2023年1月加盟该队，签约至2025年。\n- 此前他曾效力于葡萄牙体育、曼联、皇马、尤文图斯等欧洲豪门。\n- 他是葡萄牙国家队的队长和历史最佳射手。', '2026-06-04 20:53:59.668', '2026-06-04 20:54:01.783', NULL);
+INSERT INTO `ai_conversations` VALUES (3, 2, 'c罗是哪个球队的？', 'general', 0, '梅西是阿根廷国家队的球员。  \n- 他是阿根廷队史最佳射手、世界杯冠军核心（2022年卡塔尔世界杯夺冠，并获金球奖），也是世界杯历史上出场次数最多的球员之一。  \n- 关于2026美加墨世界杯：梅西尚未正式宣布是否参赛，但通常认为他可能最后一次出战（届时39岁），需以官方名单为准。  \n- 俱乐部方面，目前他效力于美国职业大联盟的迈阿密国际。', '2026-06-04 20:58:43.062', '2026-06-04 20:59:10.464', NULL);
+INSERT INTO `ai_conversations` VALUES (4, 2, '给我解释一下越位，别太专业。', 'general', 0, '越位是足球里最常见也最容易困惑的规则。简单说：**当你的队友传球给你的瞬间，你比对方倒数第二名防守球员更靠近对方底线，并且你在拿球或干扰比赛，就会被判越位。**\n\n下面用5条帮你快速理解：\n\n1. **只看传球那一刻的位置**，不是看接球时。哪怕你跑得快，接球时已经越位，只要传球时你位置不对，就算越位。\n2. **“倒数第二名防守球员”**是拿尺子的标准。守门员通常是最后一人，所以比较对象往往是对方最后一个后卫。\n3. **在本方半场不越位**。只要你站在自己这一半球场，随便怎么接球都不犯规。\n4. **没有参与进攻不越位**。比如你站在越位位置但没碰球、没挡住门将视线、也没干扰防守队员，裁判可能不吹。\n5. **目的就是防止“偷鸡”**。如果允许进攻球员一直站在对方门将旁边等球，比赛会变得很无聊，所以用越位规则让进攻必须从后排发起。\n\n世界杯里，现在有VAR（视频助理裁判），越位判罚会更精确，哪怕手指甲超了一点也可能被吹掉。不过对于新球迷，只要记住“传球瞬间，你比对方最后一个后卫更靠近球门，就别急着跑”就够了。', '2026-06-04 21:13:20.728', '2026-06-04 21:13:28.591', NULL);
+INSERT INTO `ai_conversations` VALUES (5, 2, '什么是最佳第三名出线规则？', 'general', 0, '**最佳第三名出线规则**，是指在世界杯小组赛结束后，所有小组排名第三的球队中，选出成绩最好的若干支球队进入淘汰赛。  \n在 **2026 美加墨世界杯**（48 队，12 组×4 队）中，**每组前两名直接晋级**（共 24 队），**再取 8 个成绩最好的小组第三**，凑成 32 强淘汰赛。\n\n### 关键说明\n- **比较顺序**：先看**积分**（胜 3 分，平 1 分，负 0 分）；积分相同则看**净胜球**；再相同则看**进球数**；若仍相同，则看**公平竞赛积分**（红黄牌扣分）；最后**抽签**。\n- **12 选 8**：所有 12 个小组的第三名按上述标准排序，前 8 名晋级。这意味着即使小组第三，也有可能出线（通常在 4 分或 3 分且净胜球占优时）。\n- **历史背景**：此前世界杯（如 1986、1990、1994 等）也曾用过类似规则（当时 6 组第三取前 4），2026 是首次在 48 队赛制下大范围使用。\n- **对观赛的影响**：建议关注每组第三名的实时积分和净胜球，避免因最后一轮“默契球”导致意外淘汰或晋级。\n\n**注意**：具体指标和晋级名额以国际足联官方最新公布的规则为准，若出现极端罕见情况（如多队同分且数据相同），可能需要抽签决定。', '2026-06-04 22:11:50.247', '2026-06-04 22:11:59.311', NULL);
+INSERT INTO `ai_conversations` VALUES (6, 2, '今晚如果只看一场，应该看哪场？', 'general', 0, '你好！我是 WorldCup Mate，专为 2026 美加墨世界杯服务的看球助手。如果你想知道：\n\n- **法国队**的赛程、阵容预测、历史战绩（我特别关注法国队，是你喜欢的队伍）\n- **世界杯分组与晋级规则**（小组赛怎么出线、淘汰赛对阵）\n- **观赛建议**（哪些比赛值得熬夜、如何看比赛更快熟悉强队）\n- **国家队球星的世界杯表现**（比如姆巴佩、格列兹曼在法国队的角色）\n\n只需告诉我你的问题，我会先给出结论，再用3-5条简洁理由帮你快速了解。如果是当下的俱乐部新闻，我会先按世界杯/国家队语境理解，再补充必要背景。现在，你可以问我任何关于世界杯（尤其是法国队）的问题了！', '2026-06-04 22:12:09.488', '2026-06-04 22:16:44.622', NULL);
+
+-- ----------------------------
+-- Table structure for ai_generated_contents
+-- ----------------------------
+DROP TABLE IF EXISTS `ai_generated_contents`;
+CREATE TABLE `ai_generated_contents`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` bigint UNSIGNED NULL DEFAULT NULL,
+  `type` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `target_type` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `target_id` bigint UNSIGNED NULL DEFAULT 0,
+  `content_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `content_markdown` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `provider` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `model` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `cache_key` varchar(180) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `created_at` datetime(3) NULL DEFAULT NULL,
+  `updated_at` datetime(3) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_ai_generated_contents_cache_key`(`cache_key` ASC) USING BTREE,
+  INDEX `idx_ai_generated_contents_target_id`(`target_id` ASC) USING BTREE,
+  INDEX `idx_ai_generated_contents_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_ai_generated_contents_type`(`type` ASC) USING BTREE,
+  INDEX `idx_ai_generated_contents_target_type`(`target_type` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ai_generated_contents
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for ai_messages
+-- ----------------------------
+DROP TABLE IF EXISTS `ai_messages`;
+CREATE TABLE `ai_messages`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `conversation_id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `role` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `provider` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `model` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `prompt_tokens` bigint NULL DEFAULT 0,
+  `completion_tokens` bigint NULL DEFAULT 0,
+  `total_tokens` bigint NULL DEFAULT 0,
+  `created_at` datetime(3) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_ai_messages_conversation_id`(`conversation_id` ASC) USING BTREE,
+  INDEX `idx_ai_messages_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_ai_messages_role`(`role` ASC) USING BTREE,
+  CONSTRAINT `fk_ai_conversations_messages` FOREIGN KEY (`conversation_id`) REFERENCES `ai_conversations` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ai_messages
+-- ----------------------------
+INSERT INTO `ai_messages` VALUES (1, 1, 2, 'user', '我想看葡萄牙队的比赛，葡萄牙的26人大名单都有谁？', '', '', 0, 0, 0, '2026-06-04 20:23:01.584');
+INSERT INTO `ai_messages` VALUES (2, 1, 2, 'assistant', '以下是葡萄牙队参加2022年卡塔尔世界杯的26人大名单（若你问的是其他赛事，请补充说明）：\n\n- **门将**：迪奥戈·科斯塔、若泽·萨、帕特里西奥  \n- **后卫**：坎塞洛、达洛特、佩佩、鲁本·迪亚斯、安东尼奥·席尔瓦、丹尼洛·佩雷拉、努诺·门德斯、格雷罗  \n- **中场**：B席、B费、鲁本·内维斯、帕利尼亚、若昂·马里奥、奥塔维奥、维蒂尼亚、马特乌斯·努内斯  \n- **前锋**：C罗、菲利克斯、莱奥、拉莫斯、奥尔塔、若塔（因伤未入选，实际由里卡多·奥尔塔替代）\n\n注意：若塔因伤最终未入选，名单以官方最终提交为准。', 'deepseek', 'deepseek-v4-flash', 137, 345, 482, '2026-06-04 20:23:05.827');
+INSERT INTO `ai_messages` VALUES (3, 2, 2, 'user', 'c罗是哪个球队的？', '', '', 0, 0, 0, '2026-06-04 20:53:59.675');
+INSERT INTO `ai_messages` VALUES (4, 2, 2, 'assistant', 'C罗目前效力于沙特阿拉伯的利雅得胜利（Al Nassr）俱乐部。\n\n- 他于2023年1月加盟该队，签约至2025年。\n- 此前他曾效力于葡萄牙体育、曼联、皇马、尤文图斯等欧洲豪门。\n- 他是葡萄牙国家队的队长和历史最佳射手。', 'deepseek', 'deepseek-v4-flash', 130, 128, 258, '2026-06-04 20:54:01.764');
+INSERT INTO `ai_messages` VALUES (5, 3, 2, 'user', 'c罗是哪个球队的？', '', '', 0, 0, 0, '2026-06-04 20:58:43.081');
+INSERT INTO `ai_messages` VALUES (6, 3, 2, 'assistant', 'C罗是葡萄牙国家队的球员。  \n- 他是葡萄牙队史最佳射手、出场纪录保持者，也是世界杯历史上进球最多的球员之一（2022年卡塔尔世界杯小组赛进球后，成为首位连续五届世界杯进球的球员）。  \n- 葡萄牙已晋级2026美加墨世界杯（通过欧洲区预选赛），C罗届时若入选名单将开启第六次世界杯之旅。  \n- 俱乐部方面，他目前效力于沙特联赛的利雅得胜利（Al-Nassr）。', 'deepseek', 'deepseek-v4-flash', 299, 321, 620, '2026-06-04 20:58:46.958');
+INSERT INTO `ai_messages` VALUES (7, 3, 2, 'user', '梅西是哪个球队的？', '', '', 0, 0, 0, '2026-06-04 20:59:05.960');
+INSERT INTO `ai_messages` VALUES (8, 3, 2, 'assistant', '梅西是阿根廷国家队的球员。  \n- 他是阿根廷队史最佳射手、世界杯冠军核心（2022年卡塔尔世界杯夺冠，并获金球奖），也是世界杯历史上出场次数最多的球员之一。  \n- 关于2026美加墨世界杯：梅西尚未正式宣布是否参赛，但通常认为他可能最后一次出战（届时39岁），需以官方名单为准。  \n- 俱乐部方面，目前他效力于美国职业大联盟的迈阿密国际。', 'deepseek', 'deepseek-v4-flash', 417, 316, 733, '2026-06-04 20:59:10.457');
+INSERT INTO `ai_messages` VALUES (9, 4, 2, 'user', '给我解释一下越位，别太专业。', '', '', 0, 0, 0, '2026-06-04 21:13:20.740');
+INSERT INTO `ai_messages` VALUES (10, 4, 2, 'assistant', '越位是足球里最常见也最容易困惑的规则。简单说：**当你的队友传球给你的瞬间，你比对方倒数第二名防守球员更靠近对方底线，并且你在拿球或干扰比赛，就会被判越位。**\n\n下面用5条帮你快速理解：\n\n1. **只看传球那一刻的位置**，不是看接球时。哪怕你跑得快，接球时已经越位，只要传球时你位置不对，就算越位。\n2. **“倒数第二名防守球员”**是拿尺子的标准。守门员通常是最后一人，所以比较对象往往是对方最后一个后卫。\n3. **在本方半场不越位**。只要你站在自己这一半球场，随便怎么接球都不犯规。\n4. **没有参与进攻不越位**。比如你站在越位位置但没碰球、没挡住门将视线、也没干扰防守队员，裁判可能不吹。\n5. **目的就是防止“偷鸡”**。如果允许进攻球员一直站在对方门将旁边等球，比赛会变得很无聊，所以用越位规则让进攻必须从后排发起。\n\n世界杯里，现在有VAR（视频助理裁判），越位判罚会更精确，哪怕手指甲超了一点也可能被吹掉。不过对于新球迷，只要记住“传球瞬间，你比对方最后一个后卫更靠近球门，就别急着跑”就够了。', 'deepseek', 'deepseek-v4-flash', 302, 503, 805, '2026-06-04 21:13:28.572');
+INSERT INTO `ai_messages` VALUES (11, 4, 2, 'user', '今年的葡萄牙队夺冠的几率大吗？', '', '', 0, 0, 0, '2026-06-04 22:06:39.423');
+INSERT INTO `ai_messages` VALUES (12, 5, 2, 'user', '什么是最佳第三名出线规则？', '', '', 0, 0, 0, '2026-06-04 22:11:50.265');
+INSERT INTO `ai_messages` VALUES (13, 5, 2, 'assistant', '**最佳第三名出线规则**，是指在世界杯小组赛结束后，所有小组排名第三的球队中，选出成绩最好的若干支球队进入淘汰赛。  \n在 **2026 美加墨世界杯**（48 队，12 组×4 队）中，**每组前两名直接晋级**（共 24 队），**再取 8 个成绩最好的小组第三**，凑成 32 强淘汰赛。\n\n### 关键说明\n- **比较顺序**：先看**积分**（胜 3 分，平 1 分，负 0 分）；积分相同则看**净胜球**；再相同则看**进球数**；若仍相同，则看**公平竞赛积分**（红黄牌扣分）；最后**抽签**。\n- **12 选 8**：所有 12 个小组的第三名按上述标准排序，前 8 名晋级。这意味着即使小组第三，也有可能出线（通常在 4 分或 3 分且净胜球占优时）。\n- **历史背景**：此前世界杯（如 1986、1990、1994 等）也曾用过类似规则（当时 6 组第三取前 4），2026 是首次在 48 队赛制下大范围使用。\n- **对观赛的影响**：建议关注每组第三名的实时积分和净胜球，避免因最后一轮“默契球”导致意外淘汰或晋级。\n\n**注意**：具体指标和晋级名额以国际足联官方最新公布的规则为准，若出现极端罕见情况（如多队同分且数据相同），可能需要抽签决定。', 'deepseek', 'deepseek-v4-flash', 301, 715, 1016, '2026-06-04 22:11:59.305');
+INSERT INTO `ai_messages` VALUES (14, 6, 2, 'user', '今晚如果只看一场，应该看哪场？', '', '', 0, 0, 0, '2026-06-04 22:12:09.506');
+INSERT INTO `ai_messages` VALUES (15, 6, 2, 'assistant', '目前没有“今晚”的世界杯比赛——2026美加墨世界杯的正赛要到2026年6月才开幕，赛程尚未正式公布。如果你指的是**今晚的世界杯预选赛**或**国家队友谊赛**，请提供具体日期或对阵信息，我可以帮你判断哪场值得看。\n\n按照世界杯观赛的通用原则，推荐你优先关注：\n1. **强强对话**（如法国、巴西、阿根廷等热门球队相遇）。\n2. **出线生死战**（预选赛或小组赛最后轮次）。\n3. **主场球队的比赛**（有氛围加成）。\n\n如果你喜欢法国队，等世界杯正赛开始后，法国的小组首战通常是重中之重，届时我会第一时间推荐给你。', 'deepseek', 'deepseek-v4-flash', 302, 585, 887, '2026-06-04 22:12:17.950');
+INSERT INTO `ai_messages` VALUES (16, 6, 2, 'user', '你好，你可以为我做些什么？', '', '', 0, 0, 0, '2026-06-04 22:16:40.267');
+INSERT INTO `ai_messages` VALUES (17, 6, 2, 'assistant', '你好！我是 WorldCup Mate，专为 2026 美加墨世界杯服务的看球助手。如果你想知道：\n\n- **法国队**的赛程、阵容预测、历史战绩（我特别关注法国队，是你喜欢的队伍）\n- **世界杯分组与晋级规则**（小组赛怎么出线、淘汰赛对阵）\n- **观赛建议**（哪些比赛值得熬夜、如何看比赛更快熟悉强队）\n- **国家队球星的世界杯表现**（比如姆巴佩、格列兹曼在法国队的角色）\n\n只需告诉我你的问题，我会先给出结论，再用3-5条简洁理由帮你快速了解。如果是当下的俱乐部新闻，我会先按世界杯/国家队语境理解，再补充必要背景。现在，你可以问我任何关于世界杯（尤其是法国队）的问题了！', 'deepseek', 'deepseek-v4-flash', 467, 261, 728, '2026-06-04 22:16:44.614');
+
+-- ----------------------------
+-- Table structure for ai_usage_logs
+-- ----------------------------
+DROP TABLE IF EXISTS `ai_usage_logs`;
+CREATE TABLE `ai_usage_logs`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` bigint UNSIGNED NULL DEFAULT NULL,
+  `ip` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `endpoint` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `provider` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `model` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `prompt_tokens` bigint NULL DEFAULT 0,
+  `completion_tokens` bigint NULL DEFAULT 0,
+  `total_tokens` bigint NULL DEFAULT 0,
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `latency_ms` bigint NULL DEFAULT 0,
+  `created_at` datetime(3) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_ai_usage_logs_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_ai_usage_logs_ip`(`ip` ASC) USING BTREE,
+  INDEX `idx_ai_usage_logs_endpoint`(`endpoint` ASC) USING BTREE,
+  INDEX `idx_ai_usage_logs_status`(`status` ASC) USING BTREE,
+  INDEX `idx_ai_usage_logs_created_at`(`created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ai_usage_logs
+-- ----------------------------
+INSERT INTO `ai_usage_logs` VALUES (1, 2, '::1', 'chat', 'deepseek', 'deepseek-v4-flash', 137, 345, 482, 'success', '', 4231, '2026-06-04 20:23:05.841');
+INSERT INTO `ai_usage_logs` VALUES (2, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 130, 128, 258, 'success', '', 2078, '2026-06-04 20:54:01.793');
+INSERT INTO `ai_usage_logs` VALUES (3, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 299, 321, 620, 'success', '', 3866, '2026-06-04 20:58:46.981');
+INSERT INTO `ai_usage_logs` VALUES (4, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 417, 316, 733, 'success', '', 4475, '2026-06-04 20:59:10.471');
+INSERT INTO `ai_usage_logs` VALUES (5, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 302, 503, 805, 'success', '', 7821, '2026-06-04 21:13:28.598');
+INSERT INTO `ai_usage_logs` VALUES (6, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 602, 614, 1216, 'failed', 'AI output contains unsupported content', 8836, '2026-06-04 22:06:48.280');
+INSERT INTO `ai_usage_logs` VALUES (7, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 301, 715, 1016, 'success', '', 9030, '2026-06-04 22:11:59.319');
+INSERT INTO `ai_usage_logs` VALUES (8, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 302, 585, 887, 'success', '', 8435, '2026-06-04 22:12:17.975');
+INSERT INTO `ai_usage_logs` VALUES (9, 2, '::1', 'chat_stream', 'deepseek', 'deepseek-v4-flash', 467, 261, 728, 'success', '', 4336, '2026-06-04 22:16:44.629');
 
 -- ----------------------------
 -- Table structure for cities
@@ -34,29 +177,29 @@ CREATE TABLE `cities`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_cities_deleted_at`(`deleted_at` ASC) USING BTREE,
   INDEX `idx_cities_name_en`(`name_en` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of cities
 -- ----------------------------
-INSERT INTO `cities` VALUES (1, '墨西哥城', 'Mexico City', 'Mexico', 'America/Mexico_City', '', '2026-06-02 11:53:03.304', '2026-06-04 15:21:00.340', NULL);
+INSERT INTO `cities` VALUES (1, '墨西哥城', 'Mexico City', 'Mexico', 'America/Mexico_City', '', '2026-06-02 11:53:03.304', '2026-06-04 20:58:24.077', NULL);
 INSERT INTO `cities` VALUES (2, '纽约', 'New York', 'USA', 'America/New_York', '', '2026-06-02 11:53:03.308', '2026-06-02 11:53:03.308', NULL);
-INSERT INTO `cities` VALUES (3, '洛杉矶', 'Los Angeles', 'USA', 'America/Los_Angeles', '', '2026-06-02 11:53:03.313', '2026-06-04 15:21:00.470', NULL);
-INSERT INTO `cities` VALUES (4, '达拉斯', 'Dallas', 'USA', 'America/Chicago', '', '2026-06-02 11:53:03.317', '2026-06-04 15:21:00.534', NULL);
-INSERT INTO `cities` VALUES (5, '西雅图', 'Seattle', 'USA', 'America/Los_Angeles', '', '2026-06-02 11:53:03.321', '2026-06-04 15:21:00.387', NULL);
-INSERT INTO `cities` VALUES (6, '迈阿密', 'Miami', 'USA', 'America/New_York', '', '2026-06-02 11:53:03.326', '2026-06-04 15:21:00.573', NULL);
-INSERT INTO `cities` VALUES (7, '多伦多', 'Toronto', 'Canada', 'America/Toronto', '', '2026-06-02 11:53:03.331', '2026-06-04 15:21:00.172', NULL);
-INSERT INTO `cities` VALUES (8, '温哥华', 'Vancouver', 'Canada', 'America/Vancouver', '', '2026-06-02 11:53:03.336', '2026-06-04 15:21:00.430', NULL);
+INSERT INTO `cities` VALUES (3, '洛杉矶', 'Los Angeles', 'USA', 'America/Los_Angeles', '', '2026-06-02 11:53:03.313', '2026-06-04 20:58:23.875', NULL);
+INSERT INTO `cities` VALUES (4, '达拉斯', 'Dallas', 'USA', 'America/Chicago', '', '2026-06-02 11:53:03.317', '2026-06-04 20:58:24.256', NULL);
+INSERT INTO `cities` VALUES (5, '西雅图', 'Seattle', 'USA', 'America/Los_Angeles', '', '2026-06-02 11:53:03.321', '2026-06-04 20:58:24.037', NULL);
+INSERT INTO `cities` VALUES (6, '迈阿密', 'Miami', 'USA', 'America/New_York', '', '2026-06-02 11:53:03.326', '2026-06-04 20:58:24.136', NULL);
+INSERT INTO `cities` VALUES (7, '多伦多', 'Toronto', 'Canada', 'America/Toronto', '', '2026-06-02 11:53:03.331', '2026-06-04 20:58:24.276', NULL);
+INSERT INTO `cities` VALUES (8, '温哥华', 'Vancouver', 'Canada', 'America/Vancouver', '', '2026-06-02 11:53:03.336', '2026-06-04 20:58:24.116', NULL);
 INSERT INTO `cities` VALUES (9, 'TBD', 'TBD', '', 'UTC', '', '2026-06-02 15:55:43.020', '2026-06-02 15:55:43.020', NULL);
-INSERT INTO `cities` VALUES (10, '瓜达拉哈拉', 'Guadalajara', 'Mexico', 'America/Mexico_City', '', '2026-06-04 10:01:09.693', '2026-06-04 15:20:59.739', NULL);
-INSERT INTO `cities` VALUES (11, '堪萨斯城', 'Kansas City', 'USA', 'America/Chicago', '', '2026-06-04 10:01:09.705', '2026-06-04 15:21:00.510', NULL);
-INSERT INTO `cities` VALUES (12, '亚特兰大', 'Atlanta', 'USA', 'America/New_York', '', '2026-06-04 10:01:09.716', '2026-06-04 15:21:00.554', NULL);
-INSERT INTO `cities` VALUES (13, '蒙特雷', 'Monterrey', 'Mexico', 'America/Monterrey', '', '2026-06-04 10:01:09.729', '2026-06-04 15:21:00.007', NULL);
-INSERT INTO `cities` VALUES (14, '旧金山湾区', 'San Francisco Bay Area', 'USA', 'America/Los_Angeles', '', '2026-06-04 10:01:09.740', '2026-06-04 15:21:00.130', NULL);
-INSERT INTO `cities` VALUES (15, '新泽西', 'New Jersey', 'USA', 'America/New_York', '', '2026-06-04 10:01:09.764', '2026-06-04 15:21:00.594', NULL);
-INSERT INTO `cities` VALUES (16, '休斯敦', 'Houston', 'USA', 'America/Chicago', '', '2026-06-04 10:01:09.823', '2026-06-04 15:21:00.277', NULL);
-INSERT INTO `cities` VALUES (17, '波士顿', 'Boston', 'USA', 'America/New_York', '', '2026-06-04 10:01:09.895', '2026-06-04 15:21:00.450', NULL);
-INSERT INTO `cities` VALUES (18, '费城', 'Philadelphia', 'USA', 'America/New_York', '', '2026-06-04 10:01:10.087', '2026-06-04 15:21:00.299', NULL);
+INSERT INTO `cities` VALUES (10, '瓜达拉哈拉', 'Guadalajara', 'Mexico', 'America/Mexico_City', '', '2026-06-04 10:01:09.693', '2026-06-04 20:58:23.342', NULL);
+INSERT INTO `cities` VALUES (11, '堪萨斯城', 'Kansas City', 'USA', 'America/Chicago', '', '2026-06-04 10:01:09.705', '2026-06-04 20:58:24.175', NULL);
+INSERT INTO `cities` VALUES (12, '亚特兰大', 'Atlanta', 'USA', 'America/New_York', '', '2026-06-04 10:01:09.716', '2026-06-04 20:58:24.344', NULL);
+INSERT INTO `cities` VALUES (13, '蒙特雷', 'Monterrey', 'Mexico', 'America/Monterrey', '', '2026-06-04 10:01:09.729', '2026-06-04 20:58:23.552', NULL);
+INSERT INTO `cities` VALUES (14, '旧金山湾区', 'San Francisco Bay Area', 'USA', 'America/Los_Angeles', '', '2026-06-04 10:01:09.740', '2026-06-04 20:58:24.297', NULL);
+INSERT INTO `cities` VALUES (15, '新泽西', 'New Jersey', 'USA', 'America/New_York', '', '2026-06-04 10:01:09.764', '2026-06-04 20:58:24.096', NULL);
+INSERT INTO `cities` VALUES (16, '休斯敦', 'Houston', 'USA', 'America/Chicago', '', '2026-06-04 10:01:09.823', '2026-06-04 20:58:24.322', NULL);
+INSERT INTO `cities` VALUES (17, '波士顿', 'Boston', 'USA', 'America/New_York', '', '2026-06-04 10:01:09.895', '2026-06-04 20:58:24.236', NULL);
+INSERT INTO `cities` VALUES (18, '费城', 'Philadelphia', 'USA', 'America/New_York', '', '2026-06-04 10:01:10.087', '2026-06-04 20:58:24.370', NULL);
 INSERT INTO `cities` VALUES (19, '墨西哥城', 'Mexico City', 'Mexico', 'America/Mexico_City', '', '2026-06-04 10:04:12.124', '2026-06-04 10:04:12.124', NULL);
 INSERT INTO `cities` VALUES (20, '洛杉矶', 'Los Angeles', 'USA', 'America/Los_Angeles', '', '2026-06-04 10:04:12.131', '2026-06-04 10:04:12.131', NULL);
 INSERT INTO `cities` VALUES (21, '达拉斯', 'Dallas', 'USA', 'America/Chicago', '', '2026-06-04 10:04:12.135', '2026-06-04 10:04:12.135', NULL);
@@ -89,7 +232,7 @@ CREATE TABLE `group_standings`  (
   INDEX `fk_group_standings_team`(`team_id` ASC) USING BTREE,
   CONSTRAINT `fk_group_standings_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_group_standings_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of group_standings
@@ -107,7 +250,7 @@ CREATE TABLE `groups`  (
   `updated_at` datetime(3) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_groups_name`(`name` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of groups
@@ -172,7 +315,7 @@ CREATE TABLE `matches`  (
   CONSTRAINT `fk_matches_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_matches_home_team` FOREIGN KEY (`home_team_id`) REFERENCES `teams` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_matches_stadium` FOREIGN KEY (`stadium_id`) REFERENCES `stadia` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 109 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 109 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of matches
@@ -181,110 +324,110 @@ INSERT INTO `matches` VALUES (1, 1, 1, 2, 1, 'group', 1, 1, '2026-06-02 09:00:00
 INSERT INTO `matches` VALUES (2, 2, 5, 6, 2, 'group', 2, 2, '2026-06-02 21:00:00.000', NULL, NULL, 'scheduled', NULL, 3, '焦点大战', '', '2026-06-02 13:51:13.318', '2026-06-02 13:51:13.318', '2026-06-03 08:56:46.702', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO `matches` VALUES (3, 3, 9, 10, 3, 'group', 3, 3, '2026-06-03 18:00:00.000', NULL, NULL, 'scheduled', NULL, 3, '热门比赛', '', '2026-06-02 13:51:13.322', '2026-06-02 13:51:13.322', '2026-06-03 08:56:46.702', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO `matches` VALUES (4, 4, 13, 14, 4, 'group', 5, 5, '2026-06-04 03:00:00.000', NULL, NULL, 'scheduled', NULL, 2, '', '', '2026-06-02 13:51:13.326', '2026-06-02 13:51:13.326', '2026-06-03 08:56:46.702', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO `matches` VALUES (5, 537327, 1, 3, 1, 'group', 21, 1, '2026-06-12 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.031', '2026-06-04 15:20:58.432', NULL, 'TIMED', NULL, 'football-data', '537327', '2026-06-04 15:20:58.431');
-INSERT INTO `matches` VALUES (6, 537357, 15, 13, 6, 'group', 19, 4, '2026-06-15 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.082', '2026-06-04 15:20:58.630', NULL, 'TIMED', NULL, 'football-data', '537357', '2026-06-04 15:20:58.629');
-INSERT INTO `matches` VALUES (7, 537411, 11, 8, 12, 'group', 22, 17, '2026-06-24 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.243', '2026-06-04 15:20:59.382', NULL, 'TIMED', NULL, 'football-data', '537411', '2026-06-04 15:20:59.380');
-INSERT INTO `matches` VALUES (8, 537367, 4, 16, 7, 'group', 16, 8, '2026-06-27 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.294', '2026-06-04 15:20:59.789', NULL, 'TIMED', NULL, 'football-data', '537367', '2026-06-04 15:20:59.788');
-INSERT INTO `matches` VALUES (9, 537328, 417, 418, 1, 'group', 11, 10, '2026-06-12 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.413', '2026-06-04 15:20:58.455', NULL, 'TIMED', NULL, 'football-data', '537328', '2026-06-04 15:20:58.453');
-INSERT INTO `matches` VALUES (10, 537333, 2, 419, 2, 'group', 23, 7, '2026-06-13 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.426', '2026-06-04 15:20:58.479', NULL, 'TIMED', NULL, 'football-data', '537333', '2026-06-04 15:20:58.478');
-INSERT INTO `matches` VALUES (11, 537345, 7, 420, 4, 'group', 24, 3, '2026-06-13 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.439', '2026-06-04 15:20:58.502', NULL, 'TIMED', NULL, 'football-data', '537345', '2026-06-04 15:20:58.500');
-INSERT INTO `matches` VALUES (12, 537334, 421, 422, 2, 'group', 15, 14, '2026-06-14 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.452', '2026-06-04 15:20:58.523', NULL, 'TIMED', NULL, 'football-data', '537334', '2026-06-04 15:20:58.523');
-INSERT INTO `matches` VALUES (13, 537339, 9, 423, 3, 'group', 17, 15, '2026-06-14 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.467', '2026-06-04 15:20:58.545', NULL, 'TIMED', NULL, 'football-data', '537339', '2026-06-04 15:20:58.544');
-INSERT INTO `matches` VALUES (14, 537340, 424, 425, 3, 'group', 22, 17, '2026-06-14 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.480', '2026-06-04 15:20:58.565', NULL, 'TIMED', NULL, 'football-data', '537340', '2026-06-04 15:20:58.564');
-INSERT INTO `matches` VALUES (15, 537346, 426, 427, 4, 'group', 16, 8, '2026-06-14 12:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.494', '2026-06-04 15:20:58.587', NULL, 'TIMED', NULL, 'football-data', '537346', '2026-06-04 15:20:58.585');
-INSERT INTO `matches` VALUES (16, 537351, 14, 428, 5, 'group', 20, 16, '2026-06-15 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.508', '2026-06-04 15:20:58.608', NULL, 'TIMED', NULL, 'football-data', '537351', '2026-06-04 15:20:58.607');
-INSERT INTO `matches` VALUES (17, 537352, 429, 430, 5, 'group', 25, 18, '2026-06-15 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.534', '2026-06-04 15:20:58.651', NULL, 'TIMED', NULL, 'football-data', '537352', '2026-06-04 15:20:58.649');
-INSERT INTO `matches` VALUES (18, 537358, 431, 432, 6, 'group', 14, 13, '2026-06-15 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.549', '2026-06-04 15:20:58.672', NULL, 'TIMED', NULL, 'football-data', '537358', '2026-06-04 15:20:58.671');
-INSERT INTO `matches` VALUES (19, 537369, 10, 433, 8, 'group', 13, 12, '2026-06-16 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.563', '2026-06-04 15:20:58.692', NULL, 'TIMED', NULL, 'football-data', '537369', '2026-06-04 15:20:58.691');
-INSERT INTO `matches` VALUES (20, 537363, 16, 434, 7, 'group', 10, 5, '2026-06-16 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.577', '2026-06-04 15:20:58.713', NULL, 'TIMED', NULL, 'football-data', '537363', '2026-06-04 15:20:58.712');
-INSERT INTO `matches` VALUES (21, 537370, 435, 436, 8, 'group', 18, 6, '2026-06-16 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.590', '2026-06-04 15:20:58.735', NULL, 'TIMED', NULL, 'football-data', '537370', '2026-06-04 15:20:58.734');
-INSERT INTO `matches` VALUES (22, 537364, 437, 4, 7, 'group', 24, 3, '2026-06-16 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.605', '2026-06-04 15:20:58.755', NULL, 'TIMED', NULL, 'football-data', '537364', '2026-06-04 15:20:58.754');
-INSERT INTO `matches` VALUES (23, 537391, 6, 438, 9, 'group', 17, 15, '2026-06-17 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.619', '2026-06-04 15:20:58.775', NULL, 'TIMED', NULL, 'football-data', '537391', '2026-06-04 15:20:58.775');
-INSERT INTO `matches` VALUES (24, 537392, 439, 440, 9, 'group', 22, 17, '2026-06-17 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.633', '2026-06-04 15:20:58.796', NULL, 'TIMED', NULL, 'football-data', '537392', '2026-06-04 15:20:58.795');
-INSERT INTO `matches` VALUES (25, 537397, 5, 441, 10, 'group', 12, 11, '2026-06-17 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.647', '2026-06-04 15:20:58.818', NULL, 'TIMED', NULL, 'football-data', '537397', '2026-06-04 15:20:58.816');
-INSERT INTO `matches` VALUES (26, 537398, 442, 443, 10, 'group', 15, 14, '2026-06-17 12:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.661', '2026-06-04 15:20:58.840', NULL, 'TIMED', NULL, 'football-data', '537398', '2026-06-04 15:20:58.839');
-INSERT INTO `matches` VALUES (27, 537403, 12, 444, 11, 'group', 20, 16, '2026-06-18 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.675', '2026-06-04 15:20:58.860', NULL, 'TIMED', NULL, 'football-data', '537403', '2026-06-04 15:20:58.859');
-INSERT INTO `matches` VALUES (28, 537409, 11, 445, 12, 'group', 19, 4, '2026-06-18 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.688', '2026-06-04 15:20:58.880', NULL, 'TIMED', NULL, 'football-data', '537409', '2026-06-04 15:20:58.879');
-INSERT INTO `matches` VALUES (29, 537410, 8, 446, 12, 'group', 23, 7, '2026-06-18 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.701', '2026-06-04 15:20:58.905', NULL, 'TIMED', NULL, 'football-data', '537410', '2026-06-04 15:20:58.905');
-INSERT INTO `matches` VALUES (30, 537404, 447, 448, 11, 'group', 21, 1, '2026-06-18 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.713', '2026-06-04 15:20:58.925', NULL, 'TIMED', NULL, 'football-data', '537404', '2026-06-04 15:20:58.924');
-INSERT INTO `matches` VALUES (31, 537329, 418, 3, 1, 'group', 13, 12, '2026-06-19 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.726', '2026-06-04 15:20:58.945', NULL, 'TIMED', NULL, 'football-data', '537329', '2026-06-04 15:20:58.944');
-INSERT INTO `matches` VALUES (32, 537335, 422, 419, 2, 'group', 24, 3, '2026-06-19 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.739', '2026-06-04 15:20:58.967', NULL, 'TIMED', NULL, 'football-data', '537335', '2026-06-04 15:20:58.966');
-INSERT INTO `matches` VALUES (33, 537336, 2, 421, 2, 'group', 16, 8, '2026-06-19 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.751', '2026-06-04 15:20:58.987', NULL, 'TIMED', NULL, 'football-data', '537336', '2026-06-04 15:20:58.986');
-INSERT INTO `matches` VALUES (34, 537330, 1, 417, 1, 'group', 11, 10, '2026-06-19 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.764', '2026-06-04 15:20:59.008', NULL, 'TIMED', NULL, 'football-data', '537330', '2026-06-04 15:20:59.007');
-INSERT INTO `matches` VALUES (35, 537348, 7, 426, 4, 'group', 10, 5, '2026-06-20 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.776', '2026-06-04 15:20:59.030', NULL, 'TIMED', NULL, 'football-data', '537348', '2026-06-04 15:20:59.029');
-INSERT INTO `matches` VALUES (36, 537342, 425, 423, 3, 'group', 22, 17, '2026-06-20 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.790', '2026-06-04 15:20:59.052', NULL, 'TIMED', NULL, 'football-data', '537342', '2026-06-04 15:20:59.050');
-INSERT INTO `matches` VALUES (37, 537341, 9, 424, 3, 'group', 25, 18, '2026-06-20 08:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.802', '2026-06-04 15:20:59.074', NULL, 'TIMED', NULL, 'football-data', '537341', '2026-06-04 15:20:59.073');
-INSERT INTO `matches` VALUES (38, 537347, 427, 420, 4, 'group', 15, 14, '2026-06-20 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.814', '2026-06-04 15:20:59.095', NULL, 'TIMED', NULL, 'football-data', '537347', '2026-06-04 15:20:59.094');
-INSERT INTO `matches` VALUES (39, 537359, 15, 431, 6, 'group', 20, 16, '2026-06-21 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.827', '2026-06-04 15:20:59.115', NULL, 'TIMED', NULL, 'football-data', '537359', '2026-06-04 15:20:59.115');
-INSERT INTO `matches` VALUES (40, 537353, 14, 429, 5, 'group', 23, 7, '2026-06-21 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.839', '2026-06-04 15:20:59.135', NULL, 'TIMED', NULL, 'football-data', '537353', '2026-06-04 15:20:59.135');
-INSERT INTO `matches` VALUES (41, 537354, 430, 428, 5, 'group', 12, 11, '2026-06-21 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.852', '2026-06-04 15:20:59.155', NULL, 'TIMED', NULL, 'football-data', '537354', '2026-06-04 15:20:59.154');
-INSERT INTO `matches` VALUES (42, 537360, 432, 13, 6, 'group', 14, 13, '2026-06-21 12:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.864', '2026-06-04 15:20:59.175', NULL, 'TIMED', NULL, 'football-data', '537360', '2026-06-04 15:20:59.174');
-INSERT INTO `matches` VALUES (43, 537371, 10, 435, 8, 'group', 13, 12, '2026-06-22 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.876', '2026-06-04 15:20:59.195', NULL, 'TIMED', NULL, 'football-data', '537371', '2026-06-04 15:20:59.195');
-INSERT INTO `matches` VALUES (44, 537365, 16, 437, 7, 'group', 24, 3, '2026-06-22 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.890', '2026-06-04 15:20:59.215', NULL, 'TIMED', NULL, 'football-data', '537365', '2026-06-04 15:20:59.215');
-INSERT INTO `matches` VALUES (45, 537372, 436, 433, 8, 'group', 18, 6, '2026-06-22 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.903', '2026-06-04 15:20:59.235', NULL, 'TIMED', NULL, 'football-data', '537372', '2026-06-04 15:20:59.234');
-INSERT INTO `matches` VALUES (46, 537366, 4, 434, 7, 'group', 16, 8, '2026-06-22 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.916', '2026-06-04 15:20:59.256', NULL, 'TIMED', NULL, 'football-data', '537366', '2026-06-04 15:20:59.255');
-INSERT INTO `matches` VALUES (47, 537399, 5, 442, 10, 'group', 19, 4, '2026-06-23 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.931', '2026-06-04 15:20:59.276', NULL, 'TIMED', NULL, 'football-data', '537399', '2026-06-04 15:20:59.275');
-INSERT INTO `matches` VALUES (48, 537393, 6, 439, 9, 'group', 25, 18, '2026-06-23 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.946', '2026-06-04 15:20:59.299', NULL, 'TIMED', NULL, 'football-data', '537393', '2026-06-04 15:20:59.299');
-INSERT INTO `matches` VALUES (49, 537394, 440, 438, 9, 'group', 17, 15, '2026-06-23 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.960', '2026-06-04 15:20:59.320', NULL, 'TIMED', NULL, 'football-data', '537394', '2026-06-04 15:20:59.320');
-INSERT INTO `matches` VALUES (50, 537400, 443, 441, 10, 'group', 15, 14, '2026-06-23 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.975', '2026-06-04 15:20:59.342', NULL, 'TIMED', NULL, 'football-data', '537400', '2026-06-04 15:20:59.341');
-INSERT INTO `matches` VALUES (51, 537405, 12, 447, 11, 'group', 20, 16, '2026-06-24 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.989', '2026-06-04 15:20:59.362', NULL, 'TIMED', NULL, 'football-data', '537405', '2026-06-04 15:20:59.362');
-INSERT INTO `matches` VALUES (52, 537412, 446, 445, 12, 'group', 23, 7, '2026-06-24 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.018', '2026-06-04 15:20:59.402', NULL, 'TIMED', NULL, 'football-data', '537412', '2026-06-04 15:20:59.400');
-INSERT INTO `matches` VALUES (53, 537406, 448, 444, 11, 'group', 11, 10, '2026-06-24 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.031', '2026-06-04 15:20:59.422', NULL, 'TIMED', NULL, 'football-data', '537406', '2026-06-04 15:20:59.421');
-INSERT INTO `matches` VALUES (54, 537337, 422, 2, 2, 'group', 16, 8, '2026-06-25 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.045', '2026-06-04 15:20:59.443', NULL, 'TIMED', NULL, 'football-data', '537337', '2026-06-04 15:20:59.441');
-INSERT INTO `matches` VALUES (55, 537338, 419, 421, 2, 'group', 10, 5, '2026-06-25 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.057', '2026-06-04 15:20:59.464', NULL, 'TIMED', NULL, 'football-data', '537338', '2026-06-04 15:20:59.463');
-INSERT INTO `matches` VALUES (56, 537344, 423, 424, 3, 'group', 13, 12, '2026-06-25 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.071', '2026-06-04 15:20:59.485', NULL, 'TIMED', NULL, 'football-data', '537344', '2026-06-04 15:20:59.484');
-INSERT INTO `matches` VALUES (57, 537343, 425, 9, 3, 'group', 18, 6, '2026-06-25 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.086', '2026-06-04 15:20:59.506', NULL, 'TIMED', NULL, 'football-data', '537343', '2026-06-04 15:20:59.506');
-INSERT INTO `matches` VALUES (58, 537331, 418, 1, 1, 'group', 21, 1, '2026-06-25 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.099', '2026-06-04 15:20:59.528', NULL, 'TIMED', NULL, 'football-data', '537331', '2026-06-04 15:20:59.528');
-INSERT INTO `matches` VALUES (59, 537332, 3, 417, 1, 'group', 14, 13, '2026-06-25 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.111', '2026-06-04 15:20:59.548', NULL, 'TIMED', NULL, 'football-data', '537332', '2026-06-04 15:20:59.547');
-INSERT INTO `matches` VALUES (60, 537355, 430, 14, 5, 'group', 17, 15, '2026-06-26 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.126', '2026-06-04 15:20:59.568', NULL, 'TIMED', NULL, 'football-data', '537355', '2026-06-04 15:20:59.567');
-INSERT INTO `matches` VALUES (61, 537356, 428, 429, 5, 'group', 25, 18, '2026-06-26 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.140', '2026-06-04 15:20:59.590', NULL, 'TIMED', NULL, 'football-data', '537356', '2026-06-04 15:20:59.587');
-INSERT INTO `matches` VALUES (62, 537361, 432, 15, 6, 'group', 12, 11, '2026-06-26 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.153', '2026-06-04 15:20:59.614', NULL, 'TIMED', NULL, 'football-data', '537361', '2026-06-04 15:20:59.613');
-INSERT INTO `matches` VALUES (63, 537362, 13, 431, 6, 'group', 19, 4, '2026-06-26 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.165', '2026-06-04 15:20:59.637', NULL, 'TIMED', NULL, 'football-data', '537362', '2026-06-04 15:20:59.636');
-INSERT INTO `matches` VALUES (64, 537349, 427, 7, 4, 'group', 24, 3, '2026-06-26 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.177', '2026-06-04 15:20:59.661', NULL, 'TIMED', NULL, 'football-data', '537349', '2026-06-04 15:20:59.659');
-INSERT INTO `matches` VALUES (65, 537350, 420, 426, 4, 'group', 15, 14, '2026-06-26 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.190', '2026-06-04 15:20:59.684', NULL, 'TIMED', NULL, 'football-data', '537350', '2026-06-04 15:20:59.683');
-INSERT INTO `matches` VALUES (66, 537395, 440, 6, 9, 'group', 22, 17, '2026-06-27 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.202', '2026-06-04 15:20:59.705', NULL, 'TIMED', NULL, 'football-data', '537395', '2026-06-04 15:20:59.704');
-INSERT INTO `matches` VALUES (67, 537396, 438, 439, 9, 'group', 23, 7, '2026-06-27 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.214', '2026-06-04 15:20:59.726', NULL, 'TIMED', NULL, 'football-data', '537396', '2026-06-04 15:20:59.724');
-INSERT INTO `matches` VALUES (68, 537373, 436, 10, 8, 'group', 11, 10, '2026-06-27 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.227', '2026-06-04 15:20:59.747', NULL, 'TIMED', NULL, 'football-data', '537373', '2026-06-04 15:20:59.746');
-INSERT INTO `matches` VALUES (69, 537374, 433, 435, 8, 'group', 20, 16, '2026-06-27 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.241', '2026-06-04 15:20:59.767', NULL, 'TIMED', NULL, 'football-data', '537374', '2026-06-04 15:20:59.766');
-INSERT INTO `matches` VALUES (70, 537368, 434, 437, 7, 'group', 10, 5, '2026-06-27 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.267', '2026-06-04 15:20:59.809', NULL, 'TIMED', NULL, 'football-data', '537368', '2026-06-04 15:20:59.808');
-INSERT INTO `matches` VALUES (71, 537413, 446, 11, 12, 'group', 17, 15, '2026-06-28 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.281', '2026-06-04 15:20:59.831', NULL, 'TIMED', NULL, 'football-data', '537413', '2026-06-04 15:20:59.830');
-INSERT INTO `matches` VALUES (72, 537414, 445, 8, 12, 'group', 25, 18, '2026-06-28 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.293', '2026-06-04 15:20:59.852', NULL, 'TIMED', NULL, 'football-data', '537414', '2026-06-04 15:20:59.851');
-INSERT INTO `matches` VALUES (73, 537407, 448, 12, 11, 'group', 18, 6, '2026-06-28 07:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.307', '2026-06-04 15:20:59.872', NULL, 'TIMED', NULL, 'football-data', '537407', '2026-06-04 15:20:59.871');
-INSERT INTO `matches` VALUES (74, 537408, 444, 447, 11, 'group', 13, 12, '2026-06-28 07:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.319', '2026-06-04 15:20:59.893', NULL, 'TIMED', NULL, 'football-data', '537408', '2026-06-04 15:20:59.892');
-INSERT INTO `matches` VALUES (75, 537401, 443, 5, 10, 'group', 19, 4, '2026-06-28 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.331', '2026-06-04 15:20:59.914', NULL, 'TIMED', NULL, 'football-data', '537401', '2026-06-04 15:20:59.913');
-INSERT INTO `matches` VALUES (76, 537402, 441, 442, 10, 'group', 12, 11, '2026-06-28 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.345', '2026-06-04 15:20:59.934', NULL, 'TIMED', NULL, 'football-data', '537402', '2026-06-04 15:20:59.933');
-INSERT INTO `matches` VALUES (77, 537417, 449, 449, NULL, 'round_of_32', 24, 3, '2026-06-29 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.361', '2026-06-04 15:20:59.954', NULL, 'TIMED', NULL, 'football-data', '537417', '2026-06-04 15:20:59.953');
-INSERT INTO `matches` VALUES (78, 537423, 449, 449, NULL, 'round_of_32', 20, 16, '2026-06-30 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.373', '2026-06-04 15:20:59.975', NULL, 'TIMED', NULL, 'football-data', '537423', '2026-06-04 15:20:59.974');
-INSERT INTO `matches` VALUES (79, 537415, 449, 449, NULL, 'round_of_32', 22, 17, '2026-06-30 04:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.397', '2026-06-04 15:20:59.995', NULL, 'TIMED', NULL, 'football-data', '537415', '2026-06-04 15:20:59.994');
-INSERT INTO `matches` VALUES (80, 537418, 449, 449, NULL, 'round_of_32', 14, 13, '2026-06-30 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.423', '2026-06-04 15:21:00.015', NULL, 'TIMED', NULL, 'football-data', '537418', '2026-06-04 15:21:00.015');
-INSERT INTO `matches` VALUES (81, 537424, 449, 449, NULL, 'round_of_32', 19, 4, '2026-07-01 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.443', '2026-06-04 15:21:00.036', NULL, 'TIMED', NULL, 'football-data', '537424', '2026-06-04 15:21:00.035');
-INSERT INTO `matches` VALUES (82, 537416, 449, 449, NULL, 'round_of_32', 17, 15, '2026-07-01 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.465', '2026-06-04 15:21:00.057', NULL, 'TIMED', NULL, 'football-data', '537416', '2026-06-04 15:21:00.056');
-INSERT INTO `matches` VALUES (83, 537425, 449, 449, NULL, 'round_of_32', 21, 1, '2026-07-01 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.487', '2026-06-04 15:21:00.077', NULL, 'TIMED', NULL, 'football-data', '537425', '2026-06-04 15:21:00.075');
-INSERT INTO `matches` VALUES (84, 537426, 449, 449, NULL, 'round_of_32', 13, 12, '2026-07-02 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.508', '2026-06-04 15:21:00.095', NULL, 'TIMED', NULL, 'football-data', '537426', '2026-06-04 15:21:00.094');
-INSERT INTO `matches` VALUES (85, 537422, 449, 449, NULL, 'round_of_32', 10, 5, '2026-07-02 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.531', '2026-06-04 15:21:00.115', NULL, 'TIMED', NULL, 'football-data', '537422', '2026-06-04 15:21:00.114');
-INSERT INTO `matches` VALUES (86, 537421, 449, 449, NULL, 'round_of_32', 15, 14, '2026-07-02 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.553', '2026-06-04 15:21:00.138', NULL, 'TIMED', NULL, 'football-data', '537421', '2026-06-04 15:21:00.137');
-INSERT INTO `matches` VALUES (87, 537420, 449, 449, NULL, 'round_of_32', 24, 3, '2026-07-03 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.576', '2026-06-04 15:21:00.160', NULL, 'TIMED', NULL, 'football-data', '537420', '2026-06-04 15:21:00.159');
-INSERT INTO `matches` VALUES (88, 537419, 449, 449, NULL, 'round_of_32', 23, 7, '2026-07-03 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.599', '2026-06-04 15:21:00.180', NULL, 'TIMED', NULL, 'football-data', '537419', '2026-06-04 15:21:00.179');
-INSERT INTO `matches` VALUES (89, 537429, 449, 449, NULL, 'round_of_32', 16, 8, '2026-07-03 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.618', '2026-06-04 15:21:00.201', NULL, 'TIMED', NULL, 'football-data', '537429', '2026-06-04 15:21:00.201');
-INSERT INTO `matches` VALUES (90, 537428, 449, 449, NULL, 'round_of_32', 19, 4, '2026-07-04 02:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.632', '2026-06-04 15:21:00.225', NULL, 'TIMED', NULL, 'football-data', '537428', '2026-06-04 15:21:00.223');
-INSERT INTO `matches` VALUES (91, 537427, 449, 449, NULL, 'round_of_32', 18, 6, '2026-07-04 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.645', '2026-06-04 15:21:00.245', NULL, 'TIMED', NULL, 'football-data', '537427', '2026-06-04 15:21:00.244');
-INSERT INTO `matches` VALUES (92, 537430, 449, 449, NULL, 'round_of_32', 12, 11, '2026-07-04 09:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.657', '2026-06-04 15:21:00.265', NULL, 'TIMED', NULL, 'football-data', '537430', '2026-06-04 15:21:00.264');
-INSERT INTO `matches` VALUES (93, 537376, 449, 449, NULL, 'round_of_16', 20, 16, '2026-07-05 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.669', '2026-06-04 15:21:00.285', NULL, 'TIMED', NULL, 'football-data', '537376', '2026-06-04 15:21:00.284');
-INSERT INTO `matches` VALUES (94, 537375, 449, 449, NULL, 'round_of_16', 25, 18, '2026-07-05 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.682', '2026-06-04 15:21:00.307', NULL, 'TIMED', NULL, 'football-data', '537375', '2026-06-04 15:21:00.307');
-INSERT INTO `matches` VALUES (95, 537377, 449, 449, NULL, 'round_of_16', 17, 15, '2026-07-06 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.695', '2026-06-04 15:21:00.327', NULL, 'TIMED', NULL, 'football-data', '537377', '2026-06-04 15:21:00.326');
-INSERT INTO `matches` VALUES (96, 537378, 449, 449, NULL, 'round_of_16', 21, 1, '2026-07-06 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.706', '2026-06-04 15:21:00.348', NULL, 'TIMED', NULL, 'football-data', '537378', '2026-06-04 15:21:00.348');
-INSERT INTO `matches` VALUES (97, 537379, 449, 449, NULL, 'round_of_16', 19, 4, '2026-07-07 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.719', '2026-06-04 15:21:00.375', NULL, 'TIMED', NULL, 'football-data', '537379', '2026-06-04 15:21:00.373');
-INSERT INTO `matches` VALUES (98, 537380, 449, 449, NULL, 'round_of_16', 10, 5, '2026-07-07 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.736', '2026-06-04 15:21:00.395', NULL, 'TIMED', NULL, 'football-data', '537380', '2026-06-04 15:21:00.394');
-INSERT INTO `matches` VALUES (99, 537381, 449, 449, NULL, 'round_of_16', 13, 12, '2026-07-08 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.748', '2026-06-04 15:21:00.416', NULL, 'TIMED', NULL, 'football-data', '537381', '2026-06-04 15:21:00.415');
-INSERT INTO `matches` VALUES (100, 537382, 449, 449, NULL, 'round_of_16', 16, 8, '2026-07-08 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.761', '2026-06-04 15:21:00.438', NULL, 'TIMED', NULL, 'football-data', '537382', '2026-06-04 15:21:00.438');
-INSERT INTO `matches` VALUES (101, 537383, 449, 449, NULL, 'quarter_final', 22, 17, '2026-07-10 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.774', '2026-06-04 15:21:00.458', NULL, 'TIMED', NULL, 'football-data', '537383', '2026-06-04 15:21:00.456');
-INSERT INTO `matches` VALUES (102, 537384, 449, 449, NULL, 'quarter_final', 24, 3, '2026-07-11 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.787', '2026-06-04 15:21:00.478', NULL, 'TIMED', NULL, 'football-data', '537384', '2026-06-04 15:21:00.477');
-INSERT INTO `matches` VALUES (103, 537385, 449, 449, NULL, 'quarter_final', 18, 6, '2026-07-12 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.799', '2026-06-04 15:21:00.498', NULL, 'TIMED', NULL, 'football-data', '537385', '2026-06-04 15:21:00.497');
-INSERT INTO `matches` VALUES (104, 537386, 449, 449, NULL, 'quarter_final', 12, 11, '2026-07-12 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.810', '2026-06-04 15:21:00.518', NULL, 'TIMED', NULL, 'football-data', '537386', '2026-06-04 15:21:00.517');
-INSERT INTO `matches` VALUES (105, 537387, 449, 449, NULL, 'semi_final', 19, 4, '2026-07-15 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.824', '2026-06-04 15:21:00.542', NULL, 'TIMED', NULL, 'football-data', '537387', '2026-06-04 15:21:00.541');
-INSERT INTO `matches` VALUES (106, 537388, 449, 449, NULL, 'semi_final', 13, 12, '2026-07-16 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.837', '2026-06-04 15:21:00.562', NULL, 'TIMED', NULL, 'football-data', '537388', '2026-06-04 15:21:00.561');
-INSERT INTO `matches` VALUES (107, 537389, 449, 449, NULL, 'third_place', 18, 6, '2026-07-19 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.849', '2026-06-04 15:21:00.582', NULL, 'TIMED', NULL, 'football-data', '537389', '2026-06-04 15:21:00.581');
-INSERT INTO `matches` VALUES (108, 537390, 449, 449, NULL, 'final', 17, 15, '2026-07-20 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.861', '2026-06-04 15:21:00.604', NULL, 'TIMED', NULL, 'football-data', '537390', '2026-06-04 15:21:00.603');
+INSERT INTO `matches` VALUES (5, 537327, 1, 3, 1, 'group', 21, 1, '2026-06-12 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.031', '2026-06-04 20:58:22.425', NULL, 'TIMED', NULL, 'football-data', '537327', '2026-06-04 15:20:58.431');
+INSERT INTO `matches` VALUES (6, 537357, 15, 13, 6, 'group', 19, 4, '2026-06-15 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.082', '2026-06-04 20:58:23.114', NULL, 'TIMED', NULL, 'football-data', '537357', '2026-06-04 15:20:58.629');
+INSERT INTO `matches` VALUES (7, 537411, 11, 8, 12, 'group', 22, 17, '2026-06-24 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.243', '2026-06-04 20:58:23.666', NULL, 'TIMED', NULL, 'football-data', '537411', '2026-06-04 15:20:59.380');
+INSERT INTO `matches` VALUES (8, 537367, 4, 16, 7, 'group', 16, 8, '2026-06-27 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 15:55:43.294', '2026-06-04 20:58:24.130', NULL, 'TIMED', NULL, 'football-data', '537367', '2026-06-04 15:20:59.788');
+INSERT INTO `matches` VALUES (9, 537328, 417, 418, 1, 'group', 11, 10, '2026-06-12 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.413', '2026-06-04 20:58:22.263', NULL, 'TIMED', NULL, 'football-data', '537328', '2026-06-04 15:20:58.453');
+INSERT INTO `matches` VALUES (10, 537333, 2, 419, 2, 'group', 23, 7, '2026-06-13 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.426', '2026-06-04 20:58:22.119', NULL, 'TIMED', NULL, 'football-data', '537333', '2026-06-04 15:20:58.478');
+INSERT INTO `matches` VALUES (11, 537345, 7, 420, 4, 'group', 24, 3, '2026-06-13 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.439', '2026-06-04 20:58:22.449', NULL, 'TIMED', NULL, 'football-data', '537345', '2026-06-04 15:20:58.500');
+INSERT INTO `matches` VALUES (12, 537334, 421, 422, 2, 'group', 15, 14, '2026-06-14 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.452', '2026-06-04 20:58:23.868', NULL, 'TIMED', NULL, 'football-data', '537334', '2026-06-04 15:20:58.523');
+INSERT INTO `matches` VALUES (13, 537339, 9, 423, 3, 'group', 17, 15, '2026-06-14 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.467', '2026-06-04 20:58:22.751', NULL, 'TIMED', NULL, 'football-data', '537339', '2026-06-04 15:20:58.544');
+INSERT INTO `matches` VALUES (14, 537340, 424, 425, 3, 'group', 22, 17, '2026-06-14 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.480', '2026-06-04 20:58:24.032', NULL, 'TIMED', NULL, 'football-data', '537340', '2026-06-04 15:20:58.564');
+INSERT INTO `matches` VALUES (15, 537346, 426, 427, 4, 'group', 16, 8, '2026-06-14 12:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.494', '2026-06-04 20:58:23.419', NULL, 'TIMED', NULL, 'football-data', '537346', '2026-06-04 15:20:58.585');
+INSERT INTO `matches` VALUES (16, 537351, 14, 428, 5, 'group', 20, 16, '2026-06-15 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.508', '2026-06-04 20:58:24.168', NULL, 'TIMED', NULL, 'football-data', '537351', '2026-06-04 15:20:58.607');
+INSERT INTO `matches` VALUES (17, 537352, 429, 430, 5, 'group', 25, 18, '2026-06-15 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.534', '2026-06-04 20:58:23.545', NULL, 'TIMED', NULL, 'football-data', '537352', '2026-06-04 15:20:58.649');
+INSERT INTO `matches` VALUES (18, 537358, 431, 432, 6, 'group', 14, 13, '2026-06-15 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.549', '2026-06-04 20:58:23.566', NULL, 'TIMED', NULL, 'football-data', '537358', '2026-06-04 15:20:58.671');
+INSERT INTO `matches` VALUES (19, 537369, 10, 433, 8, 'group', 13, 12, '2026-06-16 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.563', '2026-06-04 20:58:22.878', NULL, 'TIMED', NULL, 'football-data', '537369', '2026-06-04 15:20:58.691');
+INSERT INTO `matches` VALUES (20, 537363, 16, 434, 7, 'group', 10, 5, '2026-06-16 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.577', '2026-06-04 20:58:23.439', NULL, 'TIMED', NULL, 'football-data', '537363', '2026-06-04 15:20:58.712');
+INSERT INTO `matches` VALUES (21, 537370, 435, 436, 8, 'group', 18, 6, '2026-06-16 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.590', '2026-06-04 20:58:22.282', NULL, 'TIMED', NULL, 'football-data', '537370', '2026-06-04 15:20:58.734');
+INSERT INTO `matches` VALUES (22, 537364, 437, 4, 7, 'group', 24, 3, '2026-06-16 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.605', '2026-06-04 20:58:23.707', NULL, 'TIMED', NULL, 'football-data', '537364', '2026-06-04 15:20:58.754');
+INSERT INTO `matches` VALUES (23, 537391, 6, 438, 9, 'group', 17, 15, '2026-06-17 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.619', '2026-06-04 20:58:23.585', NULL, 'TIMED', NULL, 'football-data', '537391', '2026-06-04 15:20:58.775');
+INSERT INTO `matches` VALUES (24, 537392, 439, 440, 9, 'group', 22, 17, '2026-06-17 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.633', '2026-06-04 20:58:22.772', NULL, 'TIMED', NULL, 'football-data', '537392', '2026-06-04 15:20:58.795');
+INSERT INTO `matches` VALUES (25, 537397, 5, 441, 10, 'group', 12, 11, '2026-06-17 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.647', '2026-06-04 20:58:24.189', NULL, 'TIMED', NULL, 'football-data', '537397', '2026-06-04 15:20:58.816');
+INSERT INTO `matches` VALUES (26, 537398, 442, 443, 10, 'group', 15, 14, '2026-06-17 12:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.661', '2026-06-04 20:58:22.792', NULL, 'TIMED', NULL, 'football-data', '537398', '2026-06-04 15:20:58.839');
+INSERT INTO `matches` VALUES (27, 537403, 12, 444, 11, 'group', 20, 16, '2026-06-18 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.675', '2026-06-04 20:58:23.605', NULL, 'TIMED', NULL, 'football-data', '537403', '2026-06-04 15:20:58.859');
+INSERT INTO `matches` VALUES (28, 537409, 11, 445, 12, 'group', 19, 4, '2026-06-18 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.688', '2026-06-04 20:58:23.335', NULL, 'TIMED', NULL, 'football-data', '537409', '2026-06-04 15:20:58.879');
+INSERT INTO `matches` VALUES (29, 537410, 8, 446, 12, 'group', 23, 7, '2026-06-18 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.701', '2026-06-04 20:58:22.140', NULL, 'TIMED', NULL, 'football-data', '537410', '2026-06-04 15:20:58.905');
+INSERT INTO `matches` VALUES (30, 537404, 447, 448, 11, 'group', 21, 1, '2026-06-18 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.713', '2026-06-04 20:58:22.469', NULL, 'TIMED', NULL, 'football-data', '537404', '2026-06-04 15:20:58.924');
+INSERT INTO `matches` VALUES (31, 537329, 418, 3, 1, 'group', 13, 12, '2026-06-19 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.726', '2026-06-04 20:58:22.814', NULL, 'TIMED', NULL, 'football-data', '537329', '2026-06-04 15:20:58.944');
+INSERT INTO `matches` VALUES (32, 537335, 422, 419, 2, 'group', 24, 3, '2026-06-19 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.739', '2026-06-04 20:58:23.888', NULL, 'TIMED', NULL, 'football-data', '537335', '2026-06-04 15:20:58.966');
+INSERT INTO `matches` VALUES (33, 537336, 2, 421, 2, 'group', 16, 8, '2026-06-19 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.751', '2026-06-04 20:58:22.303', NULL, 'TIMED', NULL, 'football-data', '537336', '2026-06-04 15:20:58.986');
+INSERT INTO `matches` VALUES (34, 537330, 1, 417, 1, 'group', 11, 10, '2026-06-19 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.764', '2026-06-04 20:58:22.323', NULL, 'TIMED', NULL, 'football-data', '537330', '2026-06-04 15:20:59.007');
+INSERT INTO `matches` VALUES (35, 537348, 7, 426, 4, 'group', 10, 5, '2026-06-20 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.776', '2026-06-04 20:58:24.050', NULL, 'TIMED', NULL, 'football-data', '537348', '2026-06-04 15:20:59.029');
+INSERT INTO `matches` VALUES (36, 537342, 425, 423, 3, 'group', 22, 17, '2026-06-20 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.790', '2026-06-04 20:58:23.727', NULL, 'TIMED', NULL, 'football-data', '537342', '2026-06-04 15:20:59.050');
+INSERT INTO `matches` VALUES (37, 537341, 9, 424, 3, 'group', 25, 18, '2026-06-20 08:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.802', '2026-06-04 20:58:22.342', NULL, 'TIMED', NULL, 'football-data', '537341', '2026-06-04 15:20:59.073');
+INSERT INTO `matches` VALUES (38, 537347, 427, 420, 4, 'group', 15, 14, '2026-06-20 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.814', '2026-06-04 20:58:22.491', NULL, 'TIMED', NULL, 'football-data', '537347', '2026-06-04 15:20:59.094');
+INSERT INTO `matches` VALUES (39, 537359, 15, 431, 6, 'group', 20, 16, '2026-06-21 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.827', '2026-06-04 20:58:23.624', NULL, 'TIMED', NULL, 'football-data', '537359', '2026-06-04 15:20:59.115');
+INSERT INTO `matches` VALUES (40, 537353, 14, 429, 5, 'group', 23, 7, '2026-06-21 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.839', '2026-06-04 20:58:24.071', NULL, 'TIMED', NULL, 'football-data', '537353', '2026-06-04 15:20:59.135');
+INSERT INTO `matches` VALUES (41, 537354, 430, 428, 5, 'group', 12, 11, '2026-06-21 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.852', '2026-06-04 20:58:22.898', NULL, 'TIMED', NULL, 'football-data', '537354', '2026-06-04 15:20:59.154');
+INSERT INTO `matches` VALUES (42, 537360, 432, 13, 6, 'group', 14, 13, '2026-06-21 12:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.864', '2026-06-04 20:58:22.513', NULL, 'TIMED', NULL, 'football-data', '537360', '2026-06-04 15:20:59.174');
+INSERT INTO `matches` VALUES (43, 537371, 10, 435, 8, 'group', 13, 12, '2026-06-22 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.876', '2026-06-04 20:58:23.462', NULL, 'TIMED', NULL, 'football-data', '537371', '2026-06-04 15:20:59.195');
+INSERT INTO `matches` VALUES (44, 537365, 16, 437, 7, 'group', 24, 3, '2026-06-22 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.890', '2026-06-04 20:58:23.483', NULL, 'TIMED', NULL, 'football-data', '537365', '2026-06-04 15:20:59.215');
+INSERT INTO `matches` VALUES (45, 537372, 436, 433, 8, 'group', 18, 6, '2026-06-22 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.903', '2026-06-04 20:58:23.150', NULL, 'TIMED', NULL, 'football-data', '537372', '2026-06-04 15:20:59.234');
+INSERT INTO `matches` VALUES (46, 537366, 4, 434, 7, 'group', 16, 8, '2026-06-22 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.916', '2026-06-04 20:58:23.645', NULL, 'TIMED', NULL, 'football-data', '537366', '2026-06-04 15:20:59.255');
+INSERT INTO `matches` VALUES (47, 537399, 5, 442, 10, 'group', 19, 4, '2026-06-23 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.931', '2026-06-04 20:58:22.622', NULL, 'TIMED', NULL, 'football-data', '537399', '2026-06-04 15:20:59.275');
+INSERT INTO `matches` VALUES (48, 537393, 6, 439, 9, 'group', 25, 18, '2026-06-23 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.946', '2026-06-04 20:58:22.600', NULL, 'TIMED', NULL, 'football-data', '537393', '2026-06-04 15:20:59.299');
+INSERT INTO `matches` VALUES (49, 537394, 440, 438, 9, 'group', 17, 15, '2026-06-23 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.960', '2026-06-04 20:58:22.160', NULL, 'TIMED', NULL, 'football-data', '537394', '2026-06-04 15:20:59.320');
+INSERT INTO `matches` VALUES (50, 537400, 443, 441, 10, 'group', 15, 14, '2026-06-23 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.975', '2026-06-04 20:58:23.745', NULL, 'TIMED', NULL, 'football-data', '537400', '2026-06-04 15:20:59.341');
+INSERT INTO `matches` VALUES (51, 537405, 12, 447, 11, 'group', 20, 16, '2026-06-24 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:25.989', '2026-06-04 20:58:24.209', NULL, 'TIMED', NULL, 'football-data', '537405', '2026-06-04 15:20:59.362');
+INSERT INTO `matches` VALUES (52, 537412, 446, 445, 12, 'group', 23, 7, '2026-06-24 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.018', '2026-06-04 20:58:24.290', NULL, 'TIMED', NULL, 'football-data', '537412', '2026-06-04 15:20:59.400');
+INSERT INTO `matches` VALUES (53, 537406, 448, 444, 11, 'group', 11, 10, '2026-06-24 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.031', '2026-06-04 20:58:22.181', NULL, 'TIMED', NULL, 'football-data', '537406', '2026-06-04 15:20:59.421');
+INSERT INTO `matches` VALUES (54, 537337, 422, 2, 2, 'group', 16, 8, '2026-06-25 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.045', '2026-06-04 20:58:23.764', NULL, 'TIMED', NULL, 'football-data', '537337', '2026-06-04 15:20:59.441');
+INSERT INTO `matches` VALUES (55, 537338, 419, 421, 2, 'group', 10, 5, '2026-06-25 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.057', '2026-06-04 20:58:23.784', NULL, 'TIMED', NULL, 'football-data', '537338', '2026-06-04 15:20:59.463');
+INSERT INTO `matches` VALUES (56, 537344, 423, 424, 3, 'group', 13, 12, '2026-06-25 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.071', '2026-06-04 20:58:22.938', NULL, 'TIMED', NULL, 'football-data', '537344', '2026-06-04 15:20:59.484');
+INSERT INTO `matches` VALUES (57, 537343, 425, 9, 3, 'group', 18, 6, '2026-06-25 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.086', '2026-06-04 20:58:22.919', NULL, 'TIMED', NULL, 'football-data', '537343', '2026-06-04 15:20:59.506');
+INSERT INTO `matches` VALUES (58, 537331, 418, 1, 1, 'group', 21, 1, '2026-06-25 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.099', '2026-06-04 20:58:24.090', NULL, 'TIMED', NULL, 'football-data', '537331', '2026-06-04 15:20:59.528');
+INSERT INTO `matches` VALUES (59, 537332, 3, 417, 1, 'group', 14, 13, '2026-06-25 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.111', '2026-06-04 20:58:22.974', NULL, 'TIMED', NULL, 'football-data', '537332', '2026-06-04 15:20:59.547');
+INSERT INTO `matches` VALUES (60, 537355, 430, 14, 5, 'group', 17, 15, '2026-06-26 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.126', '2026-06-04 20:58:24.109', NULL, 'TIMED', NULL, 'football-data', '537355', '2026-06-04 15:20:59.567');
+INSERT INTO `matches` VALUES (61, 537356, 428, 429, 5, 'group', 25, 18, '2026-06-26 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.140', '2026-06-04 20:58:24.228', NULL, 'TIMED', NULL, 'football-data', '537356', '2026-06-04 15:20:59.587');
+INSERT INTO `matches` VALUES (62, 537361, 432, 15, 6, 'group', 12, 11, '2026-06-26 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.153', '2026-06-04 20:58:22.709', NULL, 'TIMED', NULL, 'football-data', '537361', '2026-06-04 15:20:59.613');
+INSERT INTO `matches` VALUES (63, 537362, 13, 431, 6, 'group', 19, 4, '2026-06-26 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.165', '2026-06-04 20:58:22.689', NULL, 'TIMED', NULL, 'football-data', '537362', '2026-06-04 15:20:59.636');
+INSERT INTO `matches` VALUES (64, 537349, 427, 7, 4, 'group', 24, 3, '2026-06-26 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.177', '2026-06-04 20:58:23.804', NULL, 'TIMED', NULL, 'football-data', '537349', '2026-06-04 15:20:59.659');
+INSERT INTO `matches` VALUES (65, 537350, 420, 426, 4, 'group', 15, 14, '2026-06-26 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.190', '2026-06-04 20:58:24.311', NULL, 'TIMED', NULL, 'football-data', '537350', '2026-06-04 15:20:59.683');
+INSERT INTO `matches` VALUES (66, 537395, 440, 6, 9, 'group', 22, 17, '2026-06-27 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.202', '2026-06-04 20:58:24.249', NULL, 'TIMED', NULL, 'football-data', '537395', '2026-06-04 15:20:59.704');
+INSERT INTO `matches` VALUES (67, 537396, 438, 439, 9, 'group', 23, 7, '2026-06-27 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.214', '2026-06-04 20:58:22.833', NULL, 'TIMED', NULL, 'football-data', '537396', '2026-06-04 15:20:59.724');
+INSERT INTO `matches` VALUES (68, 537373, 436, 10, 8, 'group', 11, 10, '2026-06-27 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.227', '2026-06-04 20:58:23.360', NULL, 'TIMED', NULL, 'football-data', '537373', '2026-06-04 15:20:59.746');
+INSERT INTO `matches` VALUES (69, 537374, 433, 435, 8, 'group', 20, 16, '2026-06-27 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.241', '2026-06-04 20:58:24.336', NULL, 'TIMED', NULL, 'football-data', '537374', '2026-06-04 15:20:59.766');
+INSERT INTO `matches` VALUES (70, 537368, 434, 437, 7, 'group', 10, 5, '2026-06-27 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.267', '2026-06-04 20:58:23.684', NULL, 'TIMED', NULL, 'football-data', '537368', '2026-06-04 15:20:59.808');
+INSERT INTO `matches` VALUES (71, 537413, 446, 11, 12, 'group', 17, 15, '2026-06-28 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.281', '2026-06-04 20:58:23.379', NULL, 'TIMED', NULL, 'football-data', '537413', '2026-06-04 15:20:59.830');
+INSERT INTO `matches` VALUES (72, 537414, 445, 8, 12, 'group', 25, 18, '2026-06-28 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.293', '2026-06-04 20:58:22.364', NULL, 'TIMED', NULL, 'football-data', '537414', '2026-06-04 15:20:59.851');
+INSERT INTO `matches` VALUES (73, 537407, 448, 12, 11, 'group', 18, 6, '2026-06-28 07:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.307', '2026-06-04 20:58:22.731', NULL, 'TIMED', NULL, 'football-data', '537407', '2026-06-04 15:20:59.871');
+INSERT INTO `matches` VALUES (74, 537408, 444, 447, 11, 'group', 13, 12, '2026-06-28 07:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.319', '2026-06-04 20:58:22.645', NULL, 'TIMED', NULL, 'football-data', '537408', '2026-06-04 15:20:59.892');
+INSERT INTO `matches` VALUES (75, 537401, 443, 5, 10, 'group', 19, 4, '2026-06-28 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.331', '2026-06-04 20:58:24.269', NULL, 'TIMED', NULL, 'football-data', '537401', '2026-06-04 15:20:59.913');
+INSERT INTO `matches` VALUES (76, 537402, 441, 442, 10, 'group', 12, 11, '2026-06-28 10:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.345', '2026-06-04 20:58:23.008', NULL, 'TIMED', NULL, 'football-data', '537402', '2026-06-04 15:20:59.933');
+INSERT INTO `matches` VALUES (77, 537417, 449, 449, NULL, 'round_of_32', 24, 3, '2026-06-29 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.361', '2026-06-04 20:58:23.186', NULL, 'TIMED', NULL, 'football-data', '537417', '2026-06-04 15:20:59.953');
+INSERT INTO `matches` VALUES (78, 537423, 449, 449, NULL, 'round_of_32', 20, 16, '2026-06-30 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.373', '2026-06-04 20:58:23.823', NULL, 'TIMED', NULL, 'football-data', '537423', '2026-06-04 15:20:59.974');
+INSERT INTO `matches` VALUES (79, 537415, 449, 449, NULL, 'round_of_32', 22, 17, '2026-06-30 04:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.397', '2026-06-04 20:58:23.218', NULL, 'TIMED', NULL, 'football-data', '537415', '2026-06-04 15:20:59.994');
+INSERT INTO `matches` VALUES (80, 537418, 449, 449, NULL, 'round_of_32', 14, 13, '2026-06-30 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.423', '2026-06-04 20:58:22.535', NULL, 'TIMED', NULL, 'football-data', '537418', '2026-06-04 15:21:00.015');
+INSERT INTO `matches` VALUES (81, 537424, 449, 449, NULL, 'round_of_32', 19, 4, '2026-07-01 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.443', '2026-06-04 20:58:23.909', NULL, 'TIMED', NULL, 'football-data', '537424', '2026-06-04 15:21:00.035');
+INSERT INTO `matches` VALUES (82, 537416, 449, 449, NULL, 'round_of_32', 17, 15, '2026-07-01 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.465', '2026-06-04 20:58:22.384', NULL, 'TIMED', NULL, 'football-data', '537416', '2026-06-04 15:21:00.056');
+INSERT INTO `matches` VALUES (83, 537425, 449, 449, NULL, 'round_of_32', 21, 1, '2026-07-01 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.487', '2026-06-04 20:58:23.929', NULL, 'TIMED', NULL, 'football-data', '537425', '2026-06-04 15:21:00.075');
+INSERT INTO `matches` VALUES (84, 537426, 449, 449, NULL, 'round_of_32', 13, 12, '2026-07-02 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.508', '2026-06-04 20:58:24.359', NULL, 'TIMED', NULL, 'football-data', '537426', '2026-06-04 15:21:00.094');
+INSERT INTO `matches` VALUES (85, 537422, 449, 449, NULL, 'round_of_32', 10, 5, '2026-07-02 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.531', '2026-06-04 20:58:23.843', NULL, 'TIMED', NULL, 'football-data', '537422', '2026-06-04 15:21:00.114');
+INSERT INTO `matches` VALUES (86, 537421, 449, 449, NULL, 'round_of_32', 15, 14, '2026-07-02 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.553', '2026-06-04 20:58:23.045', NULL, 'TIMED', NULL, 'football-data', '537421', '2026-06-04 15:21:00.137');
+INSERT INTO `matches` VALUES (87, 537420, 449, 449, NULL, 'round_of_32', 24, 3, '2026-07-03 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.576', '2026-06-04 20:58:22.200', NULL, 'TIMED', NULL, 'football-data', '537420', '2026-06-04 15:21:00.159');
+INSERT INTO `matches` VALUES (88, 537419, 449, 449, NULL, 'round_of_32', 23, 7, '2026-07-03 07:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.599', '2026-06-04 20:58:23.951', NULL, 'TIMED', NULL, 'football-data', '537419', '2026-06-04 15:21:00.179');
+INSERT INTO `matches` VALUES (89, 537429, 449, 449, NULL, 'round_of_32', 16, 8, '2026-07-03 11:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.618', '2026-06-04 20:58:22.558', NULL, 'TIMED', NULL, 'football-data', '537429', '2026-06-04 15:21:00.201');
+INSERT INTO `matches` VALUES (90, 537428, 449, 449, NULL, 'round_of_32', 19, 4, '2026-07-04 02:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.632', '2026-06-04 20:58:22.858', NULL, 'TIMED', NULL, 'football-data', '537428', '2026-06-04 15:21:00.223');
+INSERT INTO `matches` VALUES (91, 537427, 449, 449, NULL, 'round_of_32', 18, 6, '2026-07-04 06:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.645', '2026-06-04 20:58:24.150', NULL, 'TIMED', NULL, 'football-data', '537427', '2026-06-04 15:21:00.244');
+INSERT INTO `matches` VALUES (92, 537430, 449, 449, NULL, 'round_of_32', 12, 11, '2026-07-04 09:30:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.657', '2026-06-04 20:58:22.405', NULL, 'TIMED', NULL, 'football-data', '537430', '2026-06-04 15:21:00.264');
+INSERT INTO `matches` VALUES (93, 537376, 449, 449, NULL, 'round_of_16', 20, 16, '2026-07-05 01:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.669', '2026-06-04 20:58:22.221', NULL, 'TIMED', NULL, 'football-data', '537376', '2026-06-04 15:21:00.284');
+INSERT INTO `matches` VALUES (94, 537375, 449, 449, NULL, 'round_of_16', 25, 18, '2026-07-05 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.682', '2026-06-04 20:58:24.388', NULL, 'TIMED', NULL, 'football-data', '537375', '2026-06-04 15:21:00.307');
+INSERT INTO `matches` VALUES (95, 537377, 449, 449, NULL, 'round_of_16', 17, 15, '2026-07-06 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.695', '2026-06-04 20:58:23.970', NULL, 'TIMED', NULL, 'football-data', '537377', '2026-06-04 15:21:00.326');
+INSERT INTO `matches` VALUES (96, 537378, 449, 449, NULL, 'round_of_16', 21, 1, '2026-07-06 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.706', '2026-06-04 20:58:23.255', NULL, 'TIMED', NULL, 'football-data', '537378', '2026-06-04 15:21:00.348');
+INSERT INTO `matches` VALUES (97, 537379, 449, 449, NULL, 'round_of_16', 19, 4, '2026-07-07 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.719', '2026-06-04 20:58:22.581', NULL, 'TIMED', NULL, 'football-data', '537379', '2026-06-04 15:21:00.373');
+INSERT INTO `matches` VALUES (98, 537380, 449, 449, NULL, 'round_of_16', 10, 5, '2026-07-07 08:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.736', '2026-06-04 20:58:23.275', NULL, 'TIMED', NULL, 'football-data', '537380', '2026-06-04 15:21:00.394');
+INSERT INTO `matches` VALUES (99, 537381, 449, 449, NULL, 'round_of_16', 13, 12, '2026-07-08 00:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.748', '2026-06-04 20:58:23.295', NULL, 'TIMED', NULL, 'football-data', '537381', '2026-06-04 15:21:00.415');
+INSERT INTO `matches` VALUES (100, 537382, 449, 449, NULL, 'round_of_16', 16, 8, '2026-07-08 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.761', '2026-06-04 20:58:23.315', NULL, 'TIMED', NULL, 'football-data', '537382', '2026-06-04 15:21:00.438');
+INSERT INTO `matches` VALUES (101, 537383, 449, 449, NULL, 'quarter_final', 22, 17, '2026-07-10 04:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.774', '2026-06-04 20:58:23.080', NULL, 'TIMED', NULL, 'football-data', '537383', '2026-06-04 15:21:00.456');
+INSERT INTO `matches` VALUES (102, 537384, 449, 449, NULL, 'quarter_final', 24, 3, '2026-07-11 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.787', '2026-06-04 20:58:23.399', NULL, 'TIMED', NULL, 'football-data', '537384', '2026-06-04 15:21:00.477');
+INSERT INTO `matches` VALUES (103, 537385, 449, 449, NULL, 'quarter_final', 18, 6, '2026-07-12 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.799', '2026-06-04 20:58:22.667', NULL, 'TIMED', NULL, 'football-data', '537385', '2026-06-04 15:21:00.497');
+INSERT INTO `matches` VALUES (104, 537386, 449, 449, NULL, 'quarter_final', 12, 11, '2026-07-12 09:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.810', '2026-06-04 20:58:23.987', NULL, 'TIMED', NULL, 'football-data', '537386', '2026-06-04 15:21:00.517');
+INSERT INTO `matches` VALUES (105, 537387, 449, 449, NULL, 'semi_final', 19, 4, '2026-07-15 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.824', '2026-06-04 20:58:23.503', NULL, 'TIMED', NULL, 'football-data', '537387', '2026-06-04 15:21:00.541');
+INSERT INTO `matches` VALUES (106, 537388, 449, 449, NULL, 'semi_final', 13, 12, '2026-07-16 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.837', '2026-06-04 20:58:24.011', NULL, 'TIMED', NULL, 'football-data', '537388', '2026-06-04 15:21:00.561');
+INSERT INTO `matches` VALUES (107, 537389, 449, 449, NULL, 'third_place', 18, 6, '2026-07-19 05:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.849', '2026-06-04 20:58:22.242', NULL, 'TIMED', NULL, 'football-data', '537389', '2026-06-04 15:21:00.581');
+INSERT INTO `matches` VALUES (108, 537390, 449, 449, NULL, 'final', 17, 15, '2026-07-20 03:00:00.000', NULL, NULL, 'scheduled', NULL, 0, '', '', '2026-06-02 16:17:26.861', '2026-06-04 20:58:23.523', NULL, 'TIMED', NULL, 'football-data', '537390', '2026-06-04 15:21:00.603');
 
 -- ----------------------------
 -- Table structure for notifications
@@ -302,7 +445,7 @@ CREATE TABLE `notifications`  (
   INDEX `idx_notifications_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_notifications_user_read`(`user_id` ASC, `is_read` ASC) USING BTREE,
   INDEX `idx_notifications_created_at`(`created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notifications
@@ -331,7 +474,7 @@ CREATE TABLE `reminders`  (
   INDEX `idx_reminders_status`(`status` ASC) USING BTREE,
   CONSTRAINT `fk_reminders_match` FOREIGN KEY (`match_id`) REFERENCES `matches` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_reminders_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of reminders
@@ -358,7 +501,7 @@ CREATE TABLE `stadia`  (
   INDEX `idx_stadia_name_en`(`name_en` ASC) USING BTREE,
   INDEX `idx_stadia_city_id`(`city_id` ASC) USING BTREE,
   CONSTRAINT `fk_stadia_city` FOREIGN KEY (`city_id`) REFERENCES `cities` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of stadia
@@ -372,22 +515,22 @@ INSERT INTO `stadia` VALUES (6, 'Hard Rock Stadium', 'Hard Rock Stadium', 6, 650
 INSERT INTO `stadia` VALUES (7, 'BMO Field', 'BMO Field', 7, 30000, '', '2026-06-02 11:53:03.370', '2026-06-02 11:53:03.370', NULL);
 INSERT INTO `stadia` VALUES (8, 'BC Place', 'BC Place', 8, 54000, '', '2026-06-02 11:53:03.376', '2026-06-02 11:53:03.376', NULL);
 INSERT INTO `stadia` VALUES (9, 'TBD', 'TBD', 9, 0, '', '2026-06-02 15:55:43.026', '2026-06-02 15:55:43.026', NULL);
-INSERT INTO `stadia` VALUES (10, '西雅图体育场', 'Seattle Stadium', 5, 0, '', '2026-06-04 10:01:09.670', '2026-06-04 15:21:00.391', NULL);
-INSERT INTO `stadia` VALUES (11, '瓜达拉哈拉体育场', 'Guadalajara Stadium', 10, 0, '', '2026-06-04 10:01:09.697', '2026-06-04 15:20:59.743', NULL);
-INSERT INTO `stadia` VALUES (12, '堪萨斯城体育场', 'Kansas City Stadium', 11, 0, '', '2026-06-04 10:01:09.709', '2026-06-04 15:21:00.514', NULL);
-INSERT INTO `stadia` VALUES (13, '亚特兰大体育场', 'Atlanta Stadium', 12, 0, '', '2026-06-04 10:01:09.720', '2026-06-04 15:21:00.558', NULL);
-INSERT INTO `stadia` VALUES (14, '蒙特雷体育场', 'Monterrey Stadium', 13, 0, '', '2026-06-04 10:01:09.733', '2026-06-04 15:21:00.011', NULL);
-INSERT INTO `stadia` VALUES (15, '旧金山湾区体育场', 'San Francisco Bay Area Stadium', 14, 0, '', '2026-06-04 10:01:09.743', '2026-06-04 15:21:00.134', NULL);
-INSERT INTO `stadia` VALUES (16, '温哥华 BC Place', 'BC Place Vancouver', 8, 0, '', '2026-06-04 10:01:09.756', '2026-06-04 15:21:00.434', NULL);
-INSERT INTO `stadia` VALUES (17, '纽约/新泽西体育场', 'New York/New Jersey Stadium', 15, 0, '', '2026-06-04 10:01:09.768', '2026-06-04 15:21:00.598', NULL);
-INSERT INTO `stadia` VALUES (18, '迈阿密体育场', 'Miami Stadium', 6, 0, '', '2026-06-04 10:01:09.790', '2026-06-04 15:21:00.578', NULL);
-INSERT INTO `stadia` VALUES (19, '达拉斯体育场', 'Dallas Stadium', 4, 0, '', '2026-06-04 10:01:09.814', '2026-06-04 15:21:00.538', NULL);
-INSERT INTO `stadia` VALUES (20, '休斯敦体育场', 'Houston Stadium', 16, 0, '', '2026-06-04 10:01:09.827', '2026-06-04 15:21:00.281', NULL);
-INSERT INTO `stadia` VALUES (21, '墨西哥城体育场', 'Mexico City Stadium', 1, 0, '', '2026-06-04 10:01:09.875', '2026-06-04 15:21:00.344', NULL);
-INSERT INTO `stadia` VALUES (22, '波士顿体育场', 'Boston Stadium', 17, 0, '', '2026-06-04 10:01:09.899', '2026-06-04 15:21:00.454', NULL);
-INSERT INTO `stadia` VALUES (23, '多伦多体育场', 'Toronto Stadium', 7, 0, '', '2026-06-04 10:01:09.923', '2026-06-04 15:21:00.176', NULL);
-INSERT INTO `stadia` VALUES (24, '洛杉矶体育场', 'Los Angeles Stadium', 3, 0, '', '2026-06-04 10:01:09.996', '2026-06-04 15:21:00.474', NULL);
-INSERT INTO `stadia` VALUES (25, '费城体育场', 'Philadelphia Stadium', 18, 0, '', '2026-06-04 10:01:10.091', '2026-06-04 15:21:00.303', NULL);
+INSERT INTO `stadia` VALUES (10, '西雅图体育场', 'Seattle Stadium', 5, 0, '', '2026-06-04 10:01:09.670', '2026-06-04 20:58:24.044', NULL);
+INSERT INTO `stadia` VALUES (11, '瓜达拉哈拉体育场', 'Guadalajara Stadium', 10, 0, '', '2026-06-04 10:01:09.697', '2026-06-04 20:58:23.354', NULL);
+INSERT INTO `stadia` VALUES (12, '堪萨斯城体育场', 'Kansas City Stadium', 11, 0, '', '2026-06-04 10:01:09.709', '2026-06-04 20:58:24.182', NULL);
+INSERT INTO `stadia` VALUES (13, '亚特兰大体育场', 'Atlanta Stadium', 12, 0, '', '2026-06-04 10:01:09.720', '2026-06-04 20:58:24.352', NULL);
+INSERT INTO `stadia` VALUES (14, '蒙特雷体育场', 'Monterrey Stadium', 13, 0, '', '2026-06-04 10:01:09.733', '2026-06-04 20:58:23.559', NULL);
+INSERT INTO `stadia` VALUES (15, '旧金山湾区体育场', 'San Francisco Bay Area Stadium', 14, 0, '', '2026-06-04 10:01:09.743', '2026-06-04 20:58:24.304', NULL);
+INSERT INTO `stadia` VALUES (16, '温哥华 BC Place', 'BC Place Vancouver', 8, 0, '', '2026-06-04 10:01:09.756', '2026-06-04 20:58:24.123', NULL);
+INSERT INTO `stadia` VALUES (17, '纽约/新泽西体育场', 'New York/New Jersey Stadium', 15, 0, '', '2026-06-04 10:01:09.768', '2026-06-04 20:58:24.103', NULL);
+INSERT INTO `stadia` VALUES (18, '迈阿密体育场', 'Miami Stadium', 6, 0, '', '2026-06-04 10:01:09.790', '2026-06-04 20:58:24.143', NULL);
+INSERT INTO `stadia` VALUES (19, '达拉斯体育场', 'Dallas Stadium', 4, 0, '', '2026-06-04 10:01:09.814', '2026-06-04 20:58:24.263', NULL);
+INSERT INTO `stadia` VALUES (20, '休斯敦体育场', 'Houston Stadium', 16, 0, '', '2026-06-04 10:01:09.827', '2026-06-04 20:58:24.329', NULL);
+INSERT INTO `stadia` VALUES (21, '墨西哥城体育场', 'Mexico City Stadium', 1, 0, '', '2026-06-04 10:01:09.875', '2026-06-04 20:58:24.084', NULL);
+INSERT INTO `stadia` VALUES (22, '波士顿体育场', 'Boston Stadium', 17, 0, '', '2026-06-04 10:01:09.899', '2026-06-04 20:58:24.243', NULL);
+INSERT INTO `stadia` VALUES (23, '多伦多体育场', 'Toronto Stadium', 7, 0, '', '2026-06-04 10:01:09.923', '2026-06-04 20:58:24.283', NULL);
+INSERT INTO `stadia` VALUES (24, '洛杉矶体育场', 'Los Angeles Stadium', 3, 0, '', '2026-06-04 10:01:09.996', '2026-06-04 20:58:23.881', NULL);
+INSERT INTO `stadia` VALUES (25, '费城体育场', 'Philadelphia Stadium', 18, 0, '', '2026-06-04 10:01:10.091', '2026-06-04 20:58:24.380', NULL);
 
 -- ----------------------------
 -- Table structure for sync_states
@@ -405,7 +548,7 @@ CREATE TABLE `sync_states`  (
   `updated_at` datetime(3) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_sync_state`(`provider` ASC, `resource` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sync_states
@@ -437,7 +580,7 @@ CREATE TABLE `teams`  (
   INDEX `idx_teams_continent`(`continent` ASC) USING BTREE,
   INDEX `idx_teams_group_id`(`group_id` ASC) USING BTREE,
   CONSTRAINT `fk_teams_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 451 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 451 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of teams
@@ -506,7 +649,7 @@ CREATE TABLE `user_favorite_matches`  (
   UNIQUE INDEX `idx_user_match`(`user_id` ASC, `match_id` ASC) USING BTREE,
   INDEX `fk_user_favorite_matches_match`(`match_id` ASC) USING BTREE,
   CONSTRAINT `fk_user_favorite_matches_match` FOREIGN KEY (`match_id`) REFERENCES `matches` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_favorite_matches
@@ -525,7 +668,7 @@ CREATE TABLE `user_favorite_teams`  (
   UNIQUE INDEX `idx_user_team`(`user_id` ASC, `team_id` ASC) USING BTREE,
   INDEX `fk_user_favorite_teams_team`(`team_id` ASC) USING BTREE,
   CONSTRAINT `fk_user_favorite_teams_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_favorite_teams
@@ -553,7 +696,7 @@ CREATE TABLE `users`  (
   UNIQUE INDEX `idx_users_username`(`username` ASC) USING BTREE,
   UNIQUE INDEX `idx_users_email`(`email` ASC) USING BTREE,
   INDEX `idx_users_deleted_at`(`deleted_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of users

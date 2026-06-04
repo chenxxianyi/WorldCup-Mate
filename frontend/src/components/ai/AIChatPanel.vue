@@ -29,38 +29,36 @@ const emit = defineEmits<{
       <p v-if="error" class="error">{{ error }}</p>
     </div>
 
-    <AIInputBox :loading="loading" @send="emit('send', $event)" />
+    <AIInputBox class="chat-input" :loading="loading" @send="emit('send', $event)" />
   </section>
 </template>
 
 <style scoped>
 .chat-panel {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .messages {
-  min-height: 420px;
+  min-height: 390px;
   display: grid;
   align-content: start;
   gap: 12px;
 }
 
 .empty {
-  min-height: 260px;
+  min-height: 210px;
   display: grid;
   place-items: center;
-  gap: 10px;
-  padding: 24px;
-  border: 1px dashed var(--line);
-  border-radius: var(--radius-xl);
+  gap: 8px;
+  padding: 18px 8px;
   text-align: center;
   color: var(--muted);
 }
 
 .empty .material-symbols-outlined {
-  color: var(--primary);
-  font-size: 34px;
+  color: var(--weak);
+  font-size: 28px;
 }
 
 .empty p {
@@ -71,15 +69,27 @@ const emit = defineEmits<{
 
 .assistant-loading {
   width: fit-content;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--card);
+  padding: 2px 0 2px 42px;
 }
 
 .error {
   margin: 0;
-  color: var(--primary);
+  color: var(--blue);
   font-size: 13px;
+}
+
+@media (max-width: 767px) {
+  .chat-panel {
+    padding-bottom: calc(var(--nav-h) + 118px + env(safe-area-inset-bottom));
+  }
+
+  .chat-input {
+    position: fixed;
+    z-index: 18;
+    left: 50%;
+    bottom: calc(var(--nav-h) + 36px + env(safe-area-inset-bottom));
+    width: min(calc(100vw - 48px), 560px);
+    transform: translateX(-50%);
+  }
 }
 </style>

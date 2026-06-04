@@ -133,6 +133,13 @@ type AIChatResponse struct {
 	Message        AIChatMessageResponse `json:"message"`
 }
 
+type AIChatStreamEvent struct {
+	Type           string                 `json:"type"`
+	ConversationID uint                   `json:"conversation_id,omitempty"`
+	Delta          string                 `json:"delta,omitempty"`
+	Message        *AIChatMessageResponse `json:"message,omitempty"`
+}
+
 type AIConversationResponse struct {
 	ID          uint                    `json:"id"`
 	Title       string                  `json:"title"`
@@ -199,6 +206,10 @@ func GenerateShareCopy(ctx context.Context, req ShareCopyRequest, userID *uint, 
 
 func Chat(ctx context.Context, req AIChatRequest, userID uint, ip string) (*AIChatResponse, error) {
 	return currentAI().Chat(ctx, req, userID, ip)
+}
+
+func ChatStream(ctx context.Context, req AIChatRequest, userID uint, ip string, onEvent func(AIChatStreamEvent) error) (*AIChatResponse, error) {
+	return currentAI().ChatStream(ctx, req, userID, ip, onEvent)
 }
 
 func ListAIConversations(userID uint) ([]AIConversationResponse, error) {
@@ -493,7 +504,7 @@ func (s *AIService) Chat(ctx context.Context, req AIChatRequest, userID uint, ip
 		messages = append(messages, ai.Message{Role: msg.Role, Content: msg.Content})
 	}
 	factContext := s.builder.ChatContext(contextType, req.ContextID, userID)
-	prompt := "TASK:chat\nUse only necessary facts. Answer in concise Chinese.\nFacts:\n" + factContext
+	prompt := "TASK:chat\n你是世界杯聊天助手。优先按 2026 世界杯、国家队、赛程、分组、晋级规则、观赛建议来理解用户问题。若用户问球员或球队且没有说明俱乐部，请先回答其国家队/世界杯相关身份，再用一句话补充俱乐部背景。不要把俱乐部信息当作唯一答案。回答使用简洁中文，先给结论，再给关键说明；只使用必要事实，不确定时说明需要以最新官方名单/赛程为准。使用纯文本输出，不要使用 Markdown 加粗、斜体或标题语法，不要输出 **、__、# 等格式符号。\nFacts:\n" + factContext
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, messages)
 	if err != nil {
 		s.logUsage(&userID, ip, "chat", "failed", err, providerRes, latency)
@@ -523,6 +534,126 @@ func (s *AIService) Chat(ctx context.Context, req AIChatRequest, userID uint, ip
 	return &AIChatResponse{
 		ConversationID: conv.ID,
 		Message:        messageResponse(*assistantMsg),
+	}, nil
+}
+
+func (s *AIService) ChatStream(ctx context.Context, req AIChatRequest, userID uint, ip string, onEvent func(AIChatStreamEvent) error) (*AIChatResponse, error) {
+	req.Message = strings.TrimSpace(req.Message)
+	if req.Message == "" {
+		return nil, fmt.Errorf("请输入消息")
+	}
+	if err := s.checkLimit(ctx, &userID); err != nil {
+		return nil, err
+	}
+	streamingProvider, ok := s.provider.(ai.StreamingProvider)
+	if !ok {
+		return nil, fmt.Errorf("当前 AI 服务不支持流式输出")
+	}
+
+	contextType := defaultContext(req.ContextType)
+	var conv *models.AIConversation
+	var err error
+	if req.ConversationID != nil && *req.ConversationID > 0 {
+		conv, err = repositories.GetConversation(userID, *req.ConversationID)
+		if err != nil {
+			return nil, fmt.Errorf("会话不存在")
+		}
+	} else {
+		conv = &models.AIConversation{
+			UserID:      userID,
+			Title:       conversationTitle(req.Message),
+			ContextType: contextType,
+			ContextID:   req.ContextID,
+		}
+		if err := repositories.CreateConversation(conv); err != nil {
+			return nil, fmt.Errorf("创建会话失败")
+		}
+	}
+	if onEvent != nil {
+		if err := onEvent(AIChatStreamEvent{Type: "start", ConversationID: conv.ID}); err != nil {
+			return nil, err
+		}
+	}
+
+	userMsg := &models.AIMessage{ConversationID: conv.ID, UserID: userID, Role: "user", Content: req.Message}
+	if err := repositories.SaveMessage(userMsg); err != nil {
+		return nil, fmt.Errorf("保存消息失败")
+	}
+
+	recent, _ := repositories.ListRecentMessages(userID, conv.ID, 8)
+	messages := make([]ai.Message, 0, len(recent))
+	for _, msg := range recent {
+		messages = append(messages, ai.Message{Role: msg.Role, Content: msg.Content})
+	}
+	factContext := s.builder.ChatContext(contextType, req.ContextID, userID)
+	prompt := "TASK:chat\n你是世界杯聊天助手。优先按 2026 世界杯、国家队、赛程、分组、晋级规则、观赛建议来理解用户问题。若用户问球员或球队且没有说明俱乐部，请先回答其国家队/世界杯相关身份，再用一句话补充俱乐部背景。不要把俱乐部信息当作唯一答案。回答使用简洁中文，先给结论，再给关键说明；只使用必要事实，不确定时说明需要以最新官方名单/赛程为准。使用纯文本输出，不要使用 Markdown 加粗、斜体或标题语法，不要输出 **、__、# 等格式符号。\nFacts:\n" + factContext
+
+	start := time.Now()
+	timeout := time.Duration(s.cfg.TimeoutSeconds) * time.Second
+	if timeout <= 0 {
+		timeout = 60 * time.Second
+	}
+	callCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	providerRes, err := streamingProvider.ChatStream(callCtx, ai.ChatRequest{
+		SystemPrompt: ai.BuildSystemPrompt(),
+		UserPrompt:   prompt,
+		Messages:     messages,
+		Model:        s.cfg.Model,
+		Temperature:  s.cfg.Temperature,
+		MaxTokens:    s.cfg.MaxTokens,
+	}, func(delta ai.StreamDelta) error {
+		if delta.Content == "" || onEvent == nil {
+			return nil
+		}
+		return onEvent(AIChatStreamEvent{
+			Type:           "delta",
+			ConversationID: conv.ID,
+			Delta:          delta.Content,
+		})
+	})
+	latency := time.Since(start).Milliseconds()
+	if err != nil {
+		s.logUsage(&userID, ip, "chat_stream", "failed", err, providerRes, latency)
+		return nil, aiUserError(err)
+	}
+	raw := strings.TrimSpace(providerRes.Content)
+	if raw == "" {
+		err := fmt.Errorf("AI provider returned empty response")
+		s.logUsage(&userID, ip, "chat_stream", "failed", err, providerRes, latency)
+		return nil, aiUserError(err)
+	}
+	if err := ai.ValidateOutput(raw); err != nil {
+		s.logUsage(&userID, ip, "chat_stream", "failed", err, providerRes, latency)
+		return nil, fmt.Errorf("AI 输出未通过安全检查")
+	}
+
+	assistantMsg := &models.AIMessage{
+		ConversationID:   conv.ID,
+		UserID:           userID,
+		Role:             "assistant",
+		Content:          raw,
+		Provider:         s.provider.Name(),
+		Model:            providerModel(providerRes, s.cfg.Model),
+		PromptTokens:     providerTokens(providerRes, "prompt"),
+		CompletionTokens: providerTokens(providerRes, "completion"),
+		TotalTokens:      providerTokens(providerRes, "total"),
+	}
+	if err := repositories.SaveMessage(assistantMsg); err != nil {
+		return nil, fmt.Errorf("保存回复失败")
+	}
+	conv.LastMessage = raw
+	_ = repositories.UpdateConversation(conv)
+	msgRes := messageResponse(*assistantMsg)
+	if onEvent != nil {
+		if err := onEvent(AIChatStreamEvent{Type: "done", ConversationID: conv.ID, Message: &msgRes}); err != nil {
+			return nil, err
+		}
+	}
+	s.logUsage(&userID, ip, "chat_stream", "success", nil, providerRes, latency)
+	return &AIChatResponse{
+		ConversationID: conv.ID,
+		Message:        msgRes,
 	}, nil
 }
 

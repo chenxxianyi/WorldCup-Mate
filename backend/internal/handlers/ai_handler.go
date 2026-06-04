@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -96,6 +98,39 @@ func AIChat(c *gin.Context) {
 		return
 	}
 	utils.Success(c, res)
+}
+
+func AIChatStream(c *gin.Context) {
+	userID, ok := requiredUserID(c)
+	if !ok {
+		return
+	}
+	var req services.AIChatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c, 400, "请求参数不正确")
+		return
+	}
+
+	c.Header("Content-Type", "text/event-stream; charset=utf-8")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
+
+	flush := func(event services.AIChatStreamEvent) error {
+		body, err := json.Marshal(event)
+		if err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintf(c.Writer, "data: %s\n\n", body); err != nil {
+			return err
+		}
+		c.Writer.Flush()
+		return nil
+	}
+
+	if _, err := services.ChatStream(c.Request.Context(), req, userID, c.ClientIP(), flush); err != nil {
+		_ = flush(services.AIChatStreamEvent{Type: "error", Delta: err.Error()})
+	}
 }
 
 func AIListConversations(c *gin.Context) {

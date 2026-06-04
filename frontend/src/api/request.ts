@@ -8,7 +8,7 @@ const request = axios.create({
 })
 
 request.interceptors.request.use((config) => {
-  const token = localStorage.getItem('wm-token')
+  const token = localStorage.getItem('wm-token') || sessionStorage.getItem('wm-token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }

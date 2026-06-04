@@ -20,26 +20,45 @@ defineEmits<{
 
 <style scoped>
 .prompt-card {
-  min-height: 86px;
-  display: grid;
-  align-content: start;
-  gap: 6px;
-  padding: 13px;
+  min-width: 190px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 11px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   text-align: left;
   color: var(--text);
   background: var(--card);
-  box-shadow: var(--shadow);
+  box-shadow: none;
+  transition: border-color 160ms ease-out, color 160ms ease-out, background 160ms ease-out;
+}
+
+.prompt-card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.prompt-card:hover {
+  color: var(--blue);
+  border-color: color-mix(in srgb, var(--blue) 28%, var(--line));
+  background: color-mix(in srgb, var(--blue) 5%, var(--card));
 }
 
 .prompt-card .material-symbols-outlined {
-  color: var(--primary);
-  font-size: 22px;
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 18px;
 }
 
 .prompt-card strong {
-  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .prompt-card small {

@@ -43,9 +43,13 @@ function submit() {
   align-items: end;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   background: var(--card);
-  box-shadow: var(--shadow);
+  box-shadow: none;
+}
+
+.input-box:focus-within {
+  border-color: color-mix(in srgb, var(--blue) 36%, var(--line));
 }
 
 textarea {
@@ -66,14 +70,19 @@ textarea::placeholder {
 }
 
 .send-btn {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   color: #fff;
-  background: var(--primary);
+  background: var(--blue);
+}
+
+.send-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue) 55%, transparent);
+  outline-offset: 2px;
 }
 
 .send-btn:disabled {

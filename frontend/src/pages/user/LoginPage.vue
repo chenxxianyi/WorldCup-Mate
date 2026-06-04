@@ -1,18 +1,41 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const router = useRouter()
 const auth = useAuthStore()
 
+const SAVED_LOGIN_KEY = 'wm-saved-login'
+const AUTO_LOGIN_KEY = 'wm-auto-login'
+
+type SavedLogin = {
+  email?: string
+  password?: string
+}
+
+function getSavedLogin(): SavedLogin {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_LOGIN_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+const savedLogin = getSavedLogin()
 const isRegister = ref(false)
 const username = ref('')
-const email = ref('')
-const password = ref('')
+const email = ref(savedLogin.email || '')
+const password = ref(savedLogin.password || '')
+const rememberPassword = ref(Boolean(savedLogin.email && savedLogin.password))
+const autoLogin = ref(localStorage.getItem(AUTO_LOGIN_KEY) === '1')
 const error = ref('')
 const loading = ref(false)
 const showTestAccount = import.meta.env.DEV
+
+watch(autoLogin, (enabled) => {
+  if (enabled) rememberPassword.value = true
+})
 
 async function handleSubmit() {
   error.value = ''
@@ -21,7 +44,17 @@ async function handleSubmit() {
     if (isRegister.value) {
       await auth.register(username.value, email.value, password.value)
     } else {
-      await auth.login(email.value, password.value)
+      await auth.login(email.value, password.value, autoLogin.value)
+      if (rememberPassword.value) {
+        localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({ email: email.value, password: password.value }))
+      } else {
+        localStorage.removeItem(SAVED_LOGIN_KEY)
+      }
+      if (autoLogin.value) {
+        localStorage.setItem(AUTO_LOGIN_KEY, '1')
+      } else {
+        localStorage.removeItem(AUTO_LOGIN_KEY)
+      }
     }
     router.push('/')
   } catch (e: any) {
@@ -48,6 +81,16 @@ async function handleSubmit() {
         <div class="field">
           <label>密码</label>
           <input v-model="password" type="password" placeholder="请输入密码" required />
+        </div>
+        <div v-if="!isRegister" class="login-options" aria-label="登录选项">
+          <label class="option-row">
+            <input v-model="rememberPassword" type="checkbox" />
+            <span>记住密码</span>
+          </label>
+          <label class="option-row">
+            <input v-model="autoLogin" type="checkbox" />
+            <span>自动登录</span>
+          </label>
         </div>
         <p v-if="error" class="error">{{ error }}</p>
         <button class="pill-btn primary submit-btn" type="submit" :disabled="loading">
@@ -109,6 +152,34 @@ async function handleSubmit() {
 
 .field input:focus {
   border-color: var(--primary);
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.option-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.option-row input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--primary);
 }
 
 .error {

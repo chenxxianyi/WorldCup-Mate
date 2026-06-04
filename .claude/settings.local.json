@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"d:\\\\project\\\\AI Website Builder\\\\\" | head -40)",
+      "Read(//d/project/**)",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npx vite *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(go build *)",
+      "Bash(npm add *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\project\\\\AI Website Builder\" -Depth 1 -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(go vet *)",
+      "Bash(ls -la .env*)",
+      "Bash(ls .claude/)",
+      "Bash(xxd \"d:\\\\project\\\\AI Website Builder\\\\apps\\\\api\\\\internal\\\\router\\\\router.go\")",
+      "Bash(Select-Object -First 5)",
+      "Bash(Get-ChildItem \"d:\\\\project\\\\AI Website Builder\" -Filter \".env*\" -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(openssl rand *)",
+      "Bash(go get *)",
+      "Bash(npm run *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8080)",
+      "Bash(findstr LISTENING)",
+      "Bash(taskkill /PID 24720 /F)",
+      "PowerShell(Stop-Process -Id 24720 -Force)",
+      "Bash(npx tailwindcss *)"
+    ]
+  }
+}

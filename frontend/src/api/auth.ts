@@ -4,7 +4,7 @@ export function apiRegister(data: { username: string; email: string; password: s
   return request.post('/auth/register', data) as Promise<{ token: string; user: any }>
 }
 
-export function apiLogin(data: { email: string; password: string }) {
+export function apiLogin(data: { email: string; password: string; remember_me?: boolean }) {
   return request.post('/auth/login', data) as Promise<{ token: string; user: any }>
 }
 

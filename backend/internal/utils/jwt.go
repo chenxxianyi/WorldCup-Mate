@@ -19,11 +19,18 @@ type Claims struct {
 }
 
 func GenerateToken(userID uint, role string) (string, error) {
+	return GenerateTokenWithTTL(userID, role, 72*time.Hour)
+}
+
+func GenerateTokenWithTTL(userID uint, role string, ttl time.Duration) (string, error) {
+	if ttl <= 0 {
+		ttl = 72 * time.Hour
+	}
 	claims := Claims{
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
