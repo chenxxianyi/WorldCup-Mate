@@ -228,7 +228,7 @@ func DeleteAIConversation(userID, conversationID uint) error {
 
 func currentAI() *AIService {
 	if aiSvc == nil {
-		_ = ConfigureAI(AIServiceConfig{Provider: "mock", Model: "mock-worldcup-mate", DailyLimitUser: 50, MaxTokens: 1200, CacheEnabled: true})
+		_ = ConfigureAI(AIServiceConfig{Provider: "openai", Model: "gpt-4o-mini", DailyLimitUser: 50, MaxTokens: 1200, CacheEnabled: true})
 	}
 	return aiSvc
 }
@@ -237,13 +237,13 @@ func (s *AIService) GenerateMatchInsight(ctx context.Context, req MatchInsightRe
 	if req.MatchID == 0 {
 		return nil, fmt.Errorf("请选择比赛")
 	}
-	cacheKey := fmt.Sprintf("ai:match_insight:%d", req.MatchID)
+	cacheKey := s.cacheKey("match_insight", fmt.Sprintf("%d", req.MatchID))
 	var cached MatchInsightResponse
 	if s.getCached(ctx, cacheKey, req.ForceRefresh, &cached) {
 		return &cached, nil
 	}
 
-	matchCtx, match, err := s.builder.MatchContext(req.MatchID, userID)
+	matchCtx, _, err := s.builder.MatchContext(req.MatchID, userID)
 	if err != nil {
 		s.logUsage(userID, ip, "match_insight", "failed", err, nil, 0)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -259,25 +259,18 @@ func (s *AIService) GenerateMatchInsight(ctx context.Context, req MatchInsightRe
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "match_insight", "failed", err, providerRes, latency)
-		return nil, fmt.Errorf("AI 服务暂时不可用")
+		return nil, aiUserError(err)
 	}
 	if err := ai.ValidateOutput(raw); err != nil {
 		s.logUsage(userID, ip, "match_insight", "failed", err, providerRes, latency)
 		return nil, fmt.Errorf("AI 输出未通过安全检查")
 	}
 
-	fallback := MatchInsightResponse{
-		Summary:             fmt.Sprintf("%s vs %s 值得关注双方节奏和小组形势。", safeTeamName(match.HomeTeam), safeTeamName(match.AwayTeam)),
-		WatchRating:         3,
-		Reasons:             []string{"赛程信息已确认，可以作为观赛参考。"},
-		TeamComparison:      []string{},
-		BeginnerTips:        []string{"先看双方控球和压迫节奏。"},
-		QualificationImpact: "具体出线影响以赛后积分榜为准。",
-		ShouldStayUp:        "按个人作息选择观看。",
-		SuitableFor:         []string{"想轻松看球的人"},
-		GeneratedAt:         time.Now().UTC(),
+	res, jsonText, err := ai.DecodeJSON(raw, MatchInsightResponse{})
+	if err != nil || strings.TrimSpace(res.Summary) == "" {
+		s.logUsage(userID, ip, "match_insight", "failed", fmt.Errorf("invalid AI response format"), providerRes, latency)
+		return nil, fmt.Errorf("AI 返回内容格式不正确，请稍后重试")
 	}
-	res, jsonText, _ := ai.DecodeJSON(raw, fallback)
 	res.WatchRating = ai.ClampInt(res.WatchRating, 1, 5)
 	res.Reasons = nonNilStrings(res.Reasons)
 	res.TeamComparison = nonNilStrings(res.TeamComparison)
@@ -302,7 +295,7 @@ func (s *AIService) GenerateTodayRecommendations(ctx context.Context, req TodayR
 	if req.Limit <= 0 || req.Limit > 10 {
 		req.Limit = 3
 	}
-	cacheKey := fmt.Sprintf("ai:today_recommendations:%s:%s:%s", req.Date, req.Timezone, userKey(userID))
+	cacheKey := s.cacheKey("today_recommendations", req.Date, req.Timezone, userKey(userID))
 	var cached TodayRecommendationResponse
 	if s.getCached(ctx, cacheKey, req.ForceRefresh, &cached) {
 		return &cached, nil
@@ -317,18 +310,27 @@ func (s *AIService) GenerateTodayRecommendations(ctx context.Context, req TodayR
 		return nil, err
 	}
 
-	prompt := fmt.Sprintf("TASK:today_recommendations\nReturn JSON with date, timezone, recommendations, only_one_match, note. Limit recommendations to %d.\nContext:\n%s", req.Limit, todayCtx)
+	prompt := fmt.Sprintf("TASK:today_recommendations\nReturn JSON with date, timezone, recommendations, only_one_match, note. Limit recommendations to %d. Every recommendation.match_id must be one of the Match ID values in Context.\nContext:\n%s", req.Limit, todayCtx)
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "today_recommendations", "failed", err, providerRes, latency)
-		return nil, fmt.Errorf("AI 服务暂时不可用")
+		return nil, aiUserError(err)
 	}
-	fallback := TodayRecommendationResponse{Date: req.Date, Timezone: req.Timezone, Recommendations: buildRecommendationsFromMatches(matches, req.Limit), Note: "基于数据库赛程生成。"}
-	res, jsonText, _ := ai.DecodeJSON(raw, fallback)
+	if err := ai.ValidateOutput(raw); err != nil {
+		s.logUsage(userID, ip, "today_recommendations", "failed", err, providerRes, latency)
+		return nil, fmt.Errorf("AI 输出未通过安全检查")
+	}
+	res, jsonText, err := ai.DecodeJSON(raw, TodayRecommendationResponse{})
+	if err != nil {
+		s.logUsage(userID, ip, "today_recommendations", "failed", fmt.Errorf("invalid AI response format"), providerRes, latency)
+		return nil, fmt.Errorf("AI 返回内容格式不正确，请稍后重试")
+	}
 	res.Date = req.Date
 	res.Timezone = req.Timezone
-	if len(res.Recommendations) == 0 || res.Recommendations[0].MatchID == 0 {
-		res.Recommendations = buildRecommendationsFromMatches(matches, req.Limit)
+	res.Recommendations = validateRecommendations(res.Recommendations, matches, req.Limit)
+	if len(matches) > 0 && len(res.Recommendations) == 0 {
+		s.logUsage(userID, ip, "today_recommendations", "failed", fmt.Errorf("AI response has no valid match ids"), providerRes, latency)
+		return nil, fmt.Errorf("AI 返回内容缺少有效比赛，请稍后重试")
 	}
 	if len(res.Recommendations) == 1 {
 		res.OnlyOneMatch = &res.Recommendations[0]
@@ -343,7 +345,7 @@ func (s *AIService) GenerateGroupAnalysis(ctx context.Context, req GroupAnalysis
 	if req.GroupID == 0 {
 		return nil, fmt.Errorf("请选择小组")
 	}
-	cacheKey := fmt.Sprintf("ai:group_analysis:%d", req.GroupID)
+	cacheKey := s.cacheKey("group_analysis", fmt.Sprintf("%d", req.GroupID))
 	var cached GroupAnalysisResponse
 	if s.getCached(ctx, cacheKey, req.ForceRefresh, &cached) {
 		return &cached, nil
@@ -364,17 +366,17 @@ func (s *AIService) GenerateGroupAnalysis(ctx context.Context, req GroupAnalysis
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "group_analysis", "failed", err, providerRes, latency)
-		return nil, fmt.Errorf("AI 服务暂时不可用")
+		return nil, aiUserError(err)
 	}
-	fallback := GroupAnalysisResponse{
-		Summary:            "小组形势需要以当前积分榜为准。",
-		KeyPoints:          []string{"先看积分，再看净胜球。", "第三名需要和其他小组横向比较。"},
-		QualificationRules: "小组前两名晋级，成绩较好的第三名也可能晋级。",
-		Teams:              buildGroupTeams(standings),
-		DataNote:           "仅基于当前数据库积分榜。",
-		GeneratedAt:        time.Now().UTC(),
+	if err := ai.ValidateOutput(raw); err != nil {
+		s.logUsage(userID, ip, "group_analysis", "failed", err, providerRes, latency)
+		return nil, fmt.Errorf("AI 输出未通过安全检查")
 	}
-	res, jsonText, _ := ai.DecodeJSON(raw, fallback)
+	res, jsonText, err := ai.DecodeJSON(raw, GroupAnalysisResponse{})
+	if err != nil || strings.TrimSpace(res.Summary) == "" {
+		s.logUsage(userID, ip, "group_analysis", "failed", fmt.Errorf("invalid AI response format"), providerRes, latency)
+		return nil, fmt.Errorf("AI 返回内容格式不正确，请稍后重试")
+	}
 	if len(res.Teams) == 0 {
 		res.Teams = buildGroupTeams(standings)
 	}
@@ -404,7 +406,7 @@ func (s *AIService) ExplainFootball(ctx context.Context, req ExplainRequest, use
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "explain", "failed", err, providerRes, latency)
-		return nil, fmt.Errorf("AI 服务暂时不可用")
+		return nil, aiUserError(err)
 	}
 	if err := ai.ValidateOutput(raw); err != nil {
 		s.logUsage(userID, ip, "explain", "failed", err, providerRes, latency)
@@ -435,18 +437,18 @@ func (s *AIService) GenerateShareCopy(ctx context.Context, req ShareCopyRequest,
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "share_copy", "failed", err, providerRes, latency)
-		return nil, fmt.Errorf("AI 服务暂时不可用")
+		return nil, aiUserError(err)
 	}
 	if err := ai.ValidateOutput(raw); err != nil {
 		s.logUsage(userID, ip, "share_copy", "failed", err, providerRes, latency)
 		return nil, fmt.Errorf("AI 输出未通过安全检查")
 	}
-	fallback := ShareCopyResponse{Title: "看球提醒", Content: raw, Tips: []string{}}
-	res, jsonText, _ := ai.DecodeJSON(raw, fallback)
-	if res.Content == "" {
-		res.Content = raw
+	res, jsonText, err := ai.DecodeJSON(raw, ShareCopyResponse{})
+	if err != nil || strings.TrimSpace(res.Content) == "" {
+		s.logUsage(userID, ip, "share_copy", "failed", fmt.Errorf("invalid AI response format"), providerRes, latency)
+		return nil, fmt.Errorf("AI 返回内容格式不正确，请稍后重试")
 	}
-	cacheKey := fmt.Sprintf("ai:share_copy:%d:%s:%s:%s:%s", req.MatchID, req.Platform, req.Tone, req.Length, userKey(userID))
+	cacheKey := s.cacheKey("share_copy", fmt.Sprintf("%d", req.MatchID), req.Platform, req.Tone, req.Length, userKey(userID))
 	s.saveGenerated(userID, "share_copy", "match", req.MatchID, cacheKey, jsonText, raw, providerRes)
 	s.logUsage(userID, ip, "share_copy", "success", nil, providerRes, latency)
 	return &res, nil
@@ -495,7 +497,7 @@ func (s *AIService) Chat(ctx context.Context, req AIChatRequest, userID uint, ip
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, messages)
 	if err != nil {
 		s.logUsage(&userID, ip, "chat", "failed", err, providerRes, latency)
-		return nil, fmt.Errorf("AI 服务暂时不可用")
+		return nil, aiUserError(err)
 	}
 	if err := ai.ValidateOutput(raw); err != nil {
 		s.logUsage(&userID, ip, "chat", "failed", err, providerRes, latency)
@@ -596,6 +598,15 @@ func (s *AIService) setCached(ctx context.Context, key string, value interface{}
 	_ = database.RDB.Set(ctx, key, body, ttl).Err()
 }
 
+func (s *AIService) cacheKey(parts ...string) string {
+	keyParts := []string{"ai", sanitizeCachePart(s.provider.Name())}
+	keyParts = append(keyParts, parts...)
+	for i := range keyParts {
+		keyParts[i] = sanitizeCachePart(keyParts[i])
+	}
+	return strings.Join(keyParts, ":")
+}
+
 func (s *AIService) saveGenerated(userID *uint, typ, targetType string, targetID uint, cacheKey, jsonText, markdown string, providerRes *ai.ChatResponse) {
 	content := &models.AIGeneratedContent{
 		UserID:          userID,
@@ -676,6 +687,37 @@ func buildRecommendationsFromMatches(matches []models.Match, limit int) []TodayR
 			Reason:      reason,
 			Rating:      rating,
 		})
+	}
+	return out
+}
+
+func validateRecommendations(items []TodayRecommendedMatch, matches []models.Match, limit int) []TodayRecommendedMatch {
+	if limit <= 0 {
+		limit = 3
+	}
+	matchByID := make(map[uint]models.Match, len(matches))
+	for _, m := range matches {
+		matchByID[m.ID] = m
+	}
+	out := make([]TodayRecommendedMatch, 0, minInt(limit, len(items)))
+	seen := map[uint]bool{}
+	for _, item := range items {
+		if len(out) >= limit || item.MatchID == 0 || seen[item.MatchID] {
+			continue
+		}
+		m, ok := matchByID[item.MatchID]
+		if !ok {
+			continue
+		}
+		seen[item.MatchID] = true
+		if strings.TrimSpace(item.Title) == "" {
+			item.Title = fmt.Sprintf("%s vs %s", safeTeamName(m.HomeTeam), safeTeamName(m.AwayTeam))
+		}
+		if strings.TrimSpace(item.KickoffTime) == "" {
+			item.KickoffTime = m.KickoffTimeUTC.UTC().Format(time.RFC3339)
+		}
+		item.Rating = ai.ClampInt(item.Rating, 1, 5)
+		out = append(out, item)
 	}
 	return out
 }
@@ -777,4 +819,15 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func aiUserError(err error) error {
+	if err == nil {
+		return fmt.Errorf("AI 服务暂时不可用")
+	}
+	msg := strings.ToLower(err.Error())
+	if strings.Contains(msg, "not configured") || strings.Contains(msg, "ai_api_key") {
+		return fmt.Errorf("AI 服务未配置，请先设置 AI_API_KEY")
+	}
+	return fmt.Errorf("AI 服务暂时不可用")
 }

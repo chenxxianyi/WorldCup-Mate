@@ -210,7 +210,7 @@ func localDayStart(date, timezone string) (time.Time, error) {
 }
 
 func matchLine(m models.Match) string {
-	return fmt.Sprintf("- #%d %s vs %s at %s UTC, status %s, importance %d", m.MatchNo, teamName(m.HomeTeam), teamName(m.AwayTeam), m.KickoffTimeUTC.UTC().Format(time.RFC3339), clean(m.Status), m.ImportanceLevel)
+	return fmt.Sprintf("- Match ID %d, Match No %d: %s vs %s at %s UTC, status %s, importance %d", m.ID, m.MatchNo, teamName(m.HomeTeam), teamName(m.AwayTeam), m.KickoffTimeUTC.UTC().Format(time.RFC3339), clean(m.Status), m.ImportanceLevel)
 }
 
 func teamName(t models.Team) string {

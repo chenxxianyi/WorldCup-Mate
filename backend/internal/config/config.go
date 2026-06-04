@@ -63,7 +63,7 @@ func Load() *Config {
 		SMTPUsername:                getEnv("SMTP_USERNAME", ""),
 		SMTPPassword:                getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:                    getEnv("SMTP_FROM", ""),
-		AIProvider:                  getEnv("AI_PROVIDER", "mock"),
+		AIProvider:                  getEnv("AI_PROVIDER", "openai"),
 		AIBaseURL:                   getEnv("AI_BASE_URL", "https://api.openai.com/v1"),
 		AIAPIKey:                    getEnv("AI_API_KEY", ""),
 		AIModel:                     getEnv("AI_MODEL", "gpt-4o-mini"),

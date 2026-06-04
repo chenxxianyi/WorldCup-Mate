@@ -38,7 +38,7 @@ WorldCup Mate 是一个面向 2026 世界杯的赛事助手与赛事数据管理
 - 积分计算：小组积分重算、最佳第三名计算、晋级状态标记。
 - 数据同步：通过 football-data.org 同步 2026 世界杯比赛、球队、比分和状态。
 - 提醒通知：定时扫描比赛提醒，生成站内通知，并可按配置发送邮件通知。
-- AI 助手：支持 mock 和 OpenAI-compatible Provider，提供比赛看点、今日推荐、小组解读、规则解释、分享文案和登录用户聊天会话。
+- AI 助手：支持 OpenAI-compatible Provider，提供比赛看点、今日推荐、小组解读、规则解释、分享文案和登录用户聊天会话。
 
 ## 技术栈
 
@@ -152,9 +152,9 @@ DATA_SYNC_IDLE_INTERVAL_MINUTES=30
 DATA_SYNC_FULL_INTERVAL_HOURS=6
 FOOTBALL_DATA_API_KEY=
 FOOTBALL_DATA_BASE_URL=https://api.football-data.org/v4
-AI_PROVIDER=mock
+AI_PROVIDER=openai
 AI_BASE_URL=https://api.openai.com/v1
-AI_API_KEY=
+AI_API_KEY=your-ai-api-key
 AI_MODEL=gpt-4o-mini
 AI_TIMEOUT_SECONDS=60
 AI_DAILY_LIMIT_USER=50
@@ -163,7 +163,7 @@ AI_MAX_TOKENS=1200
 AI_CACHE_ENABLED=true
 ```
 
-AI 默认使用 `mock`，无需外网或 API Key 即可联调前端页面。切换真实 OpenAI-compatible 服务时设置 `AI_PROVIDER=openai` 或供应商名、`AI_BASE_URL`、`AI_API_KEY` 和 `AI_MODEL`；后端不会把 API Key 写入响应或 usage log。
+AI 使用 OpenAI-compatible 服务。请设置 `AI_PROVIDER=openai` 或供应商名、`AI_BASE_URL`、`AI_API_KEY` 和 `AI_MODEL`；后端不会把 API Key 写入响应或 usage log。未配置 `AI_API_KEY` 时，AI 接口会返回明确的配置错误，不会生成假数据。
 
 ### 启动后端
 
@@ -250,9 +250,9 @@ docker compose up -d --build
 | `DATA_SYNC_FULL_INTERVAL_HOURS` | 全量同步间隔 |
 | `FOOTBALL_DATA_API_KEY` | football-data.org API Key |
 | `FOOTBALL_DATA_BASE_URL` | football-data.org API Base URL |
-| `AI_PROVIDER` | AI Provider，默认 `mock` |
+| `AI_PROVIDER` | AI Provider，默认 `openai` |
 | `AI_BASE_URL` | OpenAI-compatible API Base URL |
-| `AI_API_KEY` | AI Provider API Key，mock 模式可为空 |
+| `AI_API_KEY` | AI Provider API Key |
 | `AI_MODEL` | AI 模型名称 |
 | `AI_TIMEOUT_SECONDS` | AI 调用超时时间 |
 | `AI_DAILY_LIMIT_USER` | 登录用户每日 AI 调用上限 |

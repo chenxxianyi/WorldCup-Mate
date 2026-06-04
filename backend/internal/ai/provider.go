@@ -44,14 +44,14 @@ type ProviderConfig struct {
 
 func NewProvider(cfg ProviderConfig) (Provider, error) {
 	name := strings.ToLower(strings.TrimSpace(cfg.Provider))
-	if name == "" || name == "mock" {
-		return NewMockProvider(cfg.Model), nil
+	if name == "" {
+		name = "openai"
 	}
 	if cfg.TimeoutSeconds <= 0 {
 		cfg.TimeoutSeconds = 60
 	}
 	if strings.TrimSpace(cfg.APIKey) == "" {
-		return nil, fmt.Errorf("AI_API_KEY is required for provider %s", name)
+		return NewUnavailableProvider(name, "AI_API_KEY is required"), nil
 	}
 	return NewOpenAICompatibleProvider(OpenAICompatibleConfig{
 		Name:    name,
@@ -60,4 +60,24 @@ func NewProvider(cfg ProviderConfig) (Provider, error) {
 		Model:   cfg.Model,
 		Timeout: time.Duration(cfg.TimeoutSeconds) * time.Second,
 	}), nil
+}
+
+type UnavailableProvider struct {
+	name   string
+	reason string
+}
+
+func NewUnavailableProvider(name, reason string) *UnavailableProvider {
+	if strings.TrimSpace(name) == "" {
+		name = "openai"
+	}
+	return &UnavailableProvider{name: name, reason: reason}
+}
+
+func (p *UnavailableProvider) Name() string {
+	return p.name
+}
+
+func (p *UnavailableProvider) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
+	return nil, fmt.Errorf("AI provider is not configured: %s", p.reason)
 }
