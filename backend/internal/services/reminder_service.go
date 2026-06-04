@@ -124,7 +124,7 @@ func ScanAndSendReminders() {
 <p style="margin:8px 0 0;font-size:14px;color:#555;">📍 %s</p>
 </div>
 <p style="font-size:12px;color:#999;">来自 WorldCup Mate 比赛提醒</p>
-</div>`, title, content, match.HomeTeam.Name+" vs "+match.AwayTeam.Name, match.Stadium)
+</div>`, title, content, match.HomeTeam.Name+" vs "+match.AwayTeam.Name, match.Stadium.Name)
 			if err := utils.SendEmail(toEmail, subject, htmlBody); err != nil {
 				log.Printf("Email send failed for reminder %d: %v", r.ID, err)
 			}

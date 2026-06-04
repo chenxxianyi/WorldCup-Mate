@@ -9,7 +9,7 @@ import (
 type Stadium struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	Name        string         `gorm:"size:100;not null" json:"name"`
-	NameEn      string         `gorm:"size:100" json:"name_en"`
+	NameEn      string         `gorm:"size:100;index" json:"name_en"`
 	CityID      uint           `json:"city_id"`
 	City        City           `gorm:"foreignKey:CityID" json:"city,omitempty"`
 	Capacity    int            `json:"capacity"`

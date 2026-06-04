@@ -55,7 +55,7 @@ const filteredMatches = computed(() => {
   } else if (activeFilter.value === '淘汰赛') {
     list = list.filter((m) => m.stage !== 'group' && m.stage !== 'group_stage')
   } else if (activeFilter.value === '未开始') {
-    list = list.filter((m) => m.status === 'upcoming')
+    list = list.filter((m) => m.status === 'scheduled')
   }
 
   if (search.value) {

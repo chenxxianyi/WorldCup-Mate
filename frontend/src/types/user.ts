@@ -12,6 +12,7 @@ export interface ApiUser {
 export interface User {
   id: number
   username: string
+  email: string
   nickname: string
   avatar: string
   timezone: string
@@ -25,6 +26,7 @@ export function normalizeUser(u: ApiUser): User {
   return {
     id: u.id,
     username: u.username,
+    email: u.email,
     nickname: u.username,
     avatar: u.avatar || u.username.charAt(0).toUpperCase(),
     timezone: u.timezone,

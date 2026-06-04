@@ -1,0 +1,1 @@
+import{d as s,c as o,f as e,t,o as r}from"./index-PDdyDLGU.js";import{_ as c}from"./_plugin-vue_export-helper-DlAUqK2U.js";const n={class:"card stat-card"},l=s({__name:"StatCard",props:{value:{},label:{}},setup(a){return(d,_)=>(r(),o("div",n,[e("strong",null,t(a.value),1),e("span",null,t(a.label),1)]))}}),m=c(l,[["__scopeId","data-v-25dee1a3"]]);export{m as S};

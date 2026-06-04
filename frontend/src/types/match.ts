@@ -66,13 +66,21 @@ function formatBeijingTime(utcStr: string): string {
   if (!utcStr) return ''
   const d = new Date(utcStr)
   if (isNaN(d.getTime())) return ''
-  const utcMs = d.getTime() + d.getTimezoneOffset() * 60 * 1000
-  const bjMs = utcMs + 8 * 60 * 60 * 1000
-  const bj = new Date(bjMs)
-  const mm = String(bj.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(bj.getUTCDate()).padStart(2, '0')
-  const hh = String(bj.getUTCHours()).padStart(2, '0')
-  const mi = String(bj.getUTCMinutes()).padStart(2, '0')
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(d)
+  const pick = (type: string) => parts.find((p) => p.type === type)?.value || '00'
+
+  const mm = pick('month')
+  const dd = pick('day')
+  const hh = pick('hour')
+  const mi = pick('minute')
   return `${mm}-${dd} ${hh}:${mi}`
 }
 

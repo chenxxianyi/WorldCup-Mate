@@ -214,7 +214,7 @@ func upsertFootballDataMatch(externalMatch footballdata.Match) (string, *uint, e
 	if err != nil {
 		return "skipped", nil, err
 	}
-	cityID, stadiumID, err := ensureFallbackVenue()
+	cityID, stadiumID, err := ensureVenueForExternalMatch(externalMatch.ID)
 	if err != nil {
 		return "skipped", nil, err
 	}

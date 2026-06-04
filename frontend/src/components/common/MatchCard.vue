@@ -19,6 +19,31 @@ const settings = useSettingStore()
 
 const showChannelPicker = ref(false)
 
+function stageLabel(stage: Match['stage']) {
+  const labels: Record<Match['stage'], string> = {
+    group: '小组赛',
+    group_stage: '小组赛',
+    round_of_32: '32强赛',
+    round_of_16: '16强赛',
+    quarter_final: '四分之一决赛',
+    semi_final: '半决赛',
+    third_place: '季军赛',
+    final: '决赛',
+  }
+  return labels[stage] || '世界杯比赛'
+}
+
+function stageTagText(match: Match) {
+  const label = stageLabel(match.stage)
+  if (match.group_name) {
+    return `${label} · ${match.group_name}`
+  }
+  if (match.stage === 'group' || match.stage === 'group_stage') {
+    return label
+  }
+  return label
+}
+
 function onBellClick() {
   if (reminder.hasReminder(props.match.id)) {
     reminder.toggleReminder(props.match.id)
@@ -46,8 +71,7 @@ function goDetail() {
     <div v-if="featured || match.is_featured" class="hot-ribbon">热门比赛</div>
     <div class="match-top">
       <span class="tag blue">
-        <template v-if="match.group_name">{{ match.stage === 'group' || match.stage === 'group_stage' ? '小组赛' : '淘汰赛' }} · {{ match.group_name }}</template>
-        <template v-else>Match {{ match.match_number }}</template>
+        {{ stageTagText(match) }}
       </span>
       <span v-if="match.status === 'live'" class="tag live">
         <i class="live-dot" style="background: #fff"></i> {{ match.minute }}' LIVE

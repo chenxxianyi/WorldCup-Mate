@@ -20,13 +20,54 @@ const groups = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E', 'Group F'
 const activeGroupIndex = ref(0)
 const activeGroupName = computed(() => groups[activeGroupIndex.value])
 const groupStandings = ref<Standing[]>([])
+const groupSwipeStartX = ref(0)
+const groupSwipeStartY = ref(0)
+const groupSwipeActive = ref(false)
+const groupSlideDirection = ref<'left' | 'right'>('left')
+const groupTransitionName = computed(() =>
+  groupSlideDirection.value === 'left' ? 'standings-next' : 'standings-prev'
+)
 
 function swipeGroup(direction: 'left' | 'right') {
   if (direction === 'left' && activeGroupIndex.value < groups.length - 1) {
+    groupSlideDirection.value = direction
     activeGroupIndex.value++
   } else if (direction === 'right' && activeGroupIndex.value > 0) {
+    groupSlideDirection.value = direction
     activeGroupIndex.value--
   }
+}
+
+function startGroupSwipe(event: PointerEvent) {
+  if (!event.isPrimary) return
+  ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
+  groupSwipeStartX.value = event.clientX
+  groupSwipeStartY.value = event.clientY
+  groupSwipeActive.value = true
+}
+
+function finishGroupSwipe(event: PointerEvent) {
+  if (!groupSwipeActive.value || !event.isPrimary) return
+  ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
+  groupSwipeActive.value = false
+
+  const deltaX = event.clientX - groupSwipeStartX.value
+  const deltaY = event.clientY - groupSwipeStartY.value
+  const minDistance = 48
+  const maxVerticalDrift = 64
+
+  if (Math.abs(deltaX) < minDistance || Math.abs(deltaY) > maxVerticalDrift) {
+    return
+  }
+
+  swipeGroup(deltaX < 0 ? 'left' : 'right')
+}
+
+function cancelGroupSwipe(event?: PointerEvent) {
+  if (event) {
+    ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
+  }
+  groupSwipeActive.value = false
 }
 
 async function loadGroupStandings() {
@@ -201,8 +242,15 @@ onMounted(async () => {
             <button class="nav-btn" :disabled="activeGroupIndex === groups.length - 1" @click="swipeGroup('left')">›</button>
           </div>
         </div>
-        <div class="card table-card">
-          <table class="standing-table" style="min-width: 0">
+        <div
+          class="card table-card standings-swipe-area"
+          @pointerdown="startGroupSwipe"
+          @pointerup="finishGroupSwipe"
+          @pointercancel="cancelGroupSwipe"
+          @pointerleave="cancelGroupSwipe"
+        >
+          <Transition :name="groupTransitionName" mode="out-in">
+            <table :key="activeGroupName" class="standing-table" style="min-width: 0">
             <tbody>
               <tr
                 v-for="(s, i) in groupStandings"
@@ -221,7 +269,8 @@ onMounted(async () => {
                 <td><b>{{ s.points }}</b></td>
               </tr>
             </tbody>
-          </table>
+            </table>
+          </Transition>
         </div>
       </section>
     </aside>
@@ -401,6 +450,31 @@ tr:last-child td {
 
 .table-card {
   overflow: hidden;
+}
+
+.standings-swipe-area {
+  min-height: 177px;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.standings-next-enter-active,
+.standings-next-leave-active,
+.standings-prev-enter-active,
+.standings-prev-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.standings-next-enter-from,
+.standings-prev-leave-to {
+  opacity: 0;
+  transform: translateX(34px);
+}
+
+.standings-next-leave-to,
+.standings-prev-enter-from {
+  opacity: 0;
+  transform: translateX(-34px);
 }
 
 .team-cell {
