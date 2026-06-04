@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import ChipFilter from '@/components/common/ChipFilter.vue'
+import GroupAnalysisCard from '@/components/ai/GroupAnalysisCard.vue'
 import StandingTable from '@/components/common/StandingTable.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetBestThird, apiGetGroupStandings } from '@/api/standings'
+import { useAIStore } from '@/stores/useAIStore'
 import { normalizeStanding, type Standing } from '@/types/standing'
 
 const BEST_THIRD = '最佳第三名'
@@ -25,10 +27,15 @@ const groupOptions = [
   BEST_THIRD,
 ]
 
+const ai = useAIStore()
 const activeGroup = ref('Group A')
 const currentStandings = ref<Standing[]>([])
 const bestThird = ref<any[]>([])
 const showBestThird = computed(() => activeGroup.value === BEST_THIRD)
+const activeGroupId = computed(() => {
+  if (!activeGroup.value.startsWith('Group ')) return 0
+  return activeGroup.value.charCodeAt(6) - 64
+})
 
 async function loadStandings() {
   if (showBestThird.value) {
@@ -41,13 +48,17 @@ async function loadStandings() {
     return
   }
 
-  const groupNum = activeGroup.value.charCodeAt(6) - 64
   try {
-    const res = await apiGetGroupStandings(groupNum) as any[]
+    const res = await apiGetGroupStandings(activeGroupId.value) as any[]
     currentStandings.value = res.map(normalizeStanding)
   } catch {
     currentStandings.value = []
   }
+}
+
+function generateGroupAnalysis(forceRefresh = false) {
+  if (!activeGroupId.value) return
+  ai.generateGroupAnalysis(activeGroupId.value, forceRefresh).catch(() => {})
 }
 
 onMounted(loadStandings)
@@ -55,7 +66,7 @@ watch(activeGroup, loadStandings)
 </script>
 
 <template>
-  <div>
+  <div class="standings-page">
     <div class="section-head">
       <div>
         <h2>小组积分榜</h2>
@@ -63,10 +74,18 @@ watch(activeGroup, loadStandings)
       </div>
       <SyncStatusBadge />
     </div>
+
     <ChipFilter v-model="activeGroup" :options="groupOptions" />
 
     <template v-if="!showBestThird">
       <StandingTable :standings="currentStandings" show-status />
+      <GroupAnalysisCard
+        :analysis="ai.groupAnalysisMap[activeGroupId] || null"
+        :loading="ai.groupLoadingMap[activeGroupId]"
+        :error="ai.groupErrorMap[activeGroupId]"
+        @generate="generateGroupAnalysis(false)"
+        @refresh="generateGroupAnalysis(true)"
+      />
     </template>
 
     <template v-else>
@@ -84,7 +103,11 @@ watch(activeGroup, loadStandings)
           <table class="standing-table">
             <thead>
               <tr>
-                <th>排名</th><th>球队</th><th>小组</th><th>积分</th><th>净胜球</th>
+                <th>排名</th>
+                <th>球队</th>
+                <th>小组</th>
+                <th>积分</th>
+                <th>净胜球</th>
               </tr>
             </thead>
             <tbody>
@@ -107,12 +130,16 @@ watch(activeGroup, loadStandings)
 </template>
 
 <style scoped>
+.standings-page {
+  display: grid;
+  gap: 14px;
+}
+
 .section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
 }
 
 .section-head h2 {
@@ -127,7 +154,7 @@ watch(activeGroup, loadStandings)
 }
 
 .section {
-  margin-top: 18px;
+  margin-top: 4px;
 }
 
 .stats-row {

@@ -35,9 +35,10 @@ export interface Standing {
 }
 
 export function normalizeStanding(s: ApiStanding): Standing {
-  let status: '晋级' | '待定' | '淘汰' = '淘汰'
+  let status: Standing['status'] = '淘汰'
   if (s.qualification_status === 'qualified') status = '晋级'
   else if (s.qualification_status === 'possible') status = '待定'
+
   return {
     team_id: s.team_id,
     team_name: s.team?.name || '',

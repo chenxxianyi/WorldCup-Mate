@@ -8,7 +8,7 @@ const tabs = [
   { name: '首页', icon: 'home', route: '/' },
   { name: '赛程', icon: 'calendar_month', route: '/schedule' },
   { name: '球队', icon: 'flag', route: '/teams' },
-  { name: '积分榜', icon: 'trophy', route: '/standings' },
+  { name: 'AI', icon: 'auto_awesome', route: '/ai' },
   { name: '我的', icon: 'person', route: '/profile' },
 ]
 

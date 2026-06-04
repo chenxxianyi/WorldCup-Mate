@@ -51,7 +51,9 @@ function rowClass(status: string) {
                   green: s.status === '晋级',
                   gold: s.status === '待定',
                 }"
-              >{{ s.status }}</span>
+              >
+                {{ s.status }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -75,7 +77,8 @@ function rowClass(status: string) {
   min-width: 520px;
 }
 
-th, td {
+th,
+td {
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
   text-align: left;

@@ -7,12 +7,13 @@ const router = useRouter()
 const settings = useSettingStore()
 
 const navItems = [
-  { icon: '⌂', route: '/', title: '首页' },
-  { icon: '□', route: '/schedule', title: '赛程' },
-  { icon: '⚑', route: '/teams', title: '球队' },
-  { icon: '▥', route: '/standings', title: '积分榜' },
-  { icon: '○', route: '/profile', title: '我的' },
-  { icon: '▤', route: '/admin', title: '后台' },
+  { icon: 'home', route: '/', title: '首页' },
+  { icon: 'calendar_month', route: '/schedule', title: '赛程' },
+  { icon: 'flag', route: '/teams', title: '球队' },
+  { icon: 'trophy', route: '/standings', title: '积分' },
+  { icon: 'auto_awesome', route: '/ai', title: 'AI' },
+  { icon: 'person', route: '/profile', title: '我的' },
+  { icon: 'admin_panel_settings', route: '/admin', title: '后台' },
 ]
 
 function isActive(itemRoute: string) {
@@ -33,10 +34,12 @@ function isActive(itemRoute: string) {
         :title="item.title"
         @click="router.push(item.route)"
       >
-        {{ item.icon }}
+        <span class="material-symbols-outlined">{{ item.icon }}</span>
       </button>
     </nav>
-    <button class="rail-btn" title="切换主题" @click="settings.toggleTheme">◐</button>
+    <button class="rail-btn" title="切换主题" @click="settings.toggleTheme">
+      <span class="material-symbols-outlined">contrast</span>
+    </button>
   </aside>
 </template>
 
@@ -86,7 +89,10 @@ function isActive(itemRoute: string) {
     border-radius: 17px;
     color: var(--weak);
     background: transparent;
-    font-size: 18px;
+  }
+
+  .rail-btn .material-symbols-outlined {
+    font-size: 22px;
   }
 
   .rail-btn.active {
