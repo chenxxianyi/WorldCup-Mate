@@ -2,8 +2,10 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import MatchInsightCard from '@/components/ai/MatchInsightCard.vue'
+import MatchLineups from '@/components/common/MatchLineups.vue'
 import ReminderControl from '@/components/common/ReminderControl.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
+import { apiGetMatchLineups } from '@/api/lineups'
 import { apiGetGroupStandings } from '@/api/standings'
 import { useAIStore } from '@/stores/useAIStore'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -11,6 +13,7 @@ import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useMatchStore } from '@/stores/useMatchStore'
 import { useReminderStore } from '@/stores/useReminderStore'
 import { useSettingStore } from '@/stores/useSettingStore'
+import { normalizeMatchLineups, type MatchLineups as MatchLineupsData } from '@/types/lineup'
 import { normalizeStanding, type Standing } from '@/types/standing'
 import type { Match } from '@/types/match'
 
@@ -24,6 +27,10 @@ const settings = useSettingStore()
 
 const match = ref<Match | null>(null)
 const groupStandings = ref<Standing[]>([])
+const lineups = ref<MatchLineupsData | null>(null)
+const lineupsLoading = ref(false)
+const lineupsError = ref('')
+let lineupRequestSeq = 0
 
 function formatLocalTime(utcString: string) {
   if (!utcString) return '时间待定'
@@ -70,7 +77,11 @@ async function loadMatch() {
   if (!id) return
 
   ai.clearMatchInsight()
+  lineups.value = null
+  lineupsError.value = ''
+  lineupsLoading.value = false
   match.value = await matchStore.fetchMatchDetail(id)
+  loadLineups(id)
 
   if (auth.isLoggedIn) {
     fav.fetchFavoriteTeams()
@@ -89,6 +100,26 @@ async function loadMatch() {
     groupStandings.value = res.map(normalizeStanding)
   } catch {
     groupStandings.value = []
+  }
+}
+
+async function loadLineups(matchId: number) {
+  const seq = ++lineupRequestSeq
+  lineupsLoading.value = true
+  lineupsError.value = ''
+  lineups.value = null
+
+  try {
+    const res = await apiGetMatchLineups(matchId)
+    if (seq !== lineupRequestSeq) return
+    lineups.value = normalizeMatchLineups(res)
+  } catch {
+    if (seq !== lineupRequestSeq) return
+    lineupsError.value = '首发阵容加载失败'
+  } finally {
+    if (seq === lineupRequestSeq) {
+      lineupsLoading.value = false
+    }
   }
 }
 
@@ -175,6 +206,12 @@ watch(() => route.params.id, loadMatch)
       :error="ai.matchInsightError"
       @generate="generateInsight(false)"
       @refresh="generateInsight(true)"
+    />
+
+    <MatchLineups
+      :lineups="lineups"
+      :loading="lineupsLoading"
+      :error="lineupsError"
     />
 
     <section v-if="groupStandings.length" class="section">
