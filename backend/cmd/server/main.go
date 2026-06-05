@@ -55,6 +55,7 @@ func main() {
 		&models.User{},
 		&models.Group{},
 		&models.Team{},
+		&models.Player{},
 		&models.City{},
 		&models.Stadium{},
 		&models.Match{},

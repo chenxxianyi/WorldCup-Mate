@@ -20,6 +20,7 @@ func Seed() {
 	seedCities()
 	seedStadiums()
 	seedTeams()
+	cleanupDemoPlayers()
 	seedMatches()
 }
 
@@ -165,6 +166,12 @@ func seedTeams() {
 				FlagURL: t.Flag, Continent: t.Continent, GroupID: group.ID,
 			})
 		}
+	}
+}
+
+func cleanupDemoPlayers() {
+	if err := DB.Unscoped().Where("source = ?", "demo_seed").Delete(&models.Player{}).Error; err != nil {
+		log.Printf("cleanup demo players failed: %v", err)
 	}
 }
 

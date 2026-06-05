@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { apiGetTeamMatches } from '@/api/teams'
+import { apiGetTeamMatches, apiGetTeamPlayers } from '@/api/teams'
 import { apiGetGroupStandings } from '@/api/standings'
 import MatchCard from '@/components/common/MatchCard.vue'
+import PlayerRoster from '@/components/common/PlayerRoster.vue'
 import StandingTable from '@/components/common/StandingTable.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useTeamStore } from '@/stores/useTeamStore'
 import { normalizeMatch, type Match } from '@/types/match'
+import { normalizePlayer, type ApiPlayer, type Player } from '@/types/player'
 import { normalizeStanding, type Standing } from '@/types/standing'
 import type { Team } from '@/types/team'
 
@@ -21,9 +23,13 @@ const teamStore = useTeamStore()
 
 const team = ref<Team | null>(null)
 const matches = ref<Match[]>([])
+const players = ref<Player[]>([])
 const standings = ref<Standing[]>([])
 const loading = ref(false)
 const error = ref('')
+const playersLoading = ref(false)
+const playersError = ref('')
+let playersRequestId = 0
 
 const sortedMatches = computed(() =>
   [...matches.value].sort((a, b) => {
@@ -45,6 +51,26 @@ const teamStanding = computed(() =>
   team.value ? standings.value.find((item) => item.team_id === team.value?.id) || null : null,
 )
 
+async function loadPlayers(teamId: number) {
+  const requestId = ++playersRequestId
+  playersLoading.value = true
+  playersError.value = ''
+  players.value = []
+
+  try {
+    const res = await apiGetTeamPlayers(teamId) as ApiPlayer[]
+    if (requestId !== playersRequestId) return
+    players.value = (res || []).map(normalizePlayer)
+  } catch {
+    if (requestId !== playersRequestId) return
+    playersError.value = '球员名单加载失败'
+  } finally {
+    if (requestId === playersRequestId) {
+      playersLoading.value = false
+    }
+  }
+}
+
 async function loadTeamDetail() {
   const id = Number(route.params.id)
   if (!id) {
@@ -56,6 +82,10 @@ async function loadTeamDetail() {
   error.value = ''
   team.value = null
   matches.value = []
+  playersRequestId += 1
+  players.value = []
+  playersError.value = ''
+  playersLoading.value = false
   standings.value = []
 
   try {
@@ -66,6 +96,7 @@ async function loadTeamDetail() {
     }
 
     team.value = detail
+    void loadPlayers(id)
 
     const matchRes = await apiGetTeamMatches(id) as any[]
     matches.value = (matchRes || []).map(normalizeMatch)
@@ -155,6 +186,12 @@ watch(() => route.params.id, loadTeamDetail)
           </div>
         </div>
       </article>
+
+      <PlayerRoster
+        :players="players"
+        :loading="playersLoading"
+        :error="playersError"
+      />
 
       <section v-if="nextMatch" class="section">
         <div class="section-head">

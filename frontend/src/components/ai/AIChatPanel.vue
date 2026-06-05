@@ -106,19 +106,19 @@ watch(
 .scroll-anchor {
   width: 1px;
   height: 1px;
-  scroll-margin-bottom: calc(var(--nav-h) + 132px + env(safe-area-inset-bottom));
+  scroll-margin-bottom: calc(var(--nav-h) + 112px + env(safe-area-inset-bottom));
 }
 
 @media (max-width: 767px) {
   .chat-panel {
-    padding-bottom: calc(var(--nav-h) + 118px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--nav-h) + 98px + env(safe-area-inset-bottom));
   }
 
   .chat-input {
     position: fixed;
     z-index: 18;
     left: 50%;
-    bottom: calc(var(--nav-h) + 36px + env(safe-area-inset-bottom));
+    bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
     width: min(calc(100vw - 48px), 560px);
     transform: translateX(-50%);
   }

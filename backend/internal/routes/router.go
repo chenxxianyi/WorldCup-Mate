@@ -45,6 +45,7 @@ func Setup() *gin.Engine {
 		teams.GET("", handlers.ListTeams)
 		teams.GET("/:id", handlers.GetTeamDetail)
 		teams.GET("/:id/matches", handlers.GetTeamMatches)
+		teams.GET("/:id/players", handlers.GetTeamPlayers)
 	}
 
 	// Groups (public)

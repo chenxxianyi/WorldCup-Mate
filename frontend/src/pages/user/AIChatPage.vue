@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AIChatPanel from '@/components/ai/AIChatPanel.vue'
-import PromptSuggestionCard from '@/components/ai/PromptSuggestionCard.vue'
 import { useAIStore } from '@/stores/useAIStore'
 
 const route = useRoute()
@@ -73,6 +72,15 @@ function newConversation() {
   historyOpen.value = false
 }
 
+function goBack() {
+  const canGoBack = Boolean(window.history.state?.back)
+  if (canGoBack) {
+    router.back()
+    return
+  }
+  router.push('/ai').catch(() => {})
+}
+
 onMounted(async () => {
   const q = String(route.query.q || '').trim()
   if (q) {
@@ -87,8 +95,12 @@ onMounted(async () => {
 
 <template>
   <div class="chat-page">
+    <button class="back-action" type="button" title="返回" aria-label="返回上一页" @click="goBack">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+    </button>
+
     <div class="section-head">
-      <div>
+      <div class="head-title">
         <h2>AI 聊天助手</h2>
         <span>{{ ai.activeConversation?.title || '问赛程、球队、规则和观赛建议' }}</span>
       </div>
@@ -130,15 +142,21 @@ onMounted(async () => {
       </div>
     </section>
 
-    <div v-if="!ai.chatMessages.length && !historyOpen" class="prompt-grid">
-      <PromptSuggestionCard
-        v-for="item in prompts"
-        :key="item"
-        :title="item"
-        icon="chat"
-        @select="send(item)"
-      />
-    </div>
+    <section v-if="!ai.chatMessages.length && !historyOpen" class="quick-panel" aria-label="快捷问题">
+      <div class="list-label">你可以这样问</div>
+      <div class="quick-list">
+        <button
+          v-for="item in prompts"
+          :key="item"
+          class="quick-item"
+          type="button"
+          @click="send(item)"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span>
+          <span>{{ item }}</span>
+        </button>
+      </div>
+    </section>
 
     <AIChatPanel
       :messages="ai.chatMessages"
@@ -163,13 +181,17 @@ onMounted(async () => {
   gap: 12px;
 }
 
+.head-title {
+  min-width: 0;
+}
+
 .section-head h2 {
   margin: 0;
   font-size: 19px;
   line-height: 1.3;
 }
 
-.section-head span {
+.head-title > span {
   display: block;
   margin-top: 4px;
   color: var(--muted);
@@ -181,6 +203,30 @@ onMounted(async () => {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+}
+
+.back-action {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  justify-self: start;
+  margin-left: -12px;
+  margin-bottom: -2px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--text);
+  background: transparent;
+  transition: color 160ms ease-out, background 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out;
+}
+
+.back-action .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.back-action:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
 }
 
 .chat-action {
@@ -205,12 +251,15 @@ onMounted(async () => {
   font-size: 19px;
 }
 
+.back-action:focus-visible,
 .chat-action:focus-visible,
-.history-item:focus-visible {
+.history-item:focus-visible,
+.quick-item:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--blue) 55%, transparent);
   outline-offset: 2px;
 }
 
+.back-action:active,
 .chat-action:active {
   transform: scale(0.97);
 }
@@ -227,8 +276,8 @@ onMounted(async () => {
 
 .history-panel {
   display: grid;
-  gap: 8px;
-  padding: 4px 0 8px;
+  gap: 0;
+  padding: 2px 0 8px;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
@@ -247,32 +296,57 @@ onMounted(async () => {
 
 .history-list {
   display: grid;
-  max-height: 252px;
+  max-height: 280px;
   overflow-y: auto;
 }
 
 .history-item {
+  position: relative;
   width: 100%;
   display: grid;
-  align-content: start;
-  gap: 3px;
-  min-height: 86px;
-  padding: 11px 0 10px;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 2px;
+  min-height: 58px;
+  padding: 9px 4px;
   border: 0;
   border-top: 1px solid var(--line);
   border-radius: 0;
   color: var(--text);
   background: transparent;
   text-align: left;
+  transition: color 160ms ease-out, background 160ms ease-out;
+}
+
+.history-item::before {
+  content: 'chat_bubble';
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  color: var(--muted);
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.history-item:hover {
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 4%, transparent);
 }
 
 .history-item.active {
   color: var(--blue);
-  background: color-mix(in srgb, var(--blue) 5%, transparent);
+  background: color-mix(in srgb, var(--blue) 7%, transparent);
+}
+
+.history-item.active::before {
+  color: var(--blue);
 }
 
 .history-title {
   display: block;
+  grid-column: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -283,19 +357,23 @@ onMounted(async () => {
 
 .history-preview {
   display: -webkit-box;
+  grid-column: 2 / 4;
   overflow: hidden;
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.55;
-  -webkit-line-clamp: 2;
+  line-height: 1.45;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
 }
 
 .history-time {
   display: block;
+  grid-column: 3;
+  align-self: start;
   color: var(--weak);
   font-size: 11px;
   line-height: 1.45;
+  white-space: nowrap;
 }
 
 .history-state,
@@ -311,11 +389,56 @@ onMounted(async () => {
   color: var(--blue);
 }
 
-.prompt-grid {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+.quick-panel {
+  display: grid;
+  gap: 6px;
+  padding: 2px 0 4px;
+}
+
+.list-label {
+  color: var(--weak);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.quick-list {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.quick-item {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  transition: color 160ms ease-out, background 160ms ease-out;
+}
+
+.quick-item:hover {
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 4%, transparent);
+}
+
+.quick-item .material-symbols-outlined {
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.quick-item > span:not(.material-symbols-outlined) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 @media (max-width: 520px) {
@@ -327,6 +450,11 @@ onMounted(async () => {
   .head-actions {
     align-self: flex-start;
     gap: 4px;
+  }
+
+  .back-action {
+    width: 28px;
+    height: 28px;
   }
 
   .chat-action {

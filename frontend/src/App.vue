@@ -2,6 +2,7 @@
 import { watchEffect, onMounted } from 'vue'
 import { useSettingStore } from '@/stores/useSettingStore'
 import { useAuthStore } from '@/stores/useAuthStore'
+import PullToRefresh from '@/components/common/PullToRefresh.vue'
 
 const settings = useSettingStore()
 const auth = useAuthStore()
@@ -18,5 +19,6 @@ onMounted(() => {
 </script>
 
 <template>
+  <PullToRefresh />
   <router-view />
 </template>
