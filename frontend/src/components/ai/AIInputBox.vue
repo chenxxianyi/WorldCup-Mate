@@ -8,6 +8,7 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'send', value: string): void
+  (e: 'stop'): void
 }>()
 
 const text = ref('')
@@ -29,7 +30,17 @@ function submit() {
       :disabled="loading"
       @keydown.enter.exact.prevent="submit"
     ></textarea>
-    <button class="send-btn" type="submit" :disabled="loading || !text.trim()">
+    <button
+      v-if="loading"
+      class="send-btn stop-btn"
+      type="button"
+      title="暂停生成"
+      aria-label="暂停生成"
+      @click="emit('stop')"
+    >
+      <span class="material-symbols-outlined">pause</span>
+    </button>
+    <button v-else class="send-btn" type="submit" :disabled="!text.trim()">
       <span class="material-symbols-outlined">send</span>
     </button>
   </form>
@@ -89,4 +100,5 @@ textarea::placeholder {
   opacity: 0.42;
   cursor: not-allowed;
 }
+
 </style>

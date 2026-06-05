@@ -80,16 +80,6 @@ func (b *ContextBuilder) TodayMatchesContext(date, timezone string, userID *uint
 	if err != nil {
 		return "", nil, err
 	}
-	if len(matches) == 0 {
-		err = database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City").Preload("Group").
-			Where("kickoff_time_utc >= ?", end.UTC()).
-			Order("kickoff_time_utc ASC").
-			Limit(5).
-			Find(&matches).Error
-		if err != nil {
-			return "", nil, err
-		}
-	}
 
 	lines := []string{
 		fmt.Sprintf("Date: %s", date),

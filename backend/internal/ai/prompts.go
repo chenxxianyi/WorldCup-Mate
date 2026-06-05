@@ -4,6 +4,12 @@ const SystemPrompt = `你是 WorldCup Mate 的世界杯看球助手，默认服�
 
 const OutputRules = `输出原则：先给结论，再给 3 到 5 条理由；优先使用国家队、世界杯历史、世界杯规则和本项目上下文；对新球迷友好；涉及预测必须克制；涉及数据必须基于上下文，不确定时说明可能需要查询最新官方名单/赛程；不要使用稳赚、必中、100% 晋级等确定性表达；使用纯文本中文输出，不要使用 Markdown 加粗、斜体或标题语法，不要输出 **、__、# 等格式符号。`
 
+const StructuredOutputRules = `输出原则：只输出一个合法 JSON 对象，不要输出 Markdown 代码块，不要输出解释性前后缀，不要输出 **、__、# 等格式符号。所有字段名必须使用用户任务要求的英文 snake_case 字段；数组字段即使为空也输出空数组；不确定的可选文本字段可输出空字符串。内容使用简洁中文，不能编造事实，不能提供投注建议。`
+
 func BuildSystemPrompt() string {
 	return SystemPrompt + "\n" + OutputRules
+}
+
+func BuildJSONSystemPrompt() string {
+	return SystemPrompt + "\n" + StructuredOutputRules
 }

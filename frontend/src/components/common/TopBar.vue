@@ -92,27 +92,19 @@ watch(() => auth.isLoggedIn, refreshUnread)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin: 2px 0 16px;
-  padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  border-radius: 24px;
-  background:
-    linear-gradient(102deg, rgba(246, 218, 229, 0.96), rgba(224, 226, 239, 0.96)),
-    var(--card);
-  box-shadow: 0 18px 48px rgba(32, 34, 45, 0.08);
-  backdrop-filter: blur(18px);
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 10px 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
   overflow: hidden;
 }
 
 .topbar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 16% 14%, rgba(220, 20, 60, 0.1), transparent 30%),
-    radial-gradient(circle at 86% 30%, rgba(26, 35, 126, 0.08), transparent 34%);
-  pointer-events: none;
+  content: none;
 }
 
 .topbar > * {
@@ -123,54 +115,54 @@ watch(() => auth.isLoggedIn, refreshUnread)
 .brand {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
   min-width: 0;
 }
 
 .brand-mark {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 14px;
+  border-radius: 10px;
   color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  background: color-mix(in srgb, var(--primary) 8%, var(--card));
   flex-shrink: 0;
 }
 
 .brand-mark svg {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: block;
   fill: currentColor;
 }
 
 .brand-title {
   margin: 0;
-  font-size: clamp(23px, 3vw, 34px);
-  line-height: 1.05;
-  font-weight: 900;
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.08;
+  font-weight: 850;
 }
 
 .brand-sub {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: clamp(12px, 1.35vw, 16px);
+  font-size: clamp(11px, 1.35vw, 14px);
   line-height: 1.25;
 }
 
 .version-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 20px;
-  margin-left: 8px;
-  padding: 0 8px;
+  min-height: 18px;
+  margin-left: 6px;
+  padding: 0 7px;
   border-radius: 999px;
-  color: #0b0b0b;
-  background: var(--accent);
-  font-size: 12px;
-  font-weight: 900;
+  color: var(--muted);
+  background: var(--card-soft);
+  font-size: 11px;
+  font-weight: 750;
 }
 
 .top-actions {
@@ -182,29 +174,29 @@ watch(() => auth.isLoggedIn, refreshUnread)
 .icon-btn {
   position: relative;
   width: auto;
-  min-width: 146px;
-  height: 44px;
+  min-width: 108px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 6px 8px 6px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 18px;
-  color: #111;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 18px rgba(30, 30, 40, 0.12);
-  backdrop-filter: blur(16px);
+  gap: 8px;
+  padding: 4px 6px 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  background: var(--card);
+  box-shadow: none;
+  backdrop-filter: none;
   outline: none;
-  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
-  font-size: 14px;
-  font-weight: 850;
+  transition: border-color 180ms ease-out, background 180ms ease-out;
+  font-size: 13px;
+  font-weight: 750;
   cursor: pointer;
 }
 
 .icon-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.09);
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--line));
+  background: color-mix(in srgb, var(--primary) 4%, var(--card));
 }
 
 .badge-dot {
@@ -226,14 +218,14 @@ watch(() => auth.isLoggedIn, refreshUnread)
 
 .action-orb,
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  color: #fff;
-  background: var(--primary);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  color: var(--muted);
+  background: var(--card-soft);
+  box-shadow: none;
   font-size: 16px;
 }
 
@@ -249,37 +241,34 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 .theme-orb {
-  color: #fff;
-  background:
-    radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.28) 0 18%, transparent 19%),
-    linear-gradient(145deg, var(--green-2), var(--green));
+  color: var(--muted);
+  background: var(--card-soft);
 }
 
 .theme-orb.dark {
-  color: #fff;
-  background:
-    radial-gradient(circle at 68% 34%, rgba(255, 255, 255, 0.22) 0 9%, transparent 10%),
-    linear-gradient(145deg, #00a66b, #004d35);
+  color: var(--muted);
+  background: var(--card-soft);
 }
 
 .login-orb {
-  background: linear-gradient(145deg, var(--green), var(--green-2));
+  background: var(--card-soft);
 }
 
 .logout-orb {
-  color: #fff;
-  background: linear-gradient(145deg, #e5484d, #b4232c);
+  color: var(--muted);
+  background: var(--card-soft);
 }
 
 .user-avatar {
-  background: linear-gradient(145deg, var(--primary), var(--secondary));
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 9%, var(--card));
   font-size: 14px;
   font-weight: 800;
 }
 
 .user-avatar-img {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   object-fit: cover;
 }
@@ -299,24 +288,21 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 [data-theme='dark'] .topbar {
-  border-color: rgba(255, 255, 255, 0.08);
-  background:
-    linear-gradient(102deg, rgba(44, 16, 28, 0.96), rgba(25, 28, 55, 0.96)),
-    var(--card);
+  background: transparent;
 }
 
 [data-theme='dark'] .icon-btn {
   color: var(--text);
-  background: rgba(17, 17, 17, 0.82);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--card);
+  border-color: var(--line);
 }
 
 @media (max-width: 720px) {
   .topbar {
     align-items: center;
     flex-direction: row;
-    padding: 10px 10px 10px 12px;
-    border-radius: 22px;
+    padding: 8px 0 10px;
+    border-radius: 0;
   }
 
   .brand {
@@ -325,17 +311,17 @@ watch(() => auth.isLoggedIn, refreshUnread)
   }
 
   .brand-mark {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
 
   .brand-mark svg {
-    width: 28px;
-    height: 28px;
+    width: 23px;
+    height: 23px;
   }
 
   .brand-title {
-    font-size: 21px;
+    font-size: 20px;
   }
 
   .brand-sub {
@@ -349,12 +335,12 @@ watch(() => auth.isLoggedIn, refreshUnread)
   }
 
   .icon-btn {
-    width: 42px;
+    width: 38px;
     min-width: 0;
-    height: 42px;
+    height: 38px;
     justify-content: center;
     padding: 0;
-    border-radius: 16px;
+    border-radius: 999px;
     font-size: 16px;
   }
 
@@ -365,14 +351,14 @@ watch(() => auth.isLoggedIn, refreshUnread)
   .action-orb,
   .user-avatar,
   .user-avatar-img {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
   .logout-btn,
   .theme-btn {
-    border-color: rgba(255, 255, 255, 0.82);
-    background: rgba(255, 255, 255, 0.86);
+    border-color: var(--line);
+    background: var(--card);
   }
 }
 </style>

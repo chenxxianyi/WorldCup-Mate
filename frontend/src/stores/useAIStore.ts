@@ -49,6 +49,7 @@ export const useAIStore = defineStore('ai', () => {
   const chatMessages = ref<AIChatMessage[]>([])
   const chatLoading = ref(false)
   const chatError = ref('')
+  const chatAbortController = ref<AbortController | null>(null)
 
   const shareCopyResult = ref<ShareCopyResult | null>(null)
   const shareCopyLoading = ref(false)
@@ -154,9 +155,12 @@ export const useAIStore = defineStore('ai', () => {
   async function sendChatMessage(payload: AIChatRequest) {
     const text = payload.message.trim()
     if (!text) return null
+    if (chatLoading.value) return null
 
     chatLoading.value = true
     chatError.value = ''
+    const abortController = new AbortController()
+    chatAbortController.value = abortController
     chatMessages.value = [
       ...chatMessages.value,
       { role: 'user', content: text },
@@ -199,7 +203,7 @@ export const useAIStore = defineStore('ai', () => {
             activeConversation.value.last_message = event.message.content
           }
         }
-      })
+      }, abortController.signal)
       updateAssistant(() => res.message)
       if (!activeConversation.value || activeConversation.value.id !== res.conversation_id) {
         activeConversation.value = {
@@ -215,6 +219,14 @@ export const useAIStore = defineStore('ai', () => {
       rememberActiveConversation(res.conversation_id)
       return res
     } catch (err) {
+      if (abortController.signal.aborted) {
+        updateAssistant((message) => (
+          message.content
+            ? message
+            : { ...message, content: '已暂停生成。' }
+        ))
+        return null
+      }
       chatError.value = friendlyError(err)
       updateAssistant((message) => (
         message.content
@@ -223,8 +235,15 @@ export const useAIStore = defineStore('ai', () => {
       ))
       throw err
     } finally {
+      if (chatAbortController.value === abortController) {
+        chatAbortController.value = null
+      }
       chatLoading.value = false
     }
+  }
+
+  function stopChatGeneration() {
+    chatAbortController.value?.abort()
   }
 
   async function fetchConversations() {
@@ -272,6 +291,7 @@ export const useAIStore = defineStore('ai', () => {
   }
 
   function startNewConversation() {
+    stopChatGeneration()
     activeConversation.value = null
     chatMessages.value = []
     chatError.value = ''
@@ -304,6 +324,7 @@ export const useAIStore = defineStore('ai', () => {
     generateShareCopy,
     clearShareCopy,
     sendChatMessage,
+    stopChatGeneration,
     fetchConversations,
     fetchConversation,
     restoreLatestConversation,

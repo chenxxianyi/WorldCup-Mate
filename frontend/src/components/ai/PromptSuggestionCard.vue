@@ -20,14 +20,16 @@ defineEmits<{
 
 <style scoped>
 .prompt-card {
-  min-width: 190px;
-  min-height: 44px;
-  display: inline-flex;
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
-  gap: 7px;
-  padding: 9px 11px;
+  column-gap: 10px;
+  row-gap: 2px;
+  padding: 11px 12px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   text-align: left;
   color: var(--text);
   background: var(--card);
@@ -47,22 +49,24 @@ defineEmits<{
 }
 
 .prompt-card .material-symbols-outlined {
+  grid-row: 1 / span 2;
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .prompt-card strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
 .prompt-card small {
   color: var(--muted);
   line-height: 1.4;
+  font-size: 12px;
 }
 </style>

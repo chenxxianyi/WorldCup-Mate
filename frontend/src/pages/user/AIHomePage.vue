@@ -20,9 +20,9 @@ function openChat(prompt?: string) {
 
 <template>
   <div class="ai-home">
-    <section class="card hero-card">
-      <span class="tag live">AI 助手</span>
-      <h2>把今天的世界杯看得更省心</h2>
+    <section class="hero-card">
+      <span class="eyebrow">AI 助手</span>
+      <h2>今天看球，更省心</h2>
       <p>帮你挑比赛、读小组形势、解释规则，也能顺手写一段分享文案。</p>
       <div class="hero-actions">
         <button class="pill-btn primary" type="button" @click="generate(false)">生成今日推荐</button>
@@ -76,43 +76,48 @@ function openChat(prompt?: string) {
 <style scoped>
 .ai-home {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .hero-card {
   display: grid;
-  gap: 12px;
-  padding: 18px;
-  overflow: hidden;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent 46%),
-    linear-gradient(120deg, color-mix(in srgb, var(--blue) 9%, transparent), transparent 52%),
-    var(--card);
+  gap: 10px;
+  padding: 10px 2px 4px;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .hero-card h2 {
   margin: 0;
   max-width: 680px;
-  font-size: clamp(24px, 5vw, 36px);
-  line-height: 1.15;
+  font-size: clamp(25px, 5vw, 34px);
+  line-height: 1.16;
+  letter-spacing: 0;
 }
 
 .hero-card p {
-  max-width: 620px;
+  max-width: 560px;
   margin: 0;
   color: var(--muted);
-  line-height: 1.65;
+  line-height: 1.55;
+  font-size: 15px;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  padding-top: 2px;
 }
 
 .section {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  padding-top: 2px;
 }
 
 .section-head {
@@ -124,7 +129,7 @@ function openChat(prompt?: string) {
 
 .section-head h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .section-head span {
@@ -134,8 +139,14 @@ function openChat(prompt?: string) {
 
 .prompt-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 520px) {
+  .prompt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 768px) {

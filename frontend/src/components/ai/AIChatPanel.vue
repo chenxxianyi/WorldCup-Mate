@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue'
 import type { AIChatMessage } from '@/types/ai'
 import AIInputBox from './AIInputBox.vue'
 import AIMessageBubble from './AIMessageBubble.vue'
 import AIThinking from './AIThinking.vue'
 
-defineProps<{
+const props = defineProps<{
   messages: AIChatMessage[]
   loading?: boolean
   error?: string
@@ -12,7 +13,30 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'send', value: string): void
+  (e: 'stop'): void
 }>()
+
+const scrollAnchor = ref<HTMLElement | null>(null)
+let scrollFrame = 0
+
+function scrollToLatest() {
+  if (scrollFrame) cancelAnimationFrame(scrollFrame)
+  scrollFrame = requestAnimationFrame(async () => {
+    await nextTick()
+    scrollAnchor.value?.scrollIntoView({ block: 'end', behavior: 'auto' })
+    scrollFrame = 0
+  })
+}
+
+watch(
+  () => [
+    props.loading,
+    props.messages.length,
+    props.messages[props.messages.length - 1]?.content,
+  ],
+  scrollToLatest,
+  { flush: 'post' },
+)
 </script>
 
 <template>
@@ -27,9 +51,10 @@ const emit = defineEmits<{
         <AIThinking />
       </div>
       <p v-if="error" class="error">{{ error }}</p>
+      <div ref="scrollAnchor" class="scroll-anchor" aria-hidden="true"></div>
     </div>
 
-    <AIInputBox class="chat-input" :loading="loading" @send="emit('send', $event)" />
+    <AIInputBox class="chat-input" :loading="loading" @send="emit('send', $event)" @stop="emit('stop')" />
   </section>
 </template>
 
@@ -76,6 +101,12 @@ const emit = defineEmits<{
   margin: 0;
   color: var(--blue);
   font-size: 13px;
+}
+
+.scroll-anchor {
+  width: 1px;
+  height: 1px;
+  scroll-margin-bottom: calc(var(--nav-h) + 132px + env(safe-area-inset-bottom));
 }
 
 @media (max-width: 767px) {

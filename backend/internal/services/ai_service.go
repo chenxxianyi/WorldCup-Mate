@@ -267,7 +267,7 @@ func (s *AIService) GenerateMatchInsight(ctx context.Context, req MatchInsightRe
 	}
 
 	prompt := "TASK:match_insight\nReturn JSON with summary, watch_rating, reasons, team_comparison, beginner_tips, qualification_impact, should_stay_up, suitable_for.\nContext:\n" + matchCtx
-	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
+	raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "match_insight", "failed", err, providerRes, latency)
 		return nil, aiUserError(err)
@@ -317,12 +317,24 @@ func (s *AIService) GenerateTodayRecommendations(ctx context.Context, req TodayR
 		s.logUsage(userID, ip, "today_recommendations", "failed", err, nil, 0)
 		return nil, fmt.Errorf("读取赛程失败")
 	}
+	if len(matches) == 0 {
+		res := TodayRecommendationResponse{
+			Date:            req.Date,
+			Timezone:        req.Timezone,
+			Recommendations: []TodayRecommendedMatch{},
+			OnlyOneMatch:    nil,
+			Note:            "当天没有真实赛程数据。",
+		}
+		s.setCached(ctx, cacheKey, res, 30*time.Minute)
+		s.logUsage(userID, ip, "today_recommendations", "success", nil, nil, 0)
+		return &res, nil
+	}
 	if err := s.checkLimit(ctx, userID); err != nil {
 		return nil, err
 	}
 
 	prompt := fmt.Sprintf("TASK:today_recommendations\nReturn JSON with date, timezone, recommendations, only_one_match, note. Limit recommendations to %d. Every recommendation.match_id must be one of the Match ID values in Context.\nContext:\n%s", req.Limit, todayCtx)
-	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
+	raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "today_recommendations", "failed", err, providerRes, latency)
 		return nil, aiUserError(err)
@@ -339,7 +351,8 @@ func (s *AIService) GenerateTodayRecommendations(ctx context.Context, req TodayR
 	res.Date = req.Date
 	res.Timezone = req.Timezone
 	res.Recommendations = validateRecommendations(res.Recommendations, matches, req.Limit)
-	if len(matches) > 0 && len(res.Recommendations) == 0 {
+	res.OnlyOneMatch = validateOnlyOneMatch(res.OnlyOneMatch, res.Recommendations)
+	if len(res.Recommendations) == 0 {
 		s.logUsage(userID, ip, "today_recommendations", "failed", fmt.Errorf("AI response has no valid match ids"), providerRes, latency)
 		return nil, fmt.Errorf("AI 返回内容缺少有效比赛，请稍后重试")
 	}
@@ -374,7 +387,7 @@ func (s *AIService) GenerateGroupAnalysis(ctx context.Context, req GroupAnalysis
 	}
 
 	prompt := "TASK:group_analysis\nReturn JSON with summary, key_points, qualification_rules, teams, data_note. Do not invent probabilities.\nContext:\n" + groupCtx
-	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
+	raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "group_analysis", "failed", err, providerRes, latency)
 		return nil, aiUserError(err)
@@ -414,7 +427,7 @@ func (s *AIService) ExplainFootball(ctx context.Context, req ExplainRequest, use
 		contextText = s.builder.ChatContext(defaultContext(req.ContextType), req.ContextID, *userID)
 	}
 	prompt := "TASK:explain\nReturn JSON with answer and key_points. Explain football rules in beginner-friendly Chinese.\nQuestion: " + req.Question + "\nContext:\n" + contextText
-	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
+	raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "explain", "failed", err, providerRes, latency)
 		return nil, aiUserError(err)
@@ -445,7 +458,7 @@ func (s *AIService) GenerateShareCopy(ctx context.Context, req ShareCopyRequest,
 		return nil, err
 	}
 	prompt := fmt.Sprintf("TASK:share_copy\nReturn JSON with title, content, tips. Platform=%s Tone=%s Length=%s. Do not mention betting or invented facts.\nContext:\n%s", req.Platform, req.Tone, req.Length, matchCtx)
-	raw, providerRes, latency, err := s.callProvider(ctx, prompt, nil)
+	raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
 	if err != nil {
 		s.logUsage(userID, ip, "share_copy", "failed", err, providerRes, latency)
 		return nil, aiUserError(err)
@@ -658,6 +671,14 @@ func (s *AIService) ChatStream(ctx context.Context, req AIChatRequest, userID ui
 }
 
 func (s *AIService) callProvider(ctx context.Context, prompt string, messages []ai.Message) (string, *ai.ChatResponse, int64, error) {
+	return s.callProviderWithSystem(ctx, ai.BuildSystemPrompt(), prompt, messages)
+}
+
+func (s *AIService) callJSONProvider(ctx context.Context, prompt string, messages []ai.Message) (string, *ai.ChatResponse, int64, error) {
+	return s.callProviderWithSystem(ctx, ai.BuildJSONSystemPrompt(), prompt, messages)
+}
+
+func (s *AIService) callProviderWithSystem(ctx context.Context, systemPrompt, prompt string, messages []ai.Message) (string, *ai.ChatResponse, int64, error) {
 	start := time.Now()
 	timeout := time.Duration(s.cfg.TimeoutSeconds) * time.Second
 	if timeout <= 0 {
@@ -666,7 +687,7 @@ func (s *AIService) callProvider(ctx context.Context, prompt string, messages []
 	callCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	res, err := s.provider.Chat(callCtx, ai.ChatRequest{
-		SystemPrompt: ai.BuildSystemPrompt(),
+		SystemPrompt: systemPrompt,
 		UserPrompt:   prompt,
 		Messages:     messages,
 		Model:        s.cfg.Model,
@@ -791,37 +812,6 @@ func providerTokens(res *ai.ChatResponse, kind string) int {
 	}
 }
 
-func buildRecommendationsFromMatches(matches []models.Match, limit int) []TodayRecommendedMatch {
-	if limit <= 0 {
-		limit = 3
-	}
-	out := make([]TodayRecommendedMatch, 0, minInt(limit, len(matches)))
-	for i, m := range matches {
-		if i >= limit {
-			break
-		}
-		rating := m.ImportanceLevel + 2
-		if rating > 5 {
-			rating = 5
-		}
-		if rating < 1 {
-			rating = 3
-		}
-		reason := cleanReason(m.RecommendReason)
-		if reason == "" {
-			reason = "对阵信息明确，适合作为今日观赛候选。"
-		}
-		out = append(out, TodayRecommendedMatch{
-			MatchID:     m.ID,
-			Title:       fmt.Sprintf("%s vs %s", safeTeamName(m.HomeTeam), safeTeamName(m.AwayTeam)),
-			KickoffTime: m.KickoffTimeUTC.UTC().Format(time.RFC3339),
-			Reason:      reason,
-			Rating:      rating,
-		})
-	}
-	return out
-}
-
 func validateRecommendations(items []TodayRecommendedMatch, matches []models.Match, limit int) []TodayRecommendedMatch {
 	if limit <= 0 {
 		limit = 3
@@ -851,6 +841,18 @@ func validateRecommendations(items []TodayRecommendedMatch, matches []models.Mat
 		out = append(out, item)
 	}
 	return out
+}
+
+func validateOnlyOneMatch(item *TodayRecommendedMatch, recommendations []TodayRecommendedMatch) *TodayRecommendedMatch {
+	if item == nil || item.MatchID == 0 {
+		return nil
+	}
+	for i := range recommendations {
+		if recommendations[i].MatchID == item.MatchID {
+			return &recommendations[i]
+		}
+	}
+	return nil
 }
 
 func buildGroupTeams(standings []models.GroupStanding) []GroupAnalysisTeam {
@@ -929,13 +931,6 @@ func safeTeamName(t models.Team) string {
 		return t.FIFACode
 	}
 	return "TBD"
-}
-
-func cleanReason(s string) string {
-	if strings.Contains(s, "锟") || strings.Contains(s, "涓") || strings.Contains(s, "鍦") {
-		return ""
-	}
-	return strings.TrimSpace(s)
 }
 
 func nonNilStrings(v []string) []string {

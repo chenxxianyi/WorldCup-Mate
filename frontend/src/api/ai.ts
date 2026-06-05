@@ -47,6 +47,7 @@ export function apiSendAIChat(payload: AIChatRequest) {
 export async function apiSendAIChatStream(
   payload: AIChatRequest,
   onEvent: (event: AIChatStreamEvent) => void,
+  signal?: AbortSignal,
 ): Promise<AIChatResponse> {
   const token = localStorage.getItem('wm-token') || sessionStorage.getItem('wm-token')
   const headers: Record<string, string> = {
@@ -59,6 +60,7 @@ export async function apiSendAIChatStream(
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
+    signal,
   })
   if (!res.ok) {
     throw new Error('AI 服务暂时不可用，请稍后再试')

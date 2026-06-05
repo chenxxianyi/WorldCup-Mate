@@ -44,22 +44,20 @@ function navigate(tabRoute: string) {
   position: fixed;
   z-index: 20;
   left: 50%;
-  bottom: calc(18px + env(safe-area-inset-bottom));
+  bottom: calc(14px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: min(calc(100% - 40px), 430px);
-  height: 68px;
+  width: min(calc(100% - 32px), 430px);
+  height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow: 0 10px 28px rgba(17, 17, 17, 0.07);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .nav-item {
@@ -75,7 +73,7 @@ function navigate(tabRoute: string) {
   background: transparent;
   text-decoration: none;
   position: relative;
-  transition: all 300ms ease;
+  transition: color 180ms ease-out;
 }
 
 .nav-item:active {
@@ -94,25 +92,21 @@ function navigate(tabRoute: string) {
 }
 
 .nav-item.active .material-symbols-outlined {
-  filter:
-    drop-shadow(0 0 10px rgba(227, 29, 36, 0.5))
-    drop-shadow(0 0 3px rgba(227, 29, 36, 0.3));
+  filter: none;
 }
 
 .nav-item > span:not(.material-symbols-outlined) {
   font-size: 12px;
   line-height: 1;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  transition: all 300ms ease;
+  font-weight: 650;
+  letter-spacing: 0;
+  transition: color 180ms ease-out;
 }
 
 [data-theme='dark'] .bottom-nav {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(17, 17, 17, 0.78);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 
 @media (min-width: 768px) {

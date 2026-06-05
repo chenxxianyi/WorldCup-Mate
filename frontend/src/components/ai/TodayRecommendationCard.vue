@@ -21,8 +21,8 @@ const router = useRouter()
   <article class="card recommend-card">
     <div class="card-head">
       <div>
-        <span class="tag gold">今日推荐</span>
         <h2>今天看什么</h2>
+        <p>让 AI 根据赛程和关注球队给你一份观赛清单。</p>
       </div>
       <button class="pill-btn" type="button" :disabled="loading" @click="data ? emit('refresh') : emit('generate')">
         {{ data ? '重新生成' : '生成推荐' }}
@@ -38,7 +38,7 @@ const router = useRouter()
       <button class="pill-btn primary" type="button" @click="emit('generate')">重试</button>
     </div>
     <div v-else-if="!data" class="state">
-      <span>让 AI 根据赛程和关注球队给你一份观赛清单。</span>
+      <span>暂无推荐，点一下生成即可。</span>
     </div>
     <div v-else class="content">
       <div v-if="data.only_one_match" class="only-one">
@@ -83,12 +83,19 @@ const router = useRouter()
 }
 
 .card-head h2 {
-  margin: 9px 0 0;
+  margin: 0;
   font-size: 18px;
 }
 
+.card-head p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .state {
-  min-height: 112px;
+  min-height: 108px;
   display: grid;
   place-items: center;
   gap: 10px;
@@ -102,16 +109,18 @@ const router = useRouter()
 
 .content {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin-top: 14px;
 }
 
 .only-one {
   display: grid;
   gap: 8px;
-  padding: 13px;
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--primary) 9%, var(--card-soft));
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
 }
 
 .only-one span {
@@ -140,12 +149,18 @@ const router = useRouter()
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
   text-align: left;
   color: var(--text);
-  background: var(--card);
+  background: transparent;
+  transition: color 160ms ease-out;
+}
+
+.rec-row:hover {
+  color: var(--primary);
 }
 
 .rec-row span {
@@ -159,5 +174,16 @@ const router = useRouter()
   min-width: 44px;
   color: var(--primary);
   text-align: right;
+}
+
+@media (max-width: 520px) {
+  .card-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .card-head .pill-btn {
+    width: fit-content;
+  }
 }
 </style>

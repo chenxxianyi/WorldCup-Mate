@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AIChatPanel from '@/components/ai/AIChatPanel.vue'
 import PromptSuggestionCard from '@/components/ai/PromptSuggestionCard.vue'
 import { useAIStore } from '@/stores/useAIStore'
 
 const route = useRoute()
+const router = useRouter()
 const ai = useAIStore()
 const historyOpen = ref(false)
 const historyLoading = ref(false)
@@ -54,6 +55,7 @@ async function openHistory() {
 }
 
 async function selectConversation(id: number) {
+  ai.stopChatGeneration()
   historyError.value = ''
   historyLoading.value = true
   try {
@@ -74,6 +76,8 @@ function newConversation() {
 onMounted(async () => {
   const q = String(route.query.q || '').trim()
   if (q) {
+    const { q: _q, ...query } = route.query
+    router.replace({ path: route.path, query }).catch(() => {})
     send(q)
     return
   }
@@ -141,6 +145,7 @@ onMounted(async () => {
       :loading="ai.chatLoading"
       :error="ai.chatError"
       @send="send"
+      @stop="ai.stopChatGeneration"
     />
   </div>
 </template>

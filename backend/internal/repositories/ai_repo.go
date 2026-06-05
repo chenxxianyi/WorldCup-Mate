@@ -1,8 +1,6 @@
 package repositories
 
 import (
-	"errors"
-
 	"worldcup-mate/internal/database"
 	"worldcup-mate/internal/models"
 
@@ -11,12 +9,12 @@ import (
 
 func SaveGeneratedContent(content *models.AIGeneratedContent) error {
 	var existing models.AIGeneratedContent
-	err := database.DB.Where("cache_key = ?", content.CacheKey).First(&existing).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return database.DB.Create(content).Error
+	result := database.DB.Where("cache_key = ?", content.CacheKey).Limit(1).Find(&existing)
+	if result.Error != nil {
+		return result.Error
 	}
-	if err != nil {
-		return err
+	if result.RowsAffected == 0 {
+		return database.DB.Create(content).Error
 	}
 	content.ID = existing.ID
 	return database.DB.Save(content).Error
@@ -24,8 +22,14 @@ func SaveGeneratedContent(content *models.AIGeneratedContent) error {
 
 func GetGeneratedContentByCacheKey(cacheKey string) (*models.AIGeneratedContent, error) {
 	var content models.AIGeneratedContent
-	err := database.DB.Where("cache_key = ?", cacheKey).First(&content).Error
-	return &content, err
+	result := database.DB.Where("cache_key = ?", cacheKey).Limit(1).Find(&content)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &content, nil
 }
 
 func SaveUsageLog(log *models.AIUsageLog) error {
