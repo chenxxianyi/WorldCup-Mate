@@ -95,6 +95,73 @@ func (c *Client) SearchTeams(ctx context.Context, keyword string) (*TeamSearchRe
 	return &data, nil
 }
 
+func (c *Client) FixtureLineups(ctx context.Context, fixtureID string) (*FixtureLineupsResponse, error) {
+	u, err := url.Parse(c.baseURL + "/fixtures/lineups")
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	q.Set("fixture", fixtureID)
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("x-apisports-key", c.apiKey)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.doWithRetry(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data FixtureLineupsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	if hasAPIErrors(data.Errors) {
+		return nil, fmt.Errorf("api-football returned errors: %v", data.Errors)
+	}
+	return &data, nil
+}
+
+func (c *Client) SearchFixtures(ctx context.Context, date string, teamID string) (*FixtureSearchResponse, error) {
+	u, err := url.Parse(c.baseURL + "/fixtures")
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	q.Set("date", date)
+	if strings.TrimSpace(teamID) != "" {
+		q.Set("team", teamID)
+	}
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("x-apisports-key", c.apiKey)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.doWithRetry(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data FixtureSearchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	if hasAPIErrors(data.Errors) {
+		return nil, fmt.Errorf("api-football returned errors: %v", data.Errors)
+	}
+	return &data, nil
+}
+
 func (c *Client) doWithRetry(ctx context.Context, req *http.Request) (*http.Response, error) {
 	const maxAttempts = 4
 	for attempt := 1; attempt <= maxAttempts; attempt++ {

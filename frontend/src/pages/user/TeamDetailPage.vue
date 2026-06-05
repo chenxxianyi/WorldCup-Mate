@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiGetTeamMatches, apiGetTeamPlayers } from '@/api/teams'
 import { apiGetGroupStandings } from '@/api/standings'
@@ -29,7 +29,6 @@ const loading = ref(false)
 const error = ref('')
 const playersLoading = ref(false)
 const playersError = ref('')
-const showBackTop = ref(false)
 let playersRequestId = 0
 
 const sortedMatches = computed(() =>
@@ -126,26 +125,8 @@ function toggleFollow() {
   fav.toggleTeamFollow(team.value.id)
 }
 
-function updateBackTopVisibility() {
-  showBackTop.value = window.scrollY > 420
-}
-
-function onWindowScroll() {
-  updateBackTopVisibility()
-}
-
-function backToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
 onMounted(() => {
-  window.addEventListener('scroll', onWindowScroll, { passive: true })
-  updateBackTopVisibility()
   void loadTeamDetail()
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onWindowScroll)
 })
 
 watch(() => route.params.id, loadTeamDetail)
@@ -239,20 +220,7 @@ watch(() => route.params.id, loadTeamDetail)
           <span>{{ team.group_name }}</span>
         </div>
         <StandingTable :standings="standings" show-status />
-      </section>
-
-      <Transition name="back-top">
-        <button
-          v-if="showBackTop"
-          class="back-top-btn"
-          type="button"
-          aria-label="返回顶部"
-          title="返回顶部"
-          @click="backToTop"
-        >
-          <span class="material-symbols-outlined">keyboard_arrow_up</span>
-        </button>
-      </Transition>
+      </section>
     </template>
   </div>
 </template>

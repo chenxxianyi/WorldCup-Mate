@@ -2,6 +2,7 @@
 import TopBar from '@/components/common/TopBar.vue'
 import BottomTabBar from '@/components/common/BottomTabBar.vue'
 import DesktopRail from '@/components/common/DesktopRail.vue'
+import BackTopButton from '@/components/common/BackTopButton.vue'
 </script>
 
 <template>
@@ -15,6 +16,7 @@ import DesktopRail from '@/components/common/DesktopRail.vue'
     </router-view>
   </main>
   <BottomTabBar />
+  <BackTopButton />
 </template>
 
 <style scoped>

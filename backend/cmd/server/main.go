@@ -41,6 +41,17 @@ func main() {
 		Interval:           time.Duration(cfg.PlayerSyncIntervalHours) * time.Hour,
 		SyncOnStartup:      cfg.PlayerSyncOnStartup,
 	})
+	services.ConfigureLineupSync(services.LineupSyncConfig{
+		Enabled:             cfg.LineupSyncEnabled,
+		PrimaryProvider:     cfg.LineupSyncPrimaryProvider,
+		EnhancedProvider:    cfg.LineupSyncEnhancedProvider,
+		FootballDataAPIKey:  cfg.FootballDataAPIKey,
+		FootballDataBaseURL: cfg.FootballDataBaseURL,
+		APIFootballKey:      cfg.APIFootballKey,
+		APIFootballBaseURL:  cfg.APIFootballBaseURL,
+		PregameWindow:       time.Duration(cfg.LineupSyncPregameMinutes) * time.Minute,
+		LiveInterval:        time.Duration(cfg.LineupSyncLiveIntervalSeconds) * time.Second,
+	})
 	if err := services.ConfigureAI(services.AIServiceConfig{
 		Provider:       cfg.AIProvider,
 		BaseURL:        cfg.AIBaseURL,
@@ -72,6 +83,9 @@ func main() {
 		&models.City{},
 		&models.Stadium{},
 		&models.Match{},
+		&models.MatchLineup{},
+		&models.MatchLineupPlayer{},
+		&models.ExternalMatchMapping{},
 		&models.UserFavoriteTeam{},
 		&models.UserFavoriteMatch{},
 		&models.Reminder{},
@@ -117,6 +131,7 @@ func main() {
 	jobs.StartReminderScanner()
 	jobs.StartMatchSyncer()
 	jobs.StartPlayerSyncer()
+	jobs.StartLineupSyncer()
 
 	log.Printf("Server starting on %s", addr)
 	if err := r.RunListener(listener); err != nil {

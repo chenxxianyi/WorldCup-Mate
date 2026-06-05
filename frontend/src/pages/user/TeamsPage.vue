@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import ChipFilter from '@/components/common/ChipFilter.vue'
 import TeamCard from '@/components/common/TeamCard.vue'
@@ -8,7 +8,6 @@ import { useTeamStore } from '@/stores/useTeamStore'
 const teamStore = useTeamStore()
 const search = ref('')
 const activeFilter = ref('全部')
-const showBackTop = ref(false)
 
 const filterOptions = [
   '全部',
@@ -61,26 +60,8 @@ const filteredTeams = computed(() => {
   return list
 })
 
-function updateBackTopVisibility() {
-  showBackTop.value = window.scrollY > 420
-}
-
-function onWindowScroll() {
-  updateBackTopVisibility()
-}
-
-function backToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
 onMounted(() => {
-  window.addEventListener('scroll', onWindowScroll, { passive: true })
-  updateBackTopVisibility()
   teamStore.fetchTeams({ page_size: 100 })
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onWindowScroll)
 })
 </script>
 
@@ -98,20 +79,7 @@ onBeforeUnmount(() => {
     </div>
     <div class="team-grid">
       <TeamCard v-for="t in filteredTeams" :key="t.id" :team="t" />
-    </div>
-
-    <Transition name="back-top">
-      <button
-        v-if="showBackTop"
-        class="back-top-btn"
-        type="button"
-        aria-label="返回顶部"
-        title="返回顶部"
-        @click="backToTop"
-      >
-        <span class="material-symbols-outlined">keyboard_arrow_up</span>
-      </button>
-    </Transition>
+    </div>
   </div>
 </template>
 

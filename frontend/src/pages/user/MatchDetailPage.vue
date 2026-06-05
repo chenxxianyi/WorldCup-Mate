@@ -370,27 +370,45 @@ watch(() => route.params.id, loadMatch)
 }
 
 .table-scroll {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .standing-table {
   width: 100%;
-  min-width: 520px;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
 th,
 td {
-  padding: 12px 10px;
+  padding: 12px 8px;
   border-bottom: 1px solid var(--line);
   text-align: left;
   font-size: 13px;
+}
+
+th:first-child,
+td:first-child {
+  width: 54px;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+  width: auto;
+}
+
+th:nth-child(n + 3),
+td:nth-child(n + 3) {
+  width: 42px;
+  text-align: center;
 }
 
 th {
   color: var(--muted);
   font-weight: 750;
   background: var(--card-soft);
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 td {
@@ -401,7 +419,14 @@ td {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 150px;
+  min-width: 0;
+}
+
+.team-cell span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 tr:last-child td {
@@ -419,5 +444,41 @@ tr:last-child td {
 .rank-out {
   color: var(--weak);
   opacity: 0.66;
+}
+
+@media (max-width: 720px) {
+  th,
+  td {
+    padding: 12px 4px;
+    font-size: 12px;
+  }
+
+  th {
+    font-size: 11px;
+  }
+
+  th:first-child,
+  td:first-child {
+    width: 42px;
+  }
+
+  th:nth-child(n + 3),
+  td:nth-child(n + 3) {
+    width: 30px;
+  }
+
+  th:nth-child(7),
+  td:nth-child(7) {
+    width: 48px;
+  }
+
+  th:nth-child(8),
+  td:nth-child(8) {
+    width: 40px;
+  }
+
+  .team-cell {
+    gap: 6px;
+  }
 }
 </style>

@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { apiAdminListMatches } from '@/api/admin'
+import { apiAdminListMatches, apiAdminSyncMatchLineups } from '@/api/admin'
 import { normalizeMatch, type Match } from '@/types/match'
 
 const search = ref('')
 const status = ref('')
 const matches = ref<Match[]>([])
 const loading = ref(false)
+const syncingLineupId = ref<number | null>(null)
+const syncMessage = ref('')
 
 const filteredMatches = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -35,6 +37,19 @@ async function loadMatches() {
   }
 }
 
+async function syncLineup(matchId: number) {
+  syncingLineupId.value = matchId
+  syncMessage.value = ''
+  try {
+    const result = await apiAdminSyncMatchLineups(matchId)
+    syncMessage.value = `阵容同步完成：更新 ${result.updated || 0}，可用 ${result.available || 0}`
+  } catch (err: any) {
+    syncMessage.value = err?.message || '阵容同步失败'
+  } finally {
+    syncingLineupId.value = null
+  }
+}
+
 onMounted(loadMatches)
 </script>
 
@@ -56,11 +71,13 @@ onMounted(loadMatches)
       </div>
     </div>
 
+    <div v-if="syncMessage" class="card result-card">{{ syncMessage }}</div>
+
     <div class="card table-card table-scroll">
       <table class="admin-table">
         <thead>
           <tr>
-            <th>比赛</th><th>小组</th><th>时间</th><th>城市</th><th>球场</th><th>状态</th>
+            <th>比赛</th><th>小组</th><th>时间</th><th>城市</th><th>球场</th><th>状态</th><th>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -71,9 +88,14 @@ onMounted(loadMatches)
             <td>{{ match.city || '-' }}</td>
             <td>{{ match.stadium || '-' }}</td>
             <td>{{ match.status }}</td>
+            <td>
+              <button class="mini-btn" :disabled="syncingLineupId === match.id" @click="syncLineup(match.id)">
+                {{ syncingLineupId === match.id ? '同步中' : '同步阵容' }}
+              </button>
+            </td>
           </tr>
           <tr v-if="!loading && !filteredMatches.length">
-            <td colspan="6" class="empty-row">暂无比赛数据</td>
+            <td colspan="7" class="empty-row">暂无比赛数据</td>
           </tr>
         </tbody>
       </table>
@@ -121,6 +143,22 @@ onMounted(loadMatches)
 
 .table-card {
   overflow: hidden;
+}
+
+.result-card {
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mini-btn {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--card-soft);
+  white-space: nowrap;
 }
 
 .table-scroll {

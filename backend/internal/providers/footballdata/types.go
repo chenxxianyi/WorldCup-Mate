@@ -53,3 +53,26 @@ type ScoreLine struct {
 	Home *int `json:"home"`
 	Away *int `json:"away"`
 }
+
+type MatchDetailResponse struct {
+	ID       int64           `json:"id"`
+	Status   string          `json:"status"`
+	HomeTeam MatchLineupTeam `json:"homeTeam"`
+	AwayTeam MatchLineupTeam `json:"awayTeam"`
+}
+
+type MatchLineupTeam struct {
+	ID        int64          `json:"id"`
+	Name      string         `json:"name"`
+	TLA       string         `json:"tla"`
+	Formation string         `json:"formation"`
+	Lineup    []LineupPlayer `json:"lineup"`
+	Bench     []LineupPlayer `json:"bench"`
+}
+
+type LineupPlayer struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Position    string `json:"position"`
+	ShirtNumber int    `json:"shirtNumber"`
+}

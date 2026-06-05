@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { apiAdminSyncMatches } from '@/api/admin'
+import { apiAdminSyncLiveWindowLineups, apiAdminSyncMatches } from '@/api/admin'
 import { apiGetSyncStatus } from '@/api/sync'
 import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 
 const states = ref<any[]>([])
 const syncing = ref(false)
+const syncingLineups = ref(false)
 const result = ref<any | null>(null)
+const lineupResult = ref<any | null>(null)
 const error = ref('')
 
 async function loadStates() {
@@ -14,6 +16,20 @@ async function loadStates() {
     states.value = await apiGetSyncStatus() as any[]
   } catch {
     states.value = []
+  }
+}
+
+async function syncLineups() {
+  syncingLineups.value = true
+  lineupResult.value = null
+  error.value = ''
+  try {
+    lineupResult.value = await apiAdminSyncLiveWindowLineups()
+    await loadStates()
+  } catch (err: any) {
+    error.value = err?.message || '阵容同步失败'
+  } finally {
+    syncingLineups.value = false
   }
 }
 
@@ -51,6 +67,9 @@ onMounted(loadStates)
       <button class="pill-btn primary" :disabled="syncing" @click="syncMatches">
         {{ syncing ? '同步中...' : '手动同步比赛' }}
       </button>
+      <button class="pill-btn" :disabled="syncingLineups" @click="syncLineups">
+        {{ syncingLineups ? '阵容同步中...' : '同步临近阵容' }}
+      </button>
     </div>
 
     <SyncStatusBadge mode="card" />
@@ -58,6 +77,10 @@ onMounted(loadStates)
     <div v-if="result" class="card result-card">
       <b>本次同步完成</b>
       <span>总数 {{ result.total }}，创建 {{ result.created }}，更新 {{ result.updated }}，跳过 {{ result.skipped }}</span>
+    </div>
+    <div v-if="lineupResult" class="card result-card">
+      <b>阵容同步完成</b>
+      <span>比赛 {{ lineupResult.matches }}，可用 {{ lineupResult.available }}，更新 {{ lineupResult.updated }}，失败 {{ lineupResult.failed }}</span>
     </div>
     <div v-if="error" class="card result-card error">{{ error }}</div>
 

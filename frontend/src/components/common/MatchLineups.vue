@@ -224,14 +224,25 @@ function playerPosition(player: LineupPlayer) {
 
 .lineup-teams {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
   gap: 12px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-padding-inline: 0;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .team-lineup {
+  min-width: 0;
   display: grid;
   gap: 14px;
   padding: 14px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .team-lineup-head {
@@ -383,10 +394,6 @@ function playerPosition(player: LineupPlayer) {
 }
 
 @media (max-width: 720px) {
-  .lineup-teams {
-    grid-template-columns: 1fr;
-  }
-
   .lineups-source {
     justify-content: flex-start;
   }

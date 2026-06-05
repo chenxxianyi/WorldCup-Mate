@@ -13,6 +13,9 @@ interface PitchPlayer {
   side: 'home' | 'away'
   x: number
   y: number
+  row: number
+  rowSize: number
+  labelPlacement: 'above' | 'below'
 }
 
 const brokenPhotos = ref<Set<string>>(new Set())
@@ -33,7 +36,24 @@ function parseFormation(formation: string) {
 }
 
 function clampPercent(value: number) {
-  return Math.max(7, Math.min(93, value))
+  return Math.max(12, Math.min(88, value))
+}
+
+function verticalPosition(side: 'home' | 'away', rowPosition: number, maxRowIndex: number) {
+  const halfY = 7 + (rowPosition / maxRowIndex) * 38
+  return side === 'home' ? 100 - halfY : halfY
+}
+
+function avoidCenterLabelZone(side: 'home' | 'away', y: number, rowPosition: number, maxRowIndex: number) {
+  if (rowPosition !== maxRowIndex) return y
+  return side === 'away' ? Math.min(y, 45) : Math.max(y, 55)
+}
+
+function labelPlacement(side: 'home' | 'away', rowPosition: number, maxRowIndex: number) {
+  const isClosestToCenter = rowPosition === maxRowIndex
+  if (side === 'home') return 'above'
+  if (side === 'away') return isClosestToCenter ? 'above' : 'below'
+  return 'below'
 }
 
 function playersFromGrid(team: TeamLineup): PitchPlayer[] {
@@ -55,14 +75,16 @@ function playersFromGrid(team: TeamLineup): PitchPlayer[] {
     const maxCol = Math.max(...rowPlayers.map((candidate) => candidate.col), rowPlayers.length, 1)
     const rowPosition = rowIndex.get(item.row) || 0
     const x = clampPercent((item.col / (maxCol + 1)) * 100)
-    const baseY = 10 + (rowPosition / maxRowIndex) * 80
 
     return {
       key: `${team.side}-${item.player.playerId || item.player.name || item.index}`,
       player: item.player,
       side: team.side,
       x: team.side === 'away' ? 100 - x : x,
-      y: team.side === 'home' ? 100 - baseY : baseY,
+      y: avoidCenterLabelZone(team.side, verticalPosition(team.side, rowPosition, maxRowIndex), rowPosition, maxRowIndex),
+      row: item.row,
+      rowSize: rowPlayers.length,
+      labelPlacement: labelPlacement(team.side, rowPosition, maxRowIndex),
     }
   })
 }
@@ -81,14 +103,16 @@ function playersFromFormation(team: TeamLineup): PitchPlayer[] {
 
     rowPlayers.forEach((player, playerIndex) => {
       const x = clampPercent(((playerIndex + 1) / (rowPlayers.length + 1)) * 100)
-      const baseY = 10 + (layerIndex / maxLayerIndex) * 80
 
       positioned.push({
         key: `${team.side}-${player.playerId || player.name || layerIndex}-${playerIndex}`,
         player,
         side: team.side,
         x: team.side === 'away' ? 100 - x : x,
-        y: team.side === 'home' ? 100 - baseY : baseY,
+        y: avoidCenterLabelZone(team.side, verticalPosition(team.side, layerIndex, maxLayerIndex), layerIndex, maxLayerIndex),
+        row: layerIndex + 1,
+        rowSize: rowPlayers.length,
+        labelPlacement: labelPlacement(team.side, layerIndex, maxLayerIndex),
       })
     })
   })
@@ -149,7 +173,12 @@ watch(
         v-for="item in positionedPlayers"
         :key="item.key"
         class="pitch-player"
-        :class="item.side"
+        :class="[
+          item.side,
+          `row-${item.row}`,
+          `label-${item.labelPlacement}`,
+          { dense: item.rowSize >= 4, crowded: item.rowSize >= 5 },
+        ]"
         type="button"
         :style="{ left: `${item.x}%`, top: `${item.y}%` }"
         :title="`${item.player.name}${playerMeta(item.player) ? ' · ' + playerMeta(item.player) : ''}`"
@@ -172,8 +201,11 @@ watch(
 
 <style scoped>
 .pitch-wrap {
+  width: 100%;
+  min-width: 0;
   display: grid;
   gap: 8px;
+  overflow: hidden;
 }
 
 .pitch-head {
@@ -204,8 +236,11 @@ watch(
 
 .pitch {
   position: relative;
-  min-height: 420px;
-  aspect-ratio: 7 / 9;
+  justify-self: center;
+  width: min(100%, 640px);
+  min-height: clamp(560px, 116vw, 760px);
+  aspect-ratio: 7 / 10;
+  container-type: inline-size;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--green) 30%, var(--line));
   border-radius: var(--radius-lg);
@@ -270,18 +305,31 @@ watch(
 }
 
 .pitch-player {
+  --avatar-size: 34px;
+  --label-gap: 5px;
+  --name-height: 32px;
+  --anchor-offset: calc(var(--avatar-size) / 2);
+
   position: absolute;
   z-index: 2;
-  width: 76px;
-  min-height: 62px;
+  width: clamp(78px, 19cqw, 112px);
+  height: calc(var(--avatar-size) + var(--label-gap) + var(--name-height));
   display: grid;
+  grid-template-rows: var(--avatar-size) var(--label-gap) var(--name-height);
   justify-items: center;
-  gap: 4px;
   padding: 0;
   border: 0;
   color: #fff;
   background: transparent;
-  transform: translate(-50%, -50%);
+  overflow: visible;
+}
+
+.pitch-player.dense {
+  width: clamp(64px, 16cqw, 92px);
+}
+
+.pitch-player.crowded {
+  width: clamp(56px, 13cqw, 76px);
 }
 
 .pitch-player:focus-visible {
@@ -291,8 +339,10 @@ watch(
 }
 
 .pitch-avatar {
-  width: 36px;
-  height: 36px;
+  position: relative;
+  z-index: 2;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -315,31 +365,71 @@ watch(
 }
 
 .pitch-name {
-  max-width: 76px;
-  min-height: 18px;
-  padding: 2px 5px;
+  width: 100%;
+  height: var(--name-height);
+  display: -webkit-box;
+  padding: 4px 7px;
   overflow: hidden;
-  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
   color: #fff;
-  background: rgba(0, 0, 0, 0.36);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 10px;
-  font-weight: 750;
-  line-height: 1.2;
+  background: rgba(0, 22, 16, 0.76);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  white-space: normal;
+  font-size: clamp(9px, 2cqw, 10.5px);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.pitch-player.label-below .pitch-name {
+  grid-row: 3;
+}
+
+.pitch-player.label-above .pitch-name {
+  grid-row: 1;
+}
+
+.pitch-player.label-below .pitch-avatar {
+  grid-row: 1;
+}
+
+.pitch-player.label-above .pitch-avatar {
+  grid-row: 3;
+}
+
+.pitch-player.label-below {
+  transform: translate(-50%, calc(-1 * var(--anchor-offset)));
+}
+
+.pitch-player.label-above {
+  transform: translate(-50%, calc(-100% + var(--anchor-offset)));
 }
 
 @media (max-width: 720px) {
   .pitch {
-    min-height: 360px;
+    width: 100%;
+    min-height: clamp(560px, 138vw, 720px);
   }
 
   .pitch-player {
-    width: 64px;
+    --avatar-size: 30px;
+    --label-gap: 4px;
+    --name-height: 30px;
+    width: clamp(72px, 20cqw, 104px);
   }
 
   .pitch-name {
-    max-width: 64px;
+    padding: 3px 6px;
+  }
+
+  .pitch-avatar {
+    font-size: 11px;
   }
 }
 </style>

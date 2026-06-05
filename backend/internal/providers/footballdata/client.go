@@ -99,3 +99,33 @@ func (c *Client) CompetitionTeams(ctx context.Context, competitionCode string, s
 	}
 	return &data, nil
 }
+
+func (c *Client) Match(ctx context.Context, matchID string) (*MatchDetailResponse, error) {
+	u, err := url.Parse(c.baseURL + "/matches/" + url.PathEscape(matchID))
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Auth-Token", c.apiToken)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("football-data returned status %d", resp.StatusCode)
+	}
+
+	var data MatchDetailResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}

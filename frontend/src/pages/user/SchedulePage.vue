@@ -37,7 +37,6 @@ const total = ref(0)
 const reachedEnd = ref(false)
 const visibleDateLimit = ref(INITIAL_DAYS)
 const loadMoreTarget = ref<HTMLElement | null>(null)
-const showBackTop = ref(false)
 const loadHintVisible = ref(false)
 
 let observer: IntersectionObserver | null = null
@@ -276,10 +275,6 @@ function observeLoadMoreTarget() {
   observer.observe(loadMoreTarget.value)
 }
 
-function updateBackTopVisibility() {
-  showBackTop.value = window.scrollY > 420
-}
-
 function maybeLoadAfterHint() {
   if (!loadMoreTarget.value || loading.value || loadingMore.value || !hasMore.value) return
 
@@ -297,12 +292,7 @@ function maybeLoadAfterHint() {
 }
 
 function onWindowScroll() {
-  updateBackTopVisibility()
   maybeLoadAfterHint()
-}
-
-function backToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function goToTeams() {
@@ -321,7 +311,6 @@ onMounted(async () => {
     { rootMargin: '0px 0px 80px' },
   )
   window.addEventListener('scroll', onWindowScroll, { passive: true })
-  updateBackTopVisibility()
   await resetAndLoad()
 })
 
@@ -371,20 +360,7 @@ watch(search, () => {
 
     <div ref="loadMoreTarget" class="load-more" :class="{ active: hasMore && !loading }">
       {{ loadText }}
-    </div>
-
-    <Transition name="back-top">
-      <button
-        v-if="showBackTop"
-        class="back-top-btn"
-        type="button"
-        aria-label="返回顶部"
-        title="返回顶部"
-        @click="backToTop"
-      >
-        <span class="material-symbols-outlined">keyboard_arrow_up</span>
-      </button>
-    </Transition>
+    </div>
   </div>
 </template>
 

@@ -53,3 +53,58 @@ type Player struct {
 	Position string `json:"position"`
 	Photo    string `json:"photo"`
 }
+
+type FixtureLineupsResponse struct {
+	Get      string               `json:"get"`
+	Errors   interface{}          `json:"errors"`
+	Results  int                  `json:"results"`
+	Response []FixtureLineupEntry `json:"response"`
+}
+
+type FixtureLineupEntry struct {
+	Team        Team                     `json:"team"`
+	Formation   string                   `json:"formation"`
+	Coach       FixtureLineupCoach       `json:"coach"`
+	StartXI     []FixtureLineupPlayerRow `json:"startXI"`
+	Substitutes []FixtureLineupPlayerRow `json:"substitutes"`
+}
+
+type FixtureLineupCoach struct {
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Photo string `json:"photo"`
+}
+
+type FixtureLineupPlayerRow struct {
+	Player FixtureLineupPlayer `json:"player"`
+}
+
+type FixtureLineupPlayer struct {
+	ID     int64  `json:"id"`
+	Name   string `json:"name"`
+	Number int    `json:"number"`
+	Pos    string `json:"pos"`
+	Grid   string `json:"grid"`
+}
+
+type FixtureSearchResponse struct {
+	Get      string               `json:"get"`
+	Errors   interface{}          `json:"errors"`
+	Results  int                  `json:"results"`
+	Response []FixtureSearchEntry `json:"response"`
+}
+
+type FixtureSearchEntry struct {
+	Fixture FixtureSearchFixture `json:"fixture"`
+	Teams   FixtureSearchTeams   `json:"teams"`
+}
+
+type FixtureSearchFixture struct {
+	ID   int64  `json:"id"`
+	Date string `json:"date"`
+}
+
+type FixtureSearchTeams struct {
+	Home Team `json:"home"`
+	Away Team `json:"away"`
+}
