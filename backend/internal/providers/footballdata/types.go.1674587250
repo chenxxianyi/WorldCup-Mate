@@ -25,11 +25,11 @@ type Match struct {
 }
 
 type Team struct {
-	ID        int64         `json:"id"`
-	Name      string        `json:"name"`
-	ShortName string        `json:"shortName"`
-	TLA       string        `json:"tla"`
-	Crest     string        `json:"crest"`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	ShortName string `json:"shortName"`
+	TLA       string `json:"tla"`
+	Crest     string `json:"crest"`
 	Squad     []SquadPlayer `json:"squad"`
 }
 

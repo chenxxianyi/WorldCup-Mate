@@ -1,0 +1,296 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"log"
+	"strconv"
+	"strings"
+	"time"
+
+	"worldcup-mate/internal/config"
+	"worldcup-mate/internal/database"
+	"worldcup-mate/internal/models"
+	"worldcup-mate/internal/providers/apifootball"
+	"worldcup-mate/internal/repositories"
+	"worldcup-mate/internal/services"
+)
+
+type teamSyncReport struct {
+	TeamID        uint   `json:"team_id"`
+	Name          string `json:"name"`
+	NameEn        string `json:"name_en"`
+	FIFACode      string `json:"fifa_code"`
+	ExternalTeam  string `json:"external_team_id,omitempty"`
+	Status        string `json:"status"`
+	Players       int    `json:"players"`
+	Error         string `json:"error,omitempty"`
+	MatchedBy     string `json:"matched_by,omitempty"`
+	ExternalName  string `json:"external_name,omitempty"`
+	SkippedReason string `json:"skipped_reason,omitempty"`
+}
+
+func main() {
+	includeExisting := flag.Bool("include-existing", false, "sync teams that already have active players")
+	limit := flag.Int("limit", 0, "maximum number of teams to process")
+	delay := flag.Duration("delay", 700*time.Millisecond, "delay between teams")
+	teamIDs := flag.String("team-ids", "", "comma-separated local team ids to process")
+	refreshMapping := flag.Bool("refresh-mapping", false, "ignore existing team mappings and search provider teams again")
+	flag.Parse()
+
+	cfg := config.Load()
+	database.InitMySQL(cfg.MySQLDSN)
+	services.ConfigurePlayerSync(services.PlayerSyncConfig{
+		Enabled:            true,
+		Provider:           cfg.PlayerSyncProvider,
+		APIFootballKey:     cfg.APIFootballKey,
+		APIFootballBaseURL: cfg.APIFootballBaseURL,
+		Interval:           time.Duration(cfg.PlayerSyncIntervalHours) * time.Hour,
+	})
+
+	client := apifootball.NewClient(cfg.APIFootballBaseURL, cfg.APIFootballKey)
+
+	var teams []models.Team
+	if err := database.DB.Where("deleted_at IS NULL").Order("id ASC").Find(&teams).Error; err != nil {
+		log.Fatalf("list teams failed: %v", err)
+	}
+
+	reports := []teamSyncReport{}
+	processed := 0
+	onlyTeamIDs := parseTeamIDs(*teamIDs)
+	for _, team := range teams {
+		if len(onlyTeamIDs) > 0 && !onlyTeamIDs[team.ID] {
+			continue
+		}
+		if *limit > 0 && processed >= *limit {
+			break
+		}
+
+		report := teamSyncReport{
+			TeamID:   team.ID,
+			Name:     team.Name,
+			NameEn:   team.NameEn,
+			FIFACode: team.FIFACode,
+		}
+
+		if isPlaceholderTeam(team) {
+			report.Status = "skipped"
+			report.SkippedReason = "placeholder team"
+			reports = append(reports, report)
+			continue
+		}
+
+		activeCount := countActivePlayers(team.ID)
+		if activeCount > 0 && !*includeExisting {
+			report.Status = "skipped"
+			report.Players = activeCount
+			report.SkippedReason = "already has active players"
+			reports = append(reports, report)
+			continue
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		mapping, matchedBy, err := ensureMapping(ctx, client, team, cfg.PlayerSyncProvider, *refreshMapping)
+		cancel()
+		if err != nil {
+			report.Status = "failed"
+			report.Error = err.Error()
+			reports = append(reports, report)
+			processed++
+			sleepDelay(*delay)
+			continue
+		}
+
+		report.ExternalTeam = mapping.ExternalTeamID
+		report.ExternalName = mapping.ExternalTeamName
+		report.MatchedBy = matchedBy
+
+		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
+		result, err := services.SyncTeamPlayersWithDefault(ctx, team.ID, "manual-batch-cli")
+		cancel()
+		if err != nil {
+			report.Status = "failed"
+			report.Error = err.Error()
+			reports = append(reports, report)
+			processed++
+			sleepDelay(*delay)
+			continue
+		}
+
+		report.Status = "success"
+		report.Players = result.Total
+		reports = append(reports, report)
+		processed++
+		sleepDelay(*delay)
+	}
+
+	payload, err := json.MarshalIndent(reports, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(payload))
+}
+
+func isPlaceholderTeam(team models.Team) bool {
+	code := strings.TrimSpace(strings.ToUpper(team.FIFACode))
+	name := strings.TrimSpace(strings.ToUpper(team.NameEn))
+	return code == "" || code == "TBD" || name == "" || name == "TBD"
+}
+
+func countActivePlayers(teamID uint) int {
+	var count int64
+	database.DB.Model(&models.Player{}).
+		Where("team_id = ? AND is_active = ?", teamID, true).
+		Count(&count)
+	return int(count)
+}
+
+func ensureMapping(ctx context.Context, client *apifootball.Client, team models.Team, provider string, refresh bool) (*models.ExternalTeamMapping, string, error) {
+	if !refresh {
+		mapping, err := repositories.GetExternalTeamMapping(team.ID, provider)
+		if err == nil {
+			return mapping, "existing", nil
+		}
+	}
+
+	searchTerms := candidateSearchTerms(team)
+	for _, term := range searchTerms {
+		data, err := client.SearchTeams(ctx, term)
+		if err != nil {
+			return nil, "", err
+		}
+		if candidate := bestNationalTeamMatch(team, data.Response); candidate != nil {
+			input := services.ExternalTeamMappingInput{
+				ExternalTeamID:   strconv.FormatInt(candidate.Team.ID, 10),
+				ExternalTeamName: candidate.Team.Name,
+				Provider:         provider,
+			}
+			mapping, err := services.UpsertTeamPlayerMapping(team.ID, input)
+			if err != nil {
+				return nil, "", err
+			}
+			return mapping, "search:" + term, nil
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+
+	return nil, "", fmt.Errorf("no national API-Football team found")
+}
+
+func candidateSearchTerms(team models.Team) []string {
+	raw := []string{team.NameEn, team.FIFACode, team.Name}
+	aliases := map[string][]string{
+		"USA":            {"USA", "United States", "United States of America"},
+		"Korea Republic": {"South Korea", "Korea Republic"},
+		"Bosnia-H.":      {"Bosnia and Herzegovina", "Bosnia"},
+		"Ivory Coast":    {"Cote d'Ivoire", "Ivory Coast"},
+		"Curaçao":        {"Curacao", "Curaçao"},
+		"CUW":            {"Curacao"},
+		"CUR":            {"Curacao"},
+		"Congo DR":       {"Congo DR", "DR Congo", "Congo"},
+		"Cape Verde":     {"Cape Verde"},
+		"Saudi Arabia":   {"Saudi Arabia"},
+	}
+	if extra := aliases[strings.TrimSpace(team.NameEn)]; len(extra) > 0 {
+		raw = append(extra, raw...)
+	}
+	if extra := aliases[strings.ToUpper(strings.TrimSpace(team.FIFACode))]; len(extra) > 0 {
+		raw = append(extra, raw...)
+	}
+
+	seen := map[string]bool{}
+	terms := []string{}
+	for _, value := range raw {
+		value = strings.TrimSpace(value)
+		if value == "" || seen[strings.ToLower(value)] {
+			continue
+		}
+		seen[strings.ToLower(value)] = true
+		terms = append(terms, value)
+	}
+	return terms
+}
+
+func bestNationalTeamMatch(team models.Team, entries []apifootball.TeamSearchEntry) *apifootball.TeamSearchEntry {
+	code := strings.ToUpper(strings.TrimSpace(team.FIFACode))
+	name := normalizeTeamName(team.NameEn)
+	for i := range entries {
+		candidate := &entries[i]
+		if !isSeniorMensNationalTeam(candidate.Team) {
+			continue
+		}
+		candidateCode := strings.ToUpper(strings.TrimSpace(candidate.Team.Code))
+		candidateName := normalizeTeamName(candidate.Team.Name)
+		if code != "" && candidateCode == code {
+			return candidate
+		}
+		if name != "" && candidateName == name {
+			return candidate
+		}
+	}
+	for i := range entries {
+		candidate := &entries[i]
+		if isSeniorMensNationalTeam(candidate.Team) {
+			return candidate
+		}
+	}
+	return nil
+}
+
+func isSeniorMensNationalTeam(team apifootball.SearchTeam) bool {
+	if !team.National {
+		return false
+	}
+	name := strings.ToLower(strings.TrimSpace(team.Name))
+	excluded := []string{" u16", " u17", " u18", " u19", " u20", " u21", " u22", " u23", " w", " women"}
+	for _, token := range excluded {
+		if strings.Contains(name, token) || strings.HasSuffix(name, token) {
+			return false
+		}
+	}
+	return true
+}
+
+func normalizeTeamName(value string) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	replacer := strings.NewReplacer(
+		".", "",
+		"-", " ",
+		"'", "",
+		"’", "",
+		"ç", "c",
+		"ã", "a",
+		"á", "a",
+		"é", "e",
+		"í", "i",
+		"ó", "o",
+		"ú", "u",
+	)
+	value = replacer.Replace(value)
+	value = strings.Join(strings.Fields(value), " ")
+	return value
+}
+
+func sleepDelay(delay time.Duration) {
+	if delay > 0 {
+		time.Sleep(delay)
+	}
+}
+
+func parseTeamIDs(value string) map[uint]bool {
+	result := map[uint]bool{}
+	for _, part := range strings.Split(value, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		id, err := strconv.ParseUint(part, 10, 32)
+		if err != nil || id == 0 {
+			continue
+		}
+		result[uint(id)] = true
+	}
+	return result
+}

@@ -1,0 +1,72 @@
+package main
+
+import (
+	"encoding/json"
+	"flag"
+	"fmt"
+	"log"
+	"strings"
+
+	"worldcup-mate/internal/config"
+	"worldcup-mate/internal/database"
+	"worldcup-mate/internal/models"
+	"worldcup-mate/internal/services"
+)
+
+type report struct {
+	Checked int  `json:"checked"`
+	Updated int  `json:"updated"`
+	Skipped int  `json:"skipped"`
+	DryRun  bool `json:"dry_run"`
+}
+
+func main() {
+	dryRun := flag.Bool("dry-run", true, "print the number of changes without updating records")
+	activeOnly := flag.Bool("active-only", true, "only update active players")
+	source := flag.String("source", "", "limit updates to a specific player source")
+	flag.Parse()
+
+	cfg := config.Load()
+	database.InitMySQL(cfg.MySQLDSN)
+
+	var players []models.Player
+	q := database.DB.Where("deleted_at IS NULL")
+	if *activeOnly {
+		q = q.Where("is_active = ?", true)
+	}
+	if strings.TrimSpace(*source) != "" {
+		q = q.Where("source = ?", strings.TrimSpace(*source))
+	}
+	if err := q.Find(&players).Error; err != nil {
+		log.Fatalf("list players failed: %v", err)
+	}
+
+	res := report{Checked: len(players), DryRun: *dryRun}
+	for _, player := range players {
+		sourceName := strings.TrimSpace(player.NameEn)
+		if sourceName == "" {
+			sourceName = strings.TrimSpace(player.Name)
+		}
+		localized := services.LocalizePlayerName(player.Source, player.SourcePlayerID, sourceName)
+		if localized == "" || localized == player.Name {
+			res.Skipped++
+			continue
+		}
+		if *dryRun {
+			res.Updated++
+			continue
+		}
+		if err := database.DB.Model(&models.Player{}).
+			Where("id = ?", player.ID).
+			Update("name", localized).Error; err != nil {
+			log.Fatalf("update player %d failed: %v", player.ID, err)
+		}
+		res.Updated++
+	}
+
+	payload, err := json.MarshalIndent(res, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(payload))
+}

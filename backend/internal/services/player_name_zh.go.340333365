@@ -1,0 +1,685 @@
+package services
+
+import (
+	"strings"
+	"unicode"
+)
+
+var apiFootballPlayerNameZhByID = map[string]string{
+	"35769":  "卡洛斯·阿塞韦多",
+	"2098":   "吉列尔莫·奥乔亚",
+	"270774": "何塞·兰赫尔",
+	"2881":   "赫苏斯·加利亚多",
+	"2873":   "塞萨尔·蒙特斯",
+	"127227": "伊斯雷尔·雷耶斯",
+	"2878":   "豪尔赫·桑切斯",
+	"35544":  "约翰·巴斯克斯",
+	"2869":   "埃德森·阿尔瓦雷斯",
+	"390002": "马特奥·查韦斯",
+	"313383": "奥贝德·巴尔加斯",
+	"35690":  "路易斯·查韦斯",
+	"750":    "阿尔瓦罗·菲达尔戈",
+	"212233": "布莱恩·古铁雷斯",
+	"266345": "埃里克·利拉",
+	"482605": "吉尔伯托·莫拉",
+	"35576":  "奥贝林·皮内达",
+	"35970":  "路易斯·罗莫",
+	"2879":   "罗伯托·阿尔瓦拉多",
+	"94562":  "圣地亚哥·希门尼斯",
+	"291713": "阿曼多·冈萨雷斯",
+	"36111":  "塞萨尔·韦尔塔",
+	"2887":   "劳尔·希门尼斯",
+	"36088":  "吉列尔莫·马丁内斯",
+	"35532":  "胡利安·基尼奥内斯",
+	"2889":   "亚历克西斯·维加",
+}
+
+var apiFootballPlayerNameZhByName = map[string]string{
+	"c. acevedo":     "卡洛斯·阿塞韦多",
+	"g. ochoa":       "吉列尔莫·奥乔亚",
+	"j. rangel":      "何塞·兰赫尔",
+	"j. gallardo":    "赫苏斯·加利亚多",
+	"c. montes":      "塞萨尔·蒙特斯",
+	"i. reyes":       "伊斯雷尔·雷耶斯",
+	"j. sánchez":     "豪尔赫·桑切斯",
+	"j. sanchez":     "豪尔赫·桑切斯",
+	"j. vásquez":     "约翰·巴斯克斯",
+	"j. vasquez":     "约翰·巴斯克斯",
+	"e. álvarez":     "埃德森·阿尔瓦雷斯",
+	"e. alvarez":     "埃德森·阿尔瓦雷斯",
+	"m. chávez":      "马特奥·查韦斯",
+	"m. chavez":      "马特奥·查韦斯",
+	"o. vargas":      "奥贝德·巴尔加斯",
+	"l. chávez":      "路易斯·查韦斯",
+	"l. chavez":      "路易斯·查韦斯",
+	"álvaro fidalgo": "阿尔瓦罗·菲达尔戈",
+	"alvaro fidalgo": "阿尔瓦罗·菲达尔戈",
+	"b. gutiérrez":   "布莱恩·古铁雷斯",
+	"b. gutierrez":   "布莱恩·古铁雷斯",
+	"é. lira":        "埃里克·利拉",
+	"e. lira":        "埃里克·利拉",
+	"g. mora":        "吉尔伯托·莫拉",
+	"o. pineda":      "奥贝林·皮内达",
+	"l. romo":        "路易斯·罗莫",
+	"r. alvarado":    "罗伯托·阿尔瓦拉多",
+	"s. giménez":     "圣地亚哥·希门尼斯",
+	"s. gimenez":     "圣地亚哥·希门尼斯",
+	"a. gonzález":    "阿曼多·冈萨雷斯",
+	"a. gonzalez":    "阿曼多·冈萨雷斯",
+	"c. huerta":      "塞萨尔·韦尔塔",
+	"r. jiménez":     "劳尔·希门尼斯",
+	"r. jimenez":     "劳尔·希门尼斯",
+	"g. martínez":    "吉列尔莫·马丁内斯",
+	"g. martinez":    "吉列尔莫·马丁内斯",
+	"j. quiñones":    "胡利安·基尼奥内斯",
+	"j. quinones":    "胡利安·基尼奥内斯",
+	"a. vega":        "亚历克西斯·维加",
+}
+
+var latinInitialZh = map[rune]string{
+	'a': "阿",
+	'b': "贝",
+	'c': "西",
+	'd': "迪",
+	'e': "埃",
+	'f': "弗",
+	'g': "吉",
+	'h': "赫",
+	'i': "伊",
+	'j': "杰",
+	'k': "凯",
+	'l': "卢",
+	'm': "马",
+	'n': "恩",
+	'o': "奥",
+	'p': "佩",
+	'q': "丘",
+	'r': "拉",
+	's': "塞",
+	't': "蒂",
+	'u': "乌",
+	'v': "维",
+	'w': "威",
+	'x': "克斯",
+	'y': "伊",
+	'z': "泽",
+}
+
+var playerNamePartZh = map[string]string{
+	"a": "阿",
+	"b": "贝",
+	"c": "西",
+	"d": "迪",
+	"e": "埃",
+	"f": "弗",
+	"g": "吉",
+	"h": "赫",
+	"i": "伊",
+	"j": "杰",
+	"k": "凯",
+	"l": "卢",
+	"m": "马",
+	"n": "恩",
+	"o": "奥",
+	"p": "佩",
+	"q": "丘",
+	"r": "拉",
+	"s": "塞",
+	"t": "蒂",
+	"u": "乌",
+	"v": "维",
+	"w": "威",
+	"x": "克斯",
+	"y": "伊",
+	"z": "泽",
+	"jr": "小",
+	"sr": "老",
+	"ii": "二世",
+	"iii": "三世",
+	"iv": "四世",
+
+	"al": "阿尔",
+	"bin": "本",
+	"da": "达",
+	"das": "达斯",
+	"de": "德",
+	"del": "德尔",
+	"della": "德拉",
+	"di": "迪",
+	"do": "多",
+	"dos": "多斯",
+	"du": "杜",
+	"el": "埃尔",
+	"ibn": "伊本",
+	"la": "拉",
+	"le": "勒",
+	"los": "洛斯",
+	"mac": "麦克",
+	"mc": "麦克",
+	"saint": "圣",
+	"san": "圣",
+	"santa": "圣塔",
+	"st": "圣",
+	"van": "范",
+	"von": "冯",
+
+	"aaron": "阿伦",
+	"adam": "亚当",
+	"adams": "亚当斯",
+	"adrien": "阿德里安",
+	"adrian": "阿德里安",
+	"ahmed": "艾哈迈德",
+	"alex": "亚历克斯",
+	"alexander": "亚历山大",
+	"alexis": "亚历克西斯",
+	"alisson": "阿利松",
+	"alvarez": "阿尔瓦雷斯",
+	"amadou": "阿马杜",
+	"anderson": "安德森",
+	"andre": "安德烈",
+	"andreas": "安德烈亚斯",
+	"andres": "安德烈斯",
+	"andrew": "安德鲁",
+	"angel": "安赫尔",
+	"antonio": "安东尼奥",
+	"armando": "阿曼多",
+	"arnautovic": "阿瑙托维奇",
+	"arnold": "阿诺德",
+	"arthur": "阿图尔",
+	"ayew": "阿尤",
+	"aziz": "阿齐兹",
+	"bamba": "班巴",
+	"barrios": "巴里奥斯",
+	"ben": "本",
+	"benjamin": "本杰明",
+	"bellingham": "贝林厄姆",
+	"bernardo": "贝尔纳多",
+	"bruno": "布鲁诺",
+	"bryan": "布莱恩",
+	"bukayo": "布卡约",
+	"camavinga": "卡马文加",
+	"carlos": "卡洛斯",
+	"casemiro": "卡塞米罗",
+	"chavez": "查韦斯",
+	"christian": "克里斯蒂安",
+	"christopher": "克里斯托弗",
+	"claire": "克莱尔",
+	"clair": "克莱尔",
+	"cornelius": "科内柳斯",
+	"cristiano": "克里斯蒂亚诺",
+	"dani": "达尼",
+	"daniel": "丹尼尔",
+	"davies": "戴维斯",
+	"david": "戴维",
+	"declan": "德克兰",
+	"dembele": "登贝莱",
+	"diego": "迭戈",
+	"diogo": "迪奥戈",
+	"donnarumma": "多纳鲁马",
+	"duarte": "杜阿尔特",
+	"eduardo": "爱德华多",
+	"ederson": "埃德森",
+	"emiliano": "埃米利亚诺",
+	"enzo": "恩佐",
+	"eustaquio": "尤斯塔基奥",
+	"fabian": "法比安",
+	"federico": "费德里科",
+	"felix": "菲利克斯",
+	"fernandes": "费尔南德斯",
+	"fernandez": "费尔南德斯",
+	"foden": "福登",
+	"francisco": "弗朗西斯科",
+	"gabriel": "加布里埃尔",
+	"gavi": "加维",
+	"george": "乔治",
+	"gimenez": "希门尼斯",
+	"giovanni": "乔瓦尼",
+	"gonzalez": "冈萨雷斯",
+	"griezmann": "格列兹曼",
+	"guillermo": "吉列尔莫",
+	"gundogan": "京多安",
+	"hakimi": "阿什拉夫",
+	"harry": "哈里",
+	"hernandez": "埃尔南德斯",
+	"ibrahima": "易卜拉希马",
+	"ilkay": "伊尔凯",
+	"ismaila": "伊斯梅拉",
+	"ivan": "伊万",
+	"jack": "杰克",
+	"james": "詹姆斯",
+	"jamal": "贾马尔",
+	"javier": "哈维尔",
+	"jeremy": "杰里米",
+	"jesus": "赫苏斯",
+	"joao": "若昂",
+	"john": "约翰",
+	"johnston": "约翰斯顿",
+	"jonathan": "乔纳森",
+	"jordan": "乔丹",
+	"jordi": "霍尔迪",
+	"jose": "何塞",
+	"joshua": "约书亚",
+	"julian": "胡利安",
+	"jules": "朱尔",
+	"jude": "裘德",
+	"kane": "凯恩",
+	"kante": "坎特",
+	"kevin": "凯文",
+	"kimmich": "基米希",
+	"konate": "科纳特",
+	"kone": "科内",
+	"krzysztof": "克日什托夫",
+	"kylian": "基利安",
+	"lamine": "拉明",
+	"larin": "拉林",
+	"leandro": "莱安德罗",
+	"lee": "李",
+	"leroy": "勒鲁瓦",
+	"lewandowski": "莱万多夫斯基",
+	"lionel": "利昂内尔",
+	"lorenzo": "洛伦佐",
+	"louis": "路易斯",
+	"luca": "卢卡",
+	"lucas": "卢卡斯",
+	"luis": "路易斯",
+	"lukaku": "卢卡库",
+	"luka": "卢卡",
+	"maguire": "马奎尔",
+	"mane": "马内",
+	"manuel": "曼努埃尔",
+	"marco": "马尔科",
+	"marcos": "马科斯",
+	"marquinhos": "马尔基尼奥斯",
+	"martinez": "马丁内斯",
+	"mateo": "马特奥",
+	"matheus": "马特乌斯",
+	"mats": "马茨",
+	"mbappe": "姆巴佩",
+	"messi": "梅西",
+	"michael": "迈克尔",
+	"mohamed": "穆罕默德",
+	"mohammad": "穆罕默德",
+	"mohammed": "穆罕默德",
+	"moussa": "穆萨",
+	"muller": "穆勒",
+	"musiala": "穆西亚拉",
+	"nabil": "纳比勒",
+	"nathan": "内森",
+	"neymar": "内马尔",
+	"ngolo": "恩戈洛",
+	"nico": "尼科",
+	"nicolas": "尼古拉斯",
+	"olivier": "奥利维耶",
+	"oliver": "奥利弗",
+	"oscar": "奥斯卡",
+	"osorio": "奥索里奥",
+	"ousmane": "奥斯曼",
+	"paolo": "保罗",
+	"paul": "保罗",
+	"pedri": "佩德里",
+	"pedro": "佩德罗",
+	"pepe": "佩佩",
+	"phil": "菲尔",
+	"philippe": "菲利普",
+	"pulisic": "普利西奇",
+	"rafael": "拉斐尔",
+	"raphinha": "拉菲尼亚",
+	"richarlison": "理查利森",
+	"robert": "罗伯特",
+	"roberto": "罗伯托",
+	"rodri": "罗德里",
+	"rodrigo": "罗德里戈",
+	"ronaldo": "罗纳尔多",
+	"ruben": "鲁本",
+	"sadio": "萨迪奥",
+	"saka": "萨卡",
+	"saliba": "萨利巴",
+	"sanchez": "桑切斯",
+	"sandro": "桑德罗",
+	"sergio": "塞尔吉奥",
+	"silva": "席尔瓦",
+	"son": "孙",
+	"stefan": "斯特凡",
+	"steven": "史蒂文",
+	"suarez": "苏亚雷斯",
+	"thibaut": "蒂博",
+	"thiago": "蒂亚戈",
+	"thomas": "托马斯",
+	"toni": "托尼",
+	"trent": "特伦特",
+	"tyler": "泰勒",
+	"vargas": "巴尔加斯",
+	"vazquez": "巴斯克斯",
+	"victor": "维克托",
+	"vinicius": "维尼修斯",
+	"virgil": "维吉尔",
+	"walker": "沃克",
+	"william": "威廉",
+	"yamal": "亚马尔",
+	"yannick": "扬尼克",
+	"yassine": "亚辛",
+	"youssef": "优素福",
+	"zinedine": "齐内丁",
+}
+
+var latinChunkZh = map[string]string{
+	"tsch": "奇",
+	"sch":  "什",
+	"sh":   "什",
+	"ch":   "奇",
+	"ck":   "克",
+	"ph":   "夫",
+	"th":   "特",
+	"gh":   "格",
+	"kh":   "赫",
+	"wh":   "维",
+	"qu":   "库",
+	"tion": "申",
+	"sion": "申",
+	"cia":  "西亚",
+	"cio":  "乔",
+	"ciu":  "丘",
+	"ce":   "塞",
+	"ci":   "西",
+	"cy":   "西",
+	"ge":   "杰",
+	"gi":   "吉",
+	"gy":   "吉",
+	"gue":  "格",
+	"gui":  "吉",
+	"lla":  "利亚",
+	"lle":  "列",
+	"lli":  "利",
+	"llo":  "略",
+	"llu":  "柳",
+	"ny":   "尼",
+	"ou":   "乌",
+	"ow":   "奥",
+	"ai":   "艾",
+	"ay":   "艾",
+	"au":   "奥",
+	"ea":   "伊",
+	"ee":   "伊",
+	"ei":   "艾",
+	"ey":   "伊",
+	"ie":   "伊",
+	"oa":   "奥",
+	"oe":   "厄",
+	"oi":   "瓦",
+	"oo":   "乌",
+	"ue":   "韦",
+	"ui":   "维",
+	"ya":   "亚",
+	"ye":   "耶",
+	"yi":   "伊",
+	"yo":   "约",
+	"yu":   "尤",
+	"ba":   "巴",
+	"be":   "贝",
+	"bi":   "比",
+	"bo":   "博",
+	"bu":   "布",
+	"ca":   "卡",
+	"co":   "科",
+	"cu":   "库",
+	"da":   "达",
+	"de":   "德",
+	"di":   "迪",
+	"do":   "多",
+	"du":   "杜",
+	"fa":   "法",
+	"fe":   "费",
+	"fi":   "菲",
+	"fo":   "福",
+	"fu":   "富",
+	"ga":   "加",
+	"go":   "戈",
+	"gu":   "古",
+	"ha":   "哈",
+	"he":   "赫",
+	"hi":   "希",
+	"ho":   "霍",
+	"hu":   "胡",
+	"ja":   "贾",
+	"je":   "杰",
+	"ji":   "吉",
+	"jo":   "乔",
+	"ju":   "朱",
+	"ka":   "卡",
+	"ke":   "凯",
+	"ki":   "基",
+	"ko":   "科",
+	"ku":   "库",
+	"la":   "拉",
+	"le":   "勒",
+	"li":   "利",
+	"lo":   "洛",
+	"lu":   "卢",
+	"ma":   "马",
+	"me":   "梅",
+	"mi":   "米",
+	"mo":   "莫",
+	"mu":   "穆",
+	"na":   "纳",
+	"ne":   "内",
+	"ni":   "尼",
+	"no":   "诺",
+	"nu":   "努",
+	"pa":   "帕",
+	"pe":   "佩",
+	"pi":   "皮",
+	"po":   "波",
+	"pu":   "普",
+	"ra":   "拉",
+	"re":   "雷",
+	"ri":   "里",
+	"ro":   "罗",
+	"ru":   "鲁",
+	"sa":   "萨",
+	"se":   "塞",
+	"si":   "西",
+	"so":   "索",
+	"su":   "苏",
+	"ta":   "塔",
+	"te":   "特",
+	"ti":   "蒂",
+	"to":   "托",
+	"tu":   "图",
+	"va":   "瓦",
+	"ve":   "维",
+	"vi":   "维",
+	"vo":   "沃",
+	"vu":   "武",
+	"wa":   "瓦",
+	"we":   "韦",
+	"wi":   "维",
+	"wo":   "沃",
+	"wu":   "伍",
+	"za":   "扎",
+	"ze":   "泽",
+	"zi":   "齐",
+	"zo":   "佐",
+	"zu":   "祖",
+	"a":    "阿",
+	"b":    "布",
+	"c":    "克",
+	"d":    "德",
+	"e":    "埃",
+	"f":    "夫",
+	"g":    "格",
+	"h":    "赫",
+	"i":    "伊",
+	"j":    "杰",
+	"k":    "克",
+	"l":    "尔",
+	"m":    "姆",
+	"n":    "恩",
+	"o":    "奥",
+	"p":    "普",
+	"q":    "克",
+	"r":    "尔",
+	"s":    "斯",
+	"t":    "特",
+	"u":    "乌",
+	"v":    "夫",
+	"w":    "维",
+	"x":    "克斯",
+	"y":    "伊",
+	"z":    "兹",
+}
+
+var latinChunkOrder = []string{
+	"tion", "sion", "tsch", "sch", "gue", "gui",
+	"cia", "cio", "ciu", "lla", "lle", "lli", "llo", "llu",
+	"sh", "ch", "ck", "ph", "th", "gh", "kh", "wh", "qu",
+	"ce", "ci", "cy", "ge", "gi", "gy", "ny",
+	"ou", "ow", "ai", "ay", "au", "ea", "ee", "ei", "ey", "ie", "oa", "oe", "oi", "oo", "ue", "ui",
+	"ya", "ye", "yi", "yo", "yu",
+	"ba", "be", "bi", "bo", "bu", "ca", "co", "cu", "da", "de", "di", "do", "du",
+	"fa", "fe", "fi", "fo", "fu", "ga", "go", "gu", "ha", "he", "hi", "ho", "hu",
+	"ja", "je", "ji", "jo", "ju", "ka", "ke", "ki", "ko", "ku", "la", "le", "li", "lo", "lu",
+	"ma", "me", "mi", "mo", "mu", "na", "ne", "ni", "no", "nu", "pa", "pe", "pi", "po", "pu",
+	"ra", "re", "ri", "ro", "ru", "sa", "se", "si", "so", "su", "ta", "te", "ti", "to", "tu",
+	"va", "ve", "vi", "vo", "vu", "wa", "we", "wi", "wo", "wu", "za", "ze", "zi", "zo", "zu",
+	"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+}
+
+func localizeAPIPlayerName(sourcePlayerID, englishName string) string {
+	return LocalizePlayerName(syncProviderAPIFootball, sourcePlayerID, englishName)
+}
+
+func LocalizePlayerName(source, sourcePlayerID, englishName string) string {
+	source = strings.TrimSpace(source)
+	if source == syncProviderAPIFootball {
+		if name := apiFootballPlayerNameZhByID[strings.TrimSpace(sourcePlayerID)]; name != "" {
+			return name
+		}
+	}
+	lookupKey := playerNameLookupKey(englishName)
+	if name := apiFootballPlayerNameZhByName[lookupKey]; name != "" {
+		return name
+	}
+	if name := playerNamePartZh[lookupKey]; name != "" {
+		return name
+	}
+	return transliteratePlayerName(englishName)
+}
+
+func transliteratePlayerName(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return name
+	}
+	normalized := normalizeLatinName(name)
+	parts := strings.FieldsFunc(normalized, func(r rune) bool {
+		return r == ' ' || r == '.' || r == '-' || r == '_' || r == '/' || r == '\\'
+	})
+	localized := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.Trim(part, "'`")
+		if part == "" {
+			continue
+		}
+		localized = append(localized, transliterateNamePart(part))
+	}
+	if len(localized) == 0 {
+		return name
+	}
+	return strings.Join(localized, "·")
+}
+
+func transliterateNamePart(part string) string {
+	part = playerNameLookupKey(part)
+	if part == "" {
+		return ""
+	}
+	if name := playerNamePartZh[part]; name != "" {
+		return name
+	}
+	if len([]rune(part)) == 1 {
+		for _, r := range part {
+			if name := latinInitialZh[r]; name != "" {
+				return name
+			}
+		}
+	}
+
+	var out strings.Builder
+	for i := 0; i < len(part); {
+		matched := false
+		for _, chunk := range latinChunkOrder {
+			if strings.HasPrefix(part[i:], chunk) {
+				out.WriteString(latinChunkZh[chunk])
+				i += len(chunk)
+				matched = true
+				break
+			}
+		}
+		if matched {
+			continue
+		}
+		r := rune(part[i])
+		if name := latinInitialZh[r]; name != "" {
+			out.WriteString(name)
+		}
+		i++
+	}
+	return out.String()
+}
+
+func playerNameLookupKey(value string) string {
+	value = normalizeLatinName(value)
+	value = strings.ToLower(strings.TrimSpace(value))
+	return strings.Join(strings.Fields(value), " ")
+}
+
+func normalizeLatinName(value string) string {
+	value = strings.TrimSpace(value)
+	replacer := strings.NewReplacer(
+		"À", "A", "Á", "A", "Â", "A", "Ã", "A", "Ä", "A", "Å", "A", "Ā", "A", "Ă", "A", "Ą", "A",
+		"à", "a", "á", "a", "â", "a", "ã", "a", "ä", "a", "å", "a", "ā", "a", "ă", "a", "ą", "a",
+		"Ç", "C", "Ć", "C", "Č", "C", "ç", "c", "ć", "c", "č", "c",
+		"Ð", "D", "Ď", "D", "ð", "d", "ď", "d",
+		"È", "E", "É", "E", "Ê", "E", "Ë", "E", "Ē", "E", "Ė", "E", "Ę", "E", "Ě", "E",
+		"è", "e", "é", "e", "ê", "e", "ë", "e", "ē", "e", "ė", "e", "ę", "e", "ě", "e",
+		"Ğ", "G", "ğ", "g",
+		"Ì", "I", "Í", "I", "Î", "I", "Ï", "I", "Ī", "I", "İ", "I",
+		"ì", "i", "í", "i", "î", "i", "ï", "i", "ī", "i", "ı", "i",
+		"Ł", "L", "ł", "l",
+		"Ñ", "N", "Ń", "N", "Ň", "N", "ñ", "n", "ń", "n", "ň", "n",
+		"Ò", "O", "Ó", "O", "Ô", "O", "Õ", "O", "Ö", "O", "Ø", "O", "Ō", "O", "Ő", "O",
+		"ò", "o", "ó", "o", "ô", "o", "õ", "o", "ö", "o", "ø", "o", "ō", "o", "ő", "o",
+		"Ř", "R", "ř", "r",
+		"Ś", "S", "Ş", "S", "Š", "S", "ś", "s", "ş", "s", "š", "s", "ß", "ss",
+		"Ț", "T", "Ţ", "T", "Ť", "T", "ț", "t", "ţ", "t", "ť", "t",
+		"Ù", "U", "Ú", "U", "Û", "U", "Ü", "U", "Ū", "U", "Ů", "U",
+		"ù", "u", "ú", "u", "û", "u", "ü", "u", "ū", "u", "ů", "u",
+		"Ý", "Y", "Ÿ", "Y", "ý", "y", "ÿ", "y",
+		"Ž", "Z", "Ź", "Z", "Ż", "Z", "ž", "z", "ź", "z", "ż", "z",
+		"Æ", "Ae", "æ", "ae", "Œ", "Oe", "œ", "oe",
+		"’", "'", "‘", "'", "ʼ", "'", "`", "'", "´", "'",
+	)
+	value = replacer.Replace(value)
+	var b strings.Builder
+	lastSpace := false
+	for _, r := range value {
+		switch {
+		case r == '\'':
+			continue
+		case unicode.IsLetter(r) || unicode.IsDigit(r) || r == '.' || r == '-' || r == '_' || r == '/' || r == '\\':
+			b.WriteRune(r)
+			lastSpace = false
+		case unicode.IsSpace(r):
+			if !lastSpace {
+				b.WriteByte(' ')
+				lastSpace = true
+			}
+		default:
+			if !lastSpace {
+				b.WriteByte(' ')
+				lastSpace = true
+			}
+		}
+	}
+	return strings.TrimSpace(b.String())
+}

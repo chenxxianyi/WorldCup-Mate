@@ -465,41 +465,4 @@ watch(search, () => {
   opacity: 1;
 }
 
-.back-top-btn {
-  position: fixed;
-  right: max(18px, calc((100vw - 1280px) / 2 + 18px));
-  bottom: calc(var(--nav-h) + 22px);
-  z-index: 40;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
-  border-radius: 50%;
-  color: #fff;
-  background: var(--primary);
-  box-shadow: 0 14px 30px color-mix(in srgb, var(--primary) 28%, transparent);
-}
-
-.back-top-btn .material-symbols-outlined {
-  font-size: 28px;
-  line-height: 1;
-}
-
-.back-top-enter-active,
-.back-top-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.back-top-enter-from,
-.back-top-leave-to {
-  opacity: 0;
-  transform: translateY(10px) scale(0.94);
-}
-
-@media (min-width: 768px) {
-  .back-top-btn {
-    bottom: 28px;
-  }
-}
 </style>

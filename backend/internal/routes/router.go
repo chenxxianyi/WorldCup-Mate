@@ -143,6 +143,9 @@ func Setup() *gin.Engine {
 			adminAuth.POST("/teams", handlers.AdminCreateTeam)
 			adminAuth.PUT("/teams/:id", handlers.AdminUpdateTeam)
 			adminAuth.DELETE("/teams/:id", handlers.AdminDeleteTeam)
+			adminAuth.GET("/teams/:id/player-mapping", handlers.AdminGetTeamPlayerMapping)
+			adminAuth.PUT("/teams/:id/player-mapping", handlers.AdminUpsertTeamPlayerMapping)
+			adminAuth.POST("/teams/:id/sync-players", handlers.AdminSyncTeamPlayers)
 
 			adminAuth.GET("/groups", handlers.AdminListGroups)
 			adminAuth.POST("/groups", handlers.AdminCreateGroup)
@@ -166,6 +169,7 @@ func Setup() *gin.Engine {
 			adminAuth.PUT("/matches/:id/status", handlers.AdminUpdateMatchStatus)
 			adminAuth.POST("/matches/import", handlers.AdminImportMatches)
 			adminAuth.POST("/sync/matches", handlers.AdminSyncMatches)
+			adminAuth.POST("/sync/players", handlers.AdminSyncAllPlayers)
 
 			adminAuth.GET("/standings", handlers.AdminListStandings)
 			adminAuth.POST("/standings/recalculate", handlers.AdminRecalculateStandings)

@@ -64,3 +64,38 @@ func (c *Client) CompetitionMatches(ctx context.Context, competitionCode string,
 	}
 	return &data, nil
 }
+
+func (c *Client) CompetitionTeams(ctx context.Context, competitionCode string, season int) (*TeamsResponse, error) {
+	u, err := url.Parse(c.baseURL + "/competitions/" + url.PathEscape(competitionCode) + "/teams")
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	if season > 0 {
+		q.Set("season", fmt.Sprintf("%d", season))
+	}
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Auth-Token", c.apiToken)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("football-data returned status %d", resp.StatusCode)
+	}
+
+	var data TeamsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}

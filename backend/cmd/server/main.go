@@ -33,6 +33,14 @@ func main() {
 		IdleInterval:        time.Duration(cfg.DataSyncIdleIntervalMinutes) * time.Minute,
 		FullInterval:        time.Duration(cfg.DataSyncFullIntervalHours) * time.Hour,
 	})
+	services.ConfigurePlayerSync(services.PlayerSyncConfig{
+		Enabled:            cfg.PlayerSyncEnabled,
+		Provider:           cfg.PlayerSyncProvider,
+		APIFootballKey:     cfg.APIFootballKey,
+		APIFootballBaseURL: cfg.APIFootballBaseURL,
+		Interval:           time.Duration(cfg.PlayerSyncIntervalHours) * time.Hour,
+		SyncOnStartup:      cfg.PlayerSyncOnStartup,
+	})
 	if err := services.ConfigureAI(services.AIServiceConfig{
 		Provider:       cfg.AIProvider,
 		BaseURL:        cfg.AIBaseURL,
@@ -50,12 +58,17 @@ func main() {
 	database.InitMySQL(cfg.MySQLDSN)
 	database.InitRedis(cfg.RedisAddr, cfg.RedisPass, cfg.RedisDB)
 
+	if err := services.EnsurePlayerSourceUniqueness(); err != nil {
+		log.Fatalf("player source uniqueness cleanup failed: %v", err)
+	}
+
 	// Auto migrate
 	err := database.DB.AutoMigrate(
 		&models.User{},
 		&models.Group{},
 		&models.Team{},
 		&models.Player{},
+		&models.ExternalTeamMapping{},
 		&models.City{},
 		&models.Stadium{},
 		&models.Match{},
@@ -103,6 +116,7 @@ func main() {
 	// Start background workers only after the HTTP port is available.
 	jobs.StartReminderScanner()
 	jobs.StartMatchSyncer()
+	jobs.StartPlayerSyncer()
 
 	log.Printf("Server starting on %s", addr)
 	if err := r.RunListener(listener); err != nil {

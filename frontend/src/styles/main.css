@@ -232,6 +232,63 @@ button {
   background: transparent;
 }
 
+/* ── Back To Top ── */
+.back-top-btn {
+  position: fixed;
+  right: max(18px, calc((100vw - 1280px) / 2 + 18px));
+  bottom: calc(var(--nav-h) + 22px);
+  z-index: 40;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--primary);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--primary) 28%, transparent);
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.back-top-btn .material-symbols-outlined {
+  font-size: 28px;
+  line-height: 1;
+}
+
+[data-theme='dark'] .back-top-btn {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06)),
+    rgba(18, 18, 18, 0.9);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(14px);
+}
+
+.back-top-enter-active,
+.back-top-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.back-top-enter-from,
+.back-top-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.94);
+}
+
+@media (min-width: 768px) {
+  .back-top-btn {
+    bottom: 28px;
+  }
+}
+
 /* ── Live Dot ── */
 .live-dot {
   width: 8px;
