@@ -10,7 +10,9 @@ const getStoredToken = () => localStorage.getItem(TOKEN_KEY) || sessionStorage.g
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(getStoredToken())
   const user = ref<User | null>(null)
-  const isLoggedIn = computed(() => !!token.value)
+  const isCheckingProfile = ref(!!token.value)
+  const hasToken = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!token.value && !!user.value)
 
   function persistToken(nextToken: string, persistent: boolean) {
     token.value = nextToken
@@ -27,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
     const res = await apiLoginReq({ email, password, remember_me: autoLogin }) as any
     persistToken(res.token, autoLogin)
     user.value = normalizeUser(res.user)
+    isCheckingProfile.value = false
     return user.value
   }
 
@@ -36,25 +39,35 @@ export const useAuthStore = defineStore('auth', () => {
     sessionStorage.setItem(TOKEN_KEY, res.token)
     localStorage.removeItem(TOKEN_KEY)
     user.value = normalizeUser(res.user)
+    isCheckingProfile.value = false
     return user.value
   }
 
   async function fetchProfile() {
-    if (!token.value) return
+    if (!token.value) {
+      isCheckingProfile.value = false
+      return null
+    }
+    isCheckingProfile.value = true
     try {
       const res = await apiGetProfile() as any
       user.value = normalizeUser(res)
+      return user.value
     } catch {
       logout()
+      return null
+    } finally {
+      isCheckingProfile.value = false
     }
   }
 
   function logout() {
     token.value = null
     user.value = null
+    isCheckingProfile.value = false
     localStorage.removeItem(TOKEN_KEY)
     sessionStorage.removeItem(TOKEN_KEY)
-    try { apiLogoutReq() } catch {}
+    apiLogoutReq().catch(() => {})
   }
 
   async function uploadAvatar(file: File) {
@@ -67,5 +80,5 @@ export const useAuthStore = defineStore('auth', () => {
     await apiChangePassword({ old_password: oldPassword, new_password: newPassword })
   }
 
-  return { token, user, isLoggedIn, login, register, logout, fetchProfile, uploadAvatar, changePassword }
+  return { token, user, hasToken, isCheckingProfile, isLoggedIn, login, register, logout, fetchProfile, uploadAvatar, changePassword }
 })

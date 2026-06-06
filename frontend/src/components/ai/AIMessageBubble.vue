@@ -7,7 +7,7 @@ defineProps<{
 }>()
 
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
-let copyTimer: ReturnType<typeof window.setTimeout> | undefined
+let copyTimer: number | undefined
 
 async function copyText(text: string) {
   const value = formatPlainText(text).trim()

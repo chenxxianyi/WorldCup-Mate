@@ -35,7 +35,20 @@ watch(() => auth.isLoggedIn, refreshUnread)
     </div>
 
     <div class="top-actions">
-      <template v-if="auth.isLoggedIn">
+      <button
+        v-if="auth.isCheckingProfile"
+        class="icon-btn checking-btn"
+        title="正在验证登录状态"
+        disabled
+      >
+        <span class="btn-label">验证中</span>
+        <span class="action-orb checking-orb" aria-hidden="true">
+          <svg class="action-icon checking-icon" viewBox="0 0 24 24">
+            <path d="M20 12a8 8 0 1 1-2.3-5.7" />
+          </svg>
+        </span>
+      </button>
+      <template v-else-if="auth.isLoggedIn">
         <button class="icon-btn user-btn" title="个人中心" @click="router.push('/profile')">
           <span class="btn-label">{{ auth.user?.username || '用户' }}</span>
           <span v-if="notification.unreadCount > 0" class="badge-dot">{{ notification.unreadCount > 9 ? '9+' : notification.unreadCount }}</span>
@@ -199,6 +212,16 @@ watch(() => auth.isLoggedIn, refreshUnread)
   background: color-mix(in srgb, var(--primary) 4%, var(--card));
 }
 
+.icon-btn:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.icon-btn:disabled:hover {
+  border-color: var(--line);
+  background: var(--card);
+}
+
 .badge-dot {
   position: absolute;
   top: -5px;
@@ -259,6 +282,15 @@ watch(() => auth.isLoggedIn, refreshUnread)
   background: var(--card-soft);
 }
 
+.checking-orb {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 9%, var(--card));
+}
+
+.checking-icon {
+  animation: auth-spin 0.9s linear infinite;
+}
+
 .user-avatar {
   color: var(--primary);
   background: color-mix(in srgb, var(--primary) 9%, var(--card));
@@ -283,8 +315,18 @@ watch(() => auth.isLoggedIn, refreshUnread)
   min-width: 100px;
 }
 
+.checking-btn {
+  min-width: 106px;
+}
+
 .theme-btn {
   min-width: 116px;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 [data-theme='dark'] .topbar {

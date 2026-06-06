@@ -227,6 +227,17 @@ async function loadHomeData() {
 }
 
 watch(activeGroupIndex, loadGroupStandings)
+watch(
+  () => auth.isLoggedIn,
+  async (loggedIn) => {
+    if (!loggedIn) {
+      followedSchedule.value = []
+      return
+    }
+    await fav.fetchFavoriteTeams()
+    await loadFollowedSchedule()
+  },
+)
 
 onMounted(loadHomeData)
 </script>

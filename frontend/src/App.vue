@@ -11,9 +11,9 @@ watchEffect(() => {
   document.documentElement.dataset.theme = settings.theme
 })
 
-onMounted(() => {
+onMounted(async () => {
   if (auth.token) {
-    auth.fetchProfile()
+    await auth.fetchProfile()
   }
 })
 </script>
