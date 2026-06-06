@@ -3,15 +3,15 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Countdown from '@/components/common/Countdown.vue'
 import MatchCard from '@/components/common/MatchCard.vue'
+import TimelineMatchCard from '@/components/common/TimelineMatchCard.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetGroupStandings } from '@/api/standings'
-import { apiGetTournamentProgress, apiGetUpcomingMatches, apiListMatches } from '@/api/matches'
+import { apiGetTournamentProgress, apiGetUpcomingMatches, apiGetTimeline, apiListMatches } from '@/api/matches'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useMatchStore } from '@/stores/useMatchStore'
 import { useTeamStore } from '@/stores/useTeamStore'
 import { normalizeMatch, type Match } from '@/types/match'
-import { normalizeStanding, type Standing } from '@/types/standing'
 
 const router = useRouter()
 const matchStore = useMatchStore()
@@ -22,7 +22,7 @@ const auth = useAuthStore()
 const groups = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E', 'Group F', 'Group G', 'Group H', 'Group I', 'Group J', 'Group K', 'Group L']
 const activeGroupIndex = ref(0)
 const activeGroupName = computed(() => groups[activeGroupIndex.value])
-const groupStandings = ref<Standing[]>([])
+const groupStandings = ref<any[]>([])
 const groupSwipeStartX = ref(0)
 const groupSwipeStartY = ref(0)
 const groupSwipeActive = ref(false)
@@ -50,10 +50,10 @@ const progress = ref<TournamentProgress>({
 })
 
 const nextMatch = ref<Match | null>(null)
+const timelineRaw = ref<any[]>([])
 const followedSchedule = ref<Match[]>([])
 
 const todayMatches = computed(() => matchStore.todayMatches)
-const recommended = computed(() => matchStore.recommendedMatches)
 const followedTeams = computed(() =>
   teamStore.teams.filter((team) => fav.isTeamFollowed(team.id)),
 )
@@ -61,6 +61,45 @@ const followedTeams = computed(() =>
 const nextMatchLocalTime = computed(() => {
   if (!nextMatch.value) return ''
   return nextMatch.value.local_kickoff_time || '时间待定'
+})
+
+// ── Timeline grouping ──
+
+interface TimelineGroup {
+  key: string
+  title: string
+  isToday: boolean
+  isYesterday: boolean
+  isTomorrow: boolean
+  matches: any[]
+}
+
+const groupedTimeline = computed(() => {
+  const groupsMap = new Map<string, any[]>()
+  const todayKey = localDayKey(0)
+  const yesterdayKey = localDayKey(-1)
+  const tomorrowKey = localDayKey(1)
+
+  for (const m of timelineRaw.value) {
+    const local = m.local_kickoff_time || ''
+    const key = local.split(' ')[0] || 'other'
+    if (!groupsMap.has(key)) groupsMap.set(key, [])
+    groupsMap.get(key)!.push(m)
+  }
+
+  const result: TimelineGroup[] = []
+  for (const [key, matches] of groupsMap) {
+    result.push({
+      key,
+      title: dateTitle(key),
+      isToday: key === todayKey,
+      isYesterday: key === yesterdayKey,
+      isTomorrow: key === tomorrowKey,
+      matches,
+    })
+  }
+  result.sort((a, b) => a.key.localeCompare(b.key))
+  return result
 })
 
 const sortedFollowedSchedule = computed(() =>
@@ -79,6 +118,12 @@ function localDayKey(offset = 0) {
   const d = new Date()
   d.setDate(d.getDate() + offset)
   return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function dateTitle(key: string) {
+  const [month, day] = key.split('-')
+  if (!month || !day) return key
+  return `${Number(month)}月${Number(day)}日`
 }
 
 function swipeGroup(direction: 'left' | 'right') {
@@ -103,13 +148,9 @@ function finishGroupSwipe(event: PointerEvent) {
   if (!groupSwipeActive.value || !event.isPrimary) return
   ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
   groupSwipeActive.value = false
-
   const deltaX = event.clientX - groupSwipeStartX.value
   const deltaY = event.clientY - groupSwipeStartY.value
-  const minDistance = 48
-  const maxVerticalDrift = 64
-
-  if (Math.abs(deltaX) < minDistance || Math.abs(deltaY) > maxVerticalDrift) return
+  if (Math.abs(deltaX) < 48 || Math.abs(deltaY) > 64) return
   swipeGroup(deltaX < 0 ? 'left' : 'right')
 }
 
@@ -123,7 +164,13 @@ function cancelGroupSwipe(event?: PointerEvent) {
 async function loadGroupStandings() {
   try {
     const res = await apiGetGroupStandings(activeGroupIndex.value + 1) as any[]
-    groupStandings.value = res.map(normalizeStanding)
+    groupStandings.value = res.map((s: any) => ({
+      team_id: s.team_id,
+      team_name: s.team?.name || '',
+      team_code: s.team?.fifa_code || '',
+      flag: s.team?.flag_url || '',
+      points: s.points,
+    }))
   } catch {
     groupStandings.value = []
   }
@@ -141,7 +188,6 @@ async function loadNextMatch() {
 async function loadFollowedSchedule() {
   followedSchedule.value = []
   if (!auth.isLoggedIn || fav.followedTeamIds.length === 0) return
-
   try {
     const res = await apiListMatches({ status: 'scheduled', page: 1, page_size: 100 }) as any
     const list = (res.list || res || []).map(normalizeMatch)
@@ -160,6 +206,14 @@ async function loadHomeData() {
   teamStore.fetchTeams({ page_size: 100 })
   loadGroupStandings()
   loadNextMatch()
+
+  // Load timeline
+  try {
+    const res = await apiGetTimeline({ days_back: 2, days_ahead: 2 }) as any[]
+    timelineRaw.value = res || []
+  } catch {
+    timelineRaw.value = []
+  }
 
   try {
     const res = await apiGetTournamentProgress()
@@ -180,6 +234,7 @@ onMounted(loadHomeData)
 <template>
   <div class="dashboard-grid">
     <div>
+      <!-- Countdown -->
       <Countdown v-if="nextMatch" :targetTime="nextMatch.kickoff_time_utc">
         <span class="eyebrow"><i class="live-dot next-dot"></i> 下一场比赛</span>
         <div class="countdown-title">
@@ -192,6 +247,7 @@ onMounted(loadHomeData)
       </Countdown>
       <article v-else class="card empty-card">暂无即将到来的比赛</article>
 
+      <!-- Stage progress -->
       <article class="card stage-card">
         <div class="stage-head">
           <span>{{ progress.stage_name }}</span>
@@ -207,60 +263,44 @@ onMounted(loadHomeData)
         </div>
       </article>
 
-      <section class="section">
+      <!-- My followed schedule (simplified row) -->
+      <section v-if="auth.isLoggedIn && followedTeams.length > 0" class="section">
         <div class="section-head">
-          <h2>我的关注赛程</h2>
-          <span v-if="auth.isLoggedIn">{{ followedTeams.length }} 支球队</span>
+          <h2>我的关注</h2>
+          <span>{{ followedTeams.length }} 支球队</span>
         </div>
-
-        <div v-if="!auth.isLoggedIn" class="card follow-state">
-          <span>登录后可以查看关注球队的下一场比赛</span>
-          <button class="pill-btn primary" @click="router.push('/login')">去登录</button>
-        </div>
-        <div v-else-if="followedTeams.length === 0" class="card follow-state">
-          <span>还没有关注球队</span>
-          <button class="pill-btn primary" @click="router.push('/teams')">去关注</button>
-        </div>
-        <div v-else-if="!nextFollowedMatch" class="card follow-state">
-          <span>关注球队暂无未开始比赛</span>
-          <button class="pill-btn" @click="router.push('/schedule')">查看全部赛程</button>
-        </div>
-        <div v-else class="stack">
+        <div v-if="nextFollowedMatch" class="stack">
           <MatchCard :match="nextFollowedMatch" featured />
-          <div v-if="todayFollowedMatches.length > 1" class="mini-list">
-            <button
-              v-for="match in todayFollowedMatches.slice(1, 4)"
-              :key="match.id"
-              class="mini-match"
-              @click="router.push(`/matches/${match.id}`)"
-            >
-              <span>{{ match.home_team_name }} vs {{ match.away_team_name }}</span>
-              <b>{{ match.local_kickoff_time.split(' ')[1] || 'TBD' }}</b>
-            </button>
+        </div>
+        <div v-else class="card empty-card">关注球队暂无未开始比赛</div>
+      </section>
+
+      <!-- ⏱ Timeline -->
+      <section class="section">
+        <div class="section-head">
+          <h2>比赛时间线</h2>
+          <span>近 5 天</span>
+        </div>
+        <template v-for="group in groupedTimeline" :key="group.key">
+          <div class="tl-date-head">
+            <span>{{ group.title }}</span>
+            <span v-if="group.isToday" class="tag live">今天</span>
+            <span v-else-if="group.isYesterday" class="tag">昨天</span>
+            <span v-else-if="group.isTomorrow" class="tag blue">明天</span>
           </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head">
-          <h2>今日比赛</h2>
-          <span>{{ todayMatches.length }} 场</span>
-        </div>
-        <div class="match-strip">
-          <MatchCard v-for="m in todayMatches" :key="m.id" :match="m" />
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head">
-          <h2>热门推荐</h2>
-        </div>
-        <div class="stack">
-          <MatchCard v-for="m in recommended" :key="m.id" :match="m" featured />
-        </div>
+          <div class="tl-list">
+            <TimelineMatchCard
+              v-for="m in group.matches"
+              :key="m.id"
+              :match="m"
+            />
+          </div>
+        </template>
+        <div v-if="!timelineRaw.length" class="card empty-card">暂无比赛数据</div>
       </section>
     </div>
 
+    <!-- Desktop sidebar -->
     <aside class="desktop-side">
       <section class="section" style="margin-top: 0">
         <div class="section-head">
@@ -303,15 +343,7 @@ onMounted(loadHomeData)
           <Transition :name="groupTransitionName" mode="out-in">
             <table :key="activeGroupName" class="standing-table" style="min-width: 0">
               <tbody>
-                <tr
-                  v-for="(s, i) in groupStandings"
-                  :key="s.team_id"
-                  :class="{
-                    'rank-ok': s.status === '晋级',
-                    'rank-mid': s.status === '待定',
-                    'rank-out': s.status === '淘汰',
-                  }"
-                >
+                <tr v-for="(s, i) in groupStandings" :key="s.team_id">
                   <td>{{ i + 1 }}</td>
                   <td class="team-cell">
                     <TeamFlag :value="s.flag" :alt="s.team_name" :fallback="s.team_code" size="sm" />
@@ -361,16 +393,6 @@ onMounted(loadHomeData)
 .section-head span {
   color: var(--muted);
   font-size: 13px;
-}
-
-.match-strip {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(280px, 84%);
-  gap: 12px;
-  overflow-x: auto;
-  padding: 2px 2px 12px;
-  scroll-snap-type: x mandatory;
 }
 
 .stack {
@@ -448,7 +470,6 @@ onMounted(loadHomeData)
   font-size: 11px;
 }
 
-.follow-state,
 .empty-card {
   padding: 20px;
   display: grid;
@@ -458,33 +479,23 @@ onMounted(loadHomeData)
   color: var(--muted);
 }
 
-.mini-list {
+/* ── Timeline ── */
+.tl-date-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 8px;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.tl-list {
   display: grid;
   gap: 8px;
 }
 
-.mini-match {
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  color: var(--text);
-  background: var(--card);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.mini-match span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* ── Sidebar ── */
 .profile-card {
   padding: 16px;
   display: flex;
@@ -509,8 +520,7 @@ onMounted(loadHomeData)
   border-collapse: collapse;
 }
 
-th,
-td {
+th, td {
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
   text-align: left;
@@ -521,17 +531,10 @@ tr:last-child td {
   border-bottom: 0;
 }
 
-.rank-ok td:first-child {
-  border-left: 4px solid var(--success);
-}
-
-.rank-mid td:first-child {
-  border-left: 4px solid var(--gold);
-}
-
-.rank-out {
-  color: var(--weak);
-  opacity: 0.66;
+.team-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .table-card {
@@ -561,12 +564,6 @@ tr:last-child td {
 .standings-prev-enter-from {
   opacity: 0;
   transform: translateX(-34px);
-}
-
-.team-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .group-nav {
@@ -614,14 +611,6 @@ tr:last-child td {
   .dashboard-grid {
     grid-template-columns: minmax(0, 1.9fr) minmax(300px, 0.8fr);
     align-items: start;
-  }
-
-  .match-strip {
-    grid-auto-flow: row;
-    grid-auto-columns: initial;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow: visible;
-    padding-bottom: 0;
   }
 }
 </style>

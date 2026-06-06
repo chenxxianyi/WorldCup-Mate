@@ -47,6 +47,39 @@ const nextMatch = computed(() => {
   }) || sortedMatches.value[0] || null
 })
 
+const collectingMatches = ref(false)
+
+const allMatchFavorited = computed(() => {
+  const unfinished = sortedMatches.value.filter(
+    (m) => m.status !== 'finished' && m.status !== 'cancelled',
+  )
+  return unfinished.length > 0 && unfinished.every((m) => fav.isMatchFavorite(m.id))
+})
+
+const hasUnfinishedMatches = computed(() =>
+  sortedMatches.value.some((m) => m.status !== 'finished' && m.status !== 'cancelled'),
+)
+
+async function collectAllTeamMatches() {
+  if (!team.value || !auth.isLoggedIn) {
+    router.push('/login')
+    return
+  }
+
+  collectingMatches.value = true
+  try {
+    const target = sortedMatches.value.filter(
+      (m) => m.status !== 'finished' && m.status !== 'cancelled',
+    )
+    for (const match of target) {
+      await fav.addMatchFavorite(match.id)
+    }
+    await fav.fetchFavoriteMatches()
+  } finally {
+    collectingMatches.value = false
+  }
+}
+
 const teamStanding = computed(() =>
   team.value ? standings.value.find((item) => item.team_id === team.value?.id) || null : null,
 )
@@ -166,6 +199,16 @@ watch(() => route.params.id, loadTeamDetail)
               :style="fav.isTeamFollowed(team.id) ? 'font-variation-settings: \'FILL\' 1' : ''"
             >star</span>
             {{ fav.isTeamFollowed(team.id) ? '已关注' : '关注球队' }}
+          </button>
+          <button
+            v-if="hasUnfinishedMatches"
+            class="pill-btn"
+            :class="{ active: allMatchFavorited }"
+            :disabled="collectingMatches || allMatchFavorited"
+            @click="collectAllTeamMatches"
+          >
+            <span class="material-symbols-outlined">bookmark_add</span>
+            {{ collectingMatches ? '收藏中...' : allMatchFavorited ? '已全部收藏' : '收藏所有比赛' }}
           </button>
           <button class="pill-btn primary" @click="router.push('/schedule')">
             <span class="material-symbols-outlined">calendar_month</span>

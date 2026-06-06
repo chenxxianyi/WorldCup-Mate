@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import NotificationList from '@/components/common/NotificationList.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import { useSettingStore } from '@/stores/useSettingStore'
@@ -10,6 +11,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { apiUpdateProfile } from '@/api/auth'
 
 const settings = useSettingStore()
+const router = useRouter()
 const fav = useFavoriteStore()
 const reminder = useReminderStore()
 const teamStore = useTeamStore()
@@ -43,6 +45,10 @@ async function saveEmail() {
   } finally {
     emailSaving.value = false
   }
+}
+
+function goProfileDetail(path: string) {
+  router.push(auth.isLoggedIn ? path : '/login')
 }
 
 const followedTeamNames = computed(() =>
@@ -163,9 +169,24 @@ onMounted(() => {
 
     <section class="section">
       <div class="stats-row">
-        <StatCard :value="fav.followedTeamIds.length" label="关注球队" />
-        <StatCard :value="fav.favoriteMatchIds.length" label="收藏比赛" />
-        <StatCard :value="reminder.count" label="比赛提醒" />
+        <StatCard
+          :value="fav.followedTeamIds.length"
+          label="关注球队"
+          clickable
+          @click="goProfileDetail('/profile/favorite-teams')"
+        />
+        <StatCard
+          :value="fav.favoriteMatchIds.length"
+          label="收藏比赛"
+          clickable
+          @click="goProfileDetail('/profile/favorite-matches')"
+        />
+        <StatCard
+          :value="reminder.count"
+          label="比赛提醒"
+          clickable
+          @click="goProfileDetail('/profile/reminders')"
+        />
       </div>
     </section>
 

@@ -35,3 +35,11 @@ export function apiGetMatchesByGroup(groupId: number) {
 export function apiGetTournamentProgress() {
   return request.get('/matches/progress') as Promise<any>
 }
+
+export function apiGetTimeline(params?: { days_back?: number; days_ahead?: number }) {
+  return request.get('/matches/timeline', { params }) as Promise<any[]>
+}
+
+export function apiGetMatchesByStage(stage: string) {
+  return request.get(`/matches/by-stage/${stage}`) as Promise<any[]>
+}

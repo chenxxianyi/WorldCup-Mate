@@ -39,3 +39,12 @@ func GetPendingReminders(now time.Time) ([]models.Reminder, error) {
 		Find(&reminders).Error
 	return reminders, err
 }
+
+func ListUserIDsByMatchReminders(matchID uint) ([]uint, error) {
+	var ids []uint
+	err := database.DB.Model(&models.Reminder{}).
+		Where("match_id = ? AND status = ?", matchID, "pending").
+		Distinct("user_id").
+		Pluck("user_id", &ids).Error
+	return ids, err
+}

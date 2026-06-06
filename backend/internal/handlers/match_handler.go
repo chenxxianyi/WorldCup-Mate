@@ -84,6 +84,17 @@ func GetMatchDetail(c *gin.Context) {
 	utils.Success(c, match)
 }
 
+func GetTimeline(c *gin.Context) {
+	var q services.TimelineQuery
+	c.ShouldBindQuery(&q)
+	matches, err := services.GetTimeline(q)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+	utils.Success(c, matches)
+}
+
 func GetMatchesByTeam(c *gin.Context) {
 	teamID, err := strconv.ParseUint(c.Param("teamId"), 10, 32)
 	if err != nil {

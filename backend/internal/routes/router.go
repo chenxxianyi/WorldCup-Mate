@@ -32,6 +32,7 @@ func Setup() *gin.Engine {
 		matches.GET("/upcoming", handlers.GetUpcomingMatches)
 		matches.GET("/live", handlers.GetLiveMatches)
 		matches.GET("/recommended", handlers.GetRecommendedMatches)
+		matches.GET("/timeline", handlers.GetTimeline)
 		matches.GET("/progress", handlers.GetTournamentProgress)
 		matches.GET("/:id/lineups", handlers.GetMatchLineups)
 		matches.GET("/:id", handlers.GetMatchDetail)
@@ -79,6 +80,10 @@ func Setup() *gin.Engine {
 		aiPublic.POST("/explain", handlers.AIExplain)
 		aiPublic.POST("/share-copy", handlers.AIShareCopy)
 	}
+
+	// Post-match summary (public, within matches group for RESTful path)
+	matches.GET("/:id/post-match-summary", handlers.GetPostMatchSummary)
+	matches.POST("/:id/post-match-summary/generate", handlers.GeneratePostMatchSummary)
 
 	// Authenticated routes
 	authRequired := api.Group("")

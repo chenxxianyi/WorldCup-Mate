@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"time"
 
 	"worldcup-mate/internal/models"
@@ -100,6 +101,47 @@ func GetMatchesByStage(stage string) ([]models.Match, error) {
 		PageSize: 100,
 	})
 	return matches, err
+}
+
+type TimelineQuery struct {
+	DaysBack  int `form:"days_back"`
+	DaysAhead int `form:"days_ahead"`
+}
+
+type TimelineMatch struct {
+	models.Match
+	HasPostMatchSummary bool `json:"has_post_match_summary"`
+}
+
+func GetTimeline(q TimelineQuery) ([]TimelineMatch, error) {
+	now := time.Now().UTC()
+	if q.DaysBack <= 0 {
+		q.DaysBack = 2
+	}
+	if q.DaysAhead <= 0 {
+		q.DaysAhead = 2
+	}
+	start := now.AddDate(0, 0, -q.DaysBack)
+	start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.UTC)
+	end := now.AddDate(0, 0, q.DaysAhead+1)
+	end = time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, time.UTC)
+
+	matches, err := repositories.ListMatchesInWindow(start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]TimelineMatch, 0, len(matches))
+	for _, m := range matches {
+		tm := TimelineMatch{Match: m}
+		// Check if post_match_summary exists in AIGeneratedContent
+		cacheKey := fmt.Sprintf("ai:%s:post_match_summary:%d", GetAIProvider(), m.ID)
+		if content, err := repositories.GetGeneratedContentByCacheKey(cacheKey); err == nil && content != nil && content.ContentJSON != "" {
+			tm.HasPostMatchSummary = true
+		}
+		result = append(result, tm)
+	}
+	return result, nil
 }
 
 type TournamentProgress struct {

@@ -33,6 +33,22 @@ export interface ApiMatch {
   winner_team_id: number | null
   created_at: string
   updated_at: string
+  home_possession?: number | null
+  away_possession?: number | null
+  home_shots?: number | null
+  away_shots?: number | null
+  home_shots_on_target?: number | null
+  away_shots_on_target?: number | null
+  home_corners?: number | null
+  away_corners?: number | null
+  home_offsides?: number | null
+  away_offsides?: number | null
+  home_yellow_cards?: number | null
+  away_yellow_cards?: number | null
+  home_red_cards?: number | null
+  away_red_cards?: number | null
+  home_fouls?: number | null
+  away_fouls?: number | null
 }
 
 /** Frontend normalized match */
@@ -59,6 +75,22 @@ export interface Match {
   importance_level: number
   is_featured: boolean
   minute: number | null
+  home_possession?: number | null
+  away_possession?: number | null
+  home_shots?: number | null
+  away_shots?: number | null
+  home_shots_on_target?: number | null
+  away_shots_on_target?: number | null
+  home_corners?: number | null
+  away_corners?: number | null
+  home_offsides?: number | null
+  away_offsides?: number | null
+  home_yellow_cards?: number | null
+  away_yellow_cards?: number | null
+  home_red_cards?: number | null
+  away_red_cards?: number | null
+  home_fouls?: number | null
+  away_fouls?: number | null
 }
 
 /** Convert UTC time string to Beijing time (UTC+8), format: "MM-DD HH:mm" */
@@ -109,5 +141,21 @@ export function normalizeMatch(m: ApiMatch): Match {
     importance_level: m.importance_level,
     is_featured: m.importance_level >= 2,
     minute: null,
+    home_possession: m.home_possession,
+    away_possession: m.away_possession,
+    home_shots: m.home_shots,
+    away_shots: m.away_shots,
+    home_shots_on_target: m.home_shots_on_target,
+    away_shots_on_target: m.away_shots_on_target,
+    home_corners: m.home_corners,
+    away_corners: m.away_corners,
+    home_offsides: m.home_offsides,
+    away_offsides: m.away_offsides,
+    home_yellow_cards: m.home_yellow_cards,
+    away_yellow_cards: m.away_yellow_cards,
+    home_red_cards: m.home_red_cards,
+    away_red_cards: m.away_red_cards,
+    home_fouls: m.home_fouls,
+    away_fouls: m.away_fouls,
   }
 }

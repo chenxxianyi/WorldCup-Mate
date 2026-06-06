@@ -146,6 +146,27 @@ func DeleteSeedDemoMatches() error {
 		Delete(&models.Match{}).Error
 }
 
+func ListMatchesForLineupAlert(startWindow, endWindow time.Time) ([]models.Match, error) {
+	var matches []models.Match
+	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").
+		Where("kickoff_time_utc >= ? AND kickoff_time_utc <= ?", startWindow, endWindow).
+		Where("status NOT IN ?", []string{"finished", "cancelled"}).
+		Order("kickoff_time_utc ASC").
+		Find(&matches).Error
+	return matches, err
+}
+
+func ListFinishedMatchesSince(since time.Time) ([]models.Match, error) {
+	var matches []models.Match
+	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").
+		Where("status = ?", "finished").
+		Where("home_score IS NOT NULL AND away_score IS NOT NULL").
+		Where("updated_at >= ?", since).
+		Order("kickoff_time_utc DESC").
+		Find(&matches).Error
+	return matches, err
+}
+
 func CountMatches() int64 {
 	var count int64
 	database.DB.Model(&models.Match{}).Count(&count)
@@ -156,6 +177,26 @@ func GetMatchByDB(db *gorm.DB, id uint) (*models.Match, error) {
 	var match models.Match
 	err := db.First(&match, id).Error
 	return &match, err
+}
+
+func ListMatchesInWindow(start, end time.Time) ([]models.Match, error) {
+	var matches []models.Match
+	orderExpr := `
+		CASE
+			WHEN status = 'live' THEN 0
+			WHEN status = 'scheduled' THEN 1
+			WHEN status = 'finished' THEN 2
+			ELSE 3
+		END ASC,
+		CASE
+			WHEN status = 'finished' THEN UNIX_TIMESTAMP(kickoff_time_utc) * -1
+			ELSE UNIX_TIMESTAMP(kickoff_time_utc)
+		END ASC`
+	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City").Preload("Group").
+		Where("kickoff_time_utc >= ? AND kickoff_time_utc < ?", start, end).
+		Order(orderExpr).
+		Find(&matches).Error
+	return matches, err
 }
 
 func CountMatchesByStageAndStatus() (map[string]map[string]int64, error) {

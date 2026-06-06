@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import MatchInsightCard from '@/components/ai/MatchInsightCard.vue'
+import PostMatchSummaryCard from '@/components/ai/PostMatchSummaryCard.vue'
+import MatchStatsCard from '@/components/common/MatchStatsCard.vue'
 import MatchLineups from '@/components/common/MatchLineups.vue'
 import ReminderControl from '@/components/common/ReminderControl.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetMatchLineups } from '@/api/lineups'
 import { apiGetGroupStandings } from '@/api/standings'
+import { apiGetPostMatchSummary, apiGeneratePostMatchSummary } from '@/api/postMatchSummary'
 import { useAIStore } from '@/stores/useAIStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
@@ -16,8 +19,11 @@ import { useSettingStore } from '@/stores/useSettingStore'
 import { normalizeMatchLineups, type MatchLineups as MatchLineupsData } from '@/types/lineup'
 import { normalizeStanding, type Standing } from '@/types/standing'
 import type { Match } from '@/types/match'
+import type { PostMatchSummary } from '@/types/postMatchSummary'
+import { hasPostMatchSummary } from '@/types/postMatchSummary'
 
 const route = useRoute()
+const router = useRouter()
 const ai = useAIStore()
 const matchStore = useMatchStore()
 const fav = useFavoriteStore()
@@ -31,6 +37,22 @@ const lineups = ref<MatchLineupsData | null>(null)
 const lineupsLoading = ref(false)
 const lineupsError = ref('')
 let lineupRequestSeq = 0
+
+const postSummary = ref<PostMatchSummary | null>(null)
+const postSummaryLoading = ref(false)
+const postSummaryError = ref('')
+
+const canGeneratePostSummary = computed(() =>
+  match.value?.status === 'finished' &&
+  match.value?.home_score != null &&
+  match.value?.away_score != null
+)
+
+const hasStats = computed(() =>
+  match.value?.home_possession != null ||
+  match.value?.home_shots != null ||
+  match.value?.home_shots_on_target != null
+)
 
 function formatLocalTime(utcString: string) {
   if (!utcString) return '时间待定'
@@ -82,6 +104,7 @@ async function loadMatch() {
   lineupsLoading.value = false
   match.value = await matchStore.fetchMatchDetail(id)
   loadLineups(id)
+  loadPostMatchSummary(id)
 
   if (auth.isLoggedIn) {
     fav.fetchFavoriteTeams()
@@ -123,9 +146,45 @@ async function loadLineups(matchId: number) {
   }
 }
 
+async function loadPostMatchSummary(matchId: number) {
+  postSummary.value = null
+  postSummaryError.value = ''
+
+  try {
+    const res = await apiGetPostMatchSummary(matchId)
+    if (hasPostMatchSummary(res)) {
+      postSummary.value = res
+    }
+  } catch {
+    postSummary.value = null
+  }
+}
+
+async function generatePostSummary(forceRefresh = false) {
+  if (!match.value || !canGeneratePostSummary.value) return
+  postSummaryLoading.value = true
+  postSummaryError.value = ''
+
+  try {
+    postSummary.value = await apiGeneratePostMatchSummary(match.value.id, forceRefresh)
+  } catch {
+    postSummaryError.value = '赛后摘要生成失败'
+  } finally {
+    postSummaryLoading.value = false
+  }
+}
+
 function generateInsight(forceRefresh = false) {
   if (!match.value) return
   ai.generateMatchInsight(match.value.id, forceRefresh).catch(() => {})
+}
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+    return
+  }
+  router.push('/schedule')
 }
 
 onMounted(loadMatch)
@@ -134,6 +193,16 @@ watch(() => route.params.id, loadMatch)
 
 <template>
   <div v-if="match" class="match-detail-page">
+    <div class="detail-toolbar">
+      <button class="back-action" type="button" title="返回" aria-label="返回上一页" @click="goBack">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <div>
+        <h1>比赛详情</h1>
+        <p>{{ match.home_team_name || 'TBD' }} vs {{ match.away_team_name || 'TBD' }}</p>
+      </div>
+    </div>
+
     <article class="card detail-hero">
       <div class="match-top">
         <span class="tag gold">{{ match.group_name || '世界杯比赛' }}</span>
@@ -200,6 +269,21 @@ watch(() => route.params.id, loadMatch)
       </div>
     </article>
 
+    <MatchStatsCard
+      v-if="hasStats"
+      :match="match"
+    />
+
+    <PostMatchSummaryCard
+      v-if="match.status === 'finished'"
+      :summary="postSummary"
+      :loading="postSummaryLoading"
+      :error="postSummaryError"
+      :can-generate="canGeneratePostSummary"
+      @generate="generatePostSummary(false)"
+      @refresh="generatePostSummary(true)"
+    />
+
     <MatchInsightCard
       :insight="ai.currentMatchInsight"
       :loading="ai.matchInsightLoading"
@@ -258,6 +342,68 @@ watch(() => route.params.id, loadMatch)
 .match-detail-page {
   display: grid;
   gap: 16px;
+}
+
+.detail-toolbar {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  min-width: 0;
+}
+
+.back-action {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  justify-self: start;
+  margin-left: -12px;
+  margin-bottom: -2px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--text);
+  background: transparent;
+  transition: color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out;
+}
+
+.back-action:active {
+  transform: scale(0.97);
+}
+
+.back-action:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.back-action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.back-action .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.detail-toolbar > div {
+  min-width: 0;
+  width: 100%;
+}
+
+.detail-toolbar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.detail-toolbar p {
+  min-width: 0;
+  overflow: hidden;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detail-hero {
@@ -338,16 +484,22 @@ watch(() => route.params.id, loadMatch)
 }
 
 .actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin-top: 16px;
 }
 
 .actions .pill-btn {
+  width: 100%;
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 750;
 }
 
 .actions .material-symbols-outlined {

@@ -14,6 +14,8 @@ const tabs = [
 
 function isActive(tabRoute: string) {
   if (tabRoute === '/') return route.path === '/'
+  if (tabRoute === '/schedule') return route.path.startsWith('/schedule') || route.path.startsWith('/matches') || route.path.startsWith('/bracket')
+  if (tabRoute === '/teams') return route.path.startsWith('/teams')
   return route.path.startsWith(tabRoute)
 }
 

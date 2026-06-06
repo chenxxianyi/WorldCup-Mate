@@ -27,8 +27,24 @@ func GetDashboard() DashboardData {
 }
 
 type ScoreInput struct {
-	HomeScore int `json:"home_score" binding:"required"`
-	AwayScore int `json:"away_score" binding:"required"`
+	HomeScore        *int `json:"home_score"`
+	AwayScore        *int `json:"away_score"`
+	HomePossession    *int `json:"home_possession,omitempty"`
+	AwayPossession    *int `json:"away_possession,omitempty"`
+	HomeShots         *int `json:"home_shots,omitempty"`
+	AwayShots         *int `json:"away_shots,omitempty"`
+	HomeShotsOnTarget *int `json:"home_shots_on_target,omitempty"`
+	AwayShotsOnTarget *int `json:"away_shots_on_target,omitempty"`
+	HomeCorners       *int `json:"home_corners,omitempty"`
+	AwayCorners       *int `json:"away_corners,omitempty"`
+	HomeOffsides      *int `json:"home_offsides,omitempty"`
+	AwayOffsides      *int `json:"away_offsides,omitempty"`
+	HomeYellowCards   *int `json:"home_yellow_cards,omitempty"`
+	AwayYellowCards   *int `json:"away_yellow_cards,omitempty"`
+	HomeRedCards      *int `json:"home_red_cards,omitempty"`
+	AwayRedCards      *int `json:"away_red_cards,omitempty"`
+	HomeFouls         *int `json:"home_fouls,omitempty"`
+	AwayFouls         *int `json:"away_fouls,omitempty"`
 }
 
 func UpdateMatchScore(matchID uint, input ScoreInput) (*models.Match, error) {
@@ -36,13 +52,35 @@ func UpdateMatchScore(matchID uint, input ScoreInput) (*models.Match, error) {
 	if err != nil {
 		return nil, fmt.Errorf("match not found")
 	}
-	match.HomeScore = &input.HomeScore
-	match.AwayScore = &input.AwayScore
-	if input.HomeScore > input.AwayScore {
-		match.WinnerTeamID = &match.HomeTeamID
-	} else if input.AwayScore > input.HomeScore {
-		match.WinnerTeamID = &match.AwayTeamID
+	if input.HomeScore != nil {
+		match.HomeScore = input.HomeScore
 	}
+	if input.AwayScore != nil {
+		match.AwayScore = input.AwayScore
+	}
+	if input.HomeScore != nil && input.AwayScore != nil {
+		if *input.HomeScore > *input.AwayScore {
+			match.WinnerTeamID = &match.HomeTeamID
+		} else if *input.AwayScore > *input.HomeScore {
+			match.WinnerTeamID = &match.AwayTeamID
+		}
+	}
+	if input.HomePossession != nil { match.HomePossession = input.HomePossession }
+	if input.AwayPossession != nil { match.AwayPossession = input.AwayPossession }
+	if input.HomeShots != nil { match.HomeShots = input.HomeShots }
+	if input.AwayShots != nil { match.AwayShots = input.AwayShots }
+	if input.HomeShotsOnTarget != nil { match.HomeShotsOnTarget = input.HomeShotsOnTarget }
+	if input.AwayShotsOnTarget != nil { match.AwayShotsOnTarget = input.AwayShotsOnTarget }
+	if input.HomeCorners != nil { match.HomeCorners = input.HomeCorners }
+	if input.AwayCorners != nil { match.AwayCorners = input.AwayCorners }
+	if input.HomeOffsides != nil { match.HomeOffsides = input.HomeOffsides }
+	if input.AwayOffsides != nil { match.AwayOffsides = input.AwayOffsides }
+	if input.HomeYellowCards != nil { match.HomeYellowCards = input.HomeYellowCards }
+	if input.AwayYellowCards != nil { match.AwayYellowCards = input.AwayYellowCards }
+	if input.HomeRedCards != nil { match.HomeRedCards = input.HomeRedCards }
+	if input.AwayRedCards != nil { match.AwayRedCards = input.AwayRedCards }
+	if input.HomeFouls != nil { match.HomeFouls = input.HomeFouls }
+	if input.AwayFouls != nil { match.AwayFouls = input.AwayFouls }
 	if err := repositories.UpdateMatch(match); err != nil {
 		return nil, err
 	}

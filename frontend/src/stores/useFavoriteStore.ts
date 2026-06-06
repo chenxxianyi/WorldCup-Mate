@@ -81,9 +81,20 @@ export const useFavoriteStore = defineStore('favorite', () => {
     }
   }
 
+  async function addMatchFavorite(matchId: number) {
+    if (favoriteMatchIds.value.includes(matchId)) return
+    const prev = [...favoriteMatchIds.value]
+    favoriteMatchIds.value.push(matchId)
+    try {
+      await apiAddFavoriteMatch(matchId)
+    } catch {
+      favoriteMatchIds.value = prev
+    }
+  }
+
   return {
     followedTeamIds, favoriteMatchIds, favoriteMatches,
     isTeamFollowed, isMatchFavorite, fetchFavoriteTeams, fetchFavoriteMatches,
-    toggleTeamFollow, toggleMatchFavorite,
+    toggleTeamFollow, toggleMatchFavorite, addMatchFavorite,
   }
 })

@@ -47,3 +47,11 @@ func GetFavoriteMatches(userID uint) ([]models.UserFavoriteMatch, error) {
 		Where("user_id = ?", userID).Find(&favs).Error
 	return favs, err
 }
+
+func ListUserIDsByFavoriteMatch(matchID uint) ([]uint, error) {
+	var ids []uint
+	err := database.DB.Model(&models.UserFavoriteMatch{}).
+		Where("match_id = ?", matchID).
+		Pluck("user_id", &ids).Error
+	return ids, err
+}

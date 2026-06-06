@@ -49,6 +49,14 @@ type Config struct {
 	AITemperature                 float64
 	AIMaxTokens                   int
 	AICacheEnabled                bool
+	LineupAlertEnabled            bool
+	LineupAlertScanIntervalSeconds int
+	LineupAlertWindowBeforeMinutes int
+	LineupAlertWindowAfterMinutes  int
+	PostMatchSummaryEnabled        bool
+	PostMatchSummaryScanIntervalSeconds int
+	PostMatchSummaryLookbackHours      int
+	PostMatchSummaryAutoGenerate       bool
 }
 
 func Load() *Config {
@@ -94,6 +102,14 @@ func Load() *Config {
 		AITemperature:                 getFloatEnv("AI_TEMPERATURE", 0.7),
 		AIMaxTokens:                   getIntEnv("AI_MAX_TOKENS", 1200),
 		AICacheEnabled:                getBoolEnv("AI_CACHE_ENABLED", true),
+		LineupAlertEnabled:            getBoolEnv("LINEUP_ALERT_ENABLED", true),
+		LineupAlertScanIntervalSeconds: getIntEnv("LINEUP_ALERT_SCAN_INTERVAL_SECONDS", 120),
+		LineupAlertWindowBeforeMinutes: getIntEnv("LINEUP_ALERT_WINDOW_BEFORE_MINUTES", 120),
+		LineupAlertWindowAfterMinutes:  getIntEnv("LINEUP_ALERT_WINDOW_AFTER_MINUTES", 30),
+		PostMatchSummaryEnabled:        getBoolEnv("POST_MATCH_SUMMARY_ENABLED", true),
+		PostMatchSummaryScanIntervalSeconds: getIntEnv("POST_MATCH_SUMMARY_SCAN_INTERVAL_SECONDS", 600),
+		PostMatchSummaryLookbackHours:      getIntEnv("POST_MATCH_SUMMARY_LOOKBACK_HOURS", 24),
+		PostMatchSummaryAutoGenerate:       getBoolEnv("POST_MATCH_SUMMARY_AUTO_GENERATE", true),
 	}
 }
 

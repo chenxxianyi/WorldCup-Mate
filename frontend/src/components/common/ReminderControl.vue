@@ -87,7 +87,7 @@ async function createReminders() {
 </script>
 
 <template>
-  <div class="reminder-control" @click.stop>
+  <div class="reminder-control" :class="{ 'pill-mode': mode === 'pill' }" @click.stop>
     <button
       v-if="mode === 'icon'"
       class="icon-trigger"
@@ -110,7 +110,10 @@ async function createReminders() {
         class="material-symbols-outlined"
         :style="hasReminder ? 'font-variation-settings: \'FILL\' 1' : ''"
       >notifications</span>
-      {{ hasReminder ? '取消提醒' : '设置提醒' }}
+      <span class="pill-copy">
+        <span>{{ hasReminder ? '取消提醒' : '设置提醒' }}</span>
+        <small v-if="hasReminder && currentSummary">{{ currentSummary }}</small>
+      </span>
     </button>
 
     <div v-if="open && !hasReminder" class="reminder-popover">
@@ -157,10 +160,6 @@ async function createReminders() {
         </button>
       </div>
     </div>
-
-    <div v-if="hasReminder && mode === 'pill' && currentSummary" class="summary">
-      {{ currentSummary }}
-    </div>
   </div>
 </template>
 
@@ -169,6 +168,10 @@ async function createReminders() {
   position: relative;
   display: inline-grid;
   gap: 6px;
+}
+
+.reminder-control.pill-mode {
+  width: 100%;
 }
 
 .icon-trigger {
@@ -193,13 +196,44 @@ async function createReminders() {
 }
 
 .reminder-pill {
+  width: 100%;
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  padding: 0 14px;
 }
 
 .reminder-pill .material-symbols-outlined {
   font-size: 18px;
+}
+
+.pill-copy {
+  min-width: 0;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.pill-copy span,
+.pill-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pill-copy span {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.pill-copy small {
+  opacity: 0.72;
+  font-size: 12px;
+  font-weight: 750;
 }
 
 .reminder-popover {
@@ -299,8 +333,15 @@ async function createReminders() {
   cursor: wait;
 }
 
-.summary {
-  color: var(--muted);
-  font-size: 12px;
+@media (max-width: 390px) {
+  .pill-copy {
+    display: grid;
+    gap: 1px;
+    line-height: 1.05;
+  }
+
+  .pill-copy small {
+    font-size: 11px;
+  }
 }
 </style>

@@ -91,6 +91,7 @@ func main() {
 		&models.Reminder{},
 		&models.GroupStanding{},
 		&models.Notification{},
+		&models.UserMatchEventLog{},
 		&models.SyncState{},
 		&models.AIConversation{},
 		&models.AIMessage{},
@@ -118,6 +119,22 @@ func main() {
 	// Setup routes and start
 	r := routes.Setup()
 
+	// Configure lineup alert
+	services.ConfigureLineupAlert(services.LineupAlertConfig{
+		Enabled:      cfg.LineupAlertEnabled,
+		Interval:     time.Duration(cfg.LineupAlertScanIntervalSeconds) * time.Second,
+		WindowBefore: time.Duration(cfg.LineupAlertWindowBeforeMinutes) * time.Minute,
+		WindowAfter:  time.Duration(cfg.LineupAlertWindowAfterMinutes) * time.Minute,
+	})
+
+	// Configure post-match summary job
+	jobs.ConfigurePostMatchSummaryJob(jobs.PostMatchSummaryJobConfig{
+		Enabled:       cfg.PostMatchSummaryEnabled,
+		Interval:      time.Duration(cfg.PostMatchSummaryScanIntervalSeconds) * time.Second,
+		LookbackHours: time.Duration(cfg.PostMatchSummaryLookbackHours) * time.Hour,
+		AutoGenerate:  cfg.PostMatchSummaryAutoGenerate,
+	})
+
 	// Serve uploaded files
 	os.MkdirAll("uploads/avatars", 0755)
 	r.Static("/uploads", "uploads")
@@ -132,6 +149,8 @@ func main() {
 	jobs.StartMatchSyncer()
 	jobs.StartPlayerSyncer()
 	jobs.StartLineupSyncer()
+	jobs.StartLineupAlertScanner()
+	jobs.StartPostMatchSummaryScanner()
 
 	log.Printf("Server starting on %s", addr)
 	if err := r.RunListener(listener); err != nil {

@@ -27,6 +27,22 @@ type Match struct {
 	StatusDetail     string         `gorm:"size:30" json:"status_detail"`
 	LiveMinute       *int           `json:"live_minute"`
 	WinnerTeamID     *uint          `json:"winner_team_id"`
+	HomePossession    *int           `json:"home_possession"`
+	AwayPossession    *int           `json:"away_possession"`
+	HomeShots         *int           `json:"home_shots"`
+	AwayShots         *int           `json:"away_shots"`
+	HomeShotsOnTarget *int           `json:"home_shots_on_target"`
+	AwayShotsOnTarget *int           `json:"away_shots_on_target"`
+	HomeCorners       *int           `json:"home_corners"`
+	AwayCorners       *int           `json:"away_corners"`
+	HomeOffsides      *int           `json:"home_offsides"`
+	AwayOffsides      *int           `json:"away_offsides"`
+	HomeYellowCards   *int           `json:"home_yellow_cards"`
+	AwayYellowCards   *int           `json:"away_yellow_cards"`
+	HomeRedCards      *int           `json:"home_red_cards"`
+	AwayRedCards      *int           `json:"away_red_cards"`
+	HomeFouls         *int           `json:"home_fouls"`
+	AwayFouls         *int           `json:"away_fouls"`
 	ExternalProvider string         `gorm:"size:30;index" json:"external_provider"`
 	ExternalID       string         `gorm:"size:64;index" json:"external_id"`
 	LastSyncedAt     *time.Time     `json:"last_synced_at"`

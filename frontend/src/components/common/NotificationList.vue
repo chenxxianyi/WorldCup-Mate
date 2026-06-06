@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useNotificationStore } from '@/stores/useNotificationStore'
+import type { NotificationItem } from '@/stores/useNotificationStore'
 
 const auth = useAuthStore()
 const notification = useNotificationStore()
+const router = useRouter()
 
 function timeText(value: string) {
   if (!value) return ''
@@ -16,6 +19,23 @@ function timeText(value: string) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function typeText(type: string) {
+  if (type === 'lineup') return '首发'
+  if (type === 'post_match_summary') return '赛后'
+  if (type === 'reminder') return '提醒'
+  return '通知'
+}
+
+async function openNotification(item: NotificationItem) {
+  if (!item.is_read) {
+    await notification.markRead(item.id)
+  }
+
+  if (item.target_type === 'match' && item.target_id) {
+    router.push(`/matches/${item.target_id}`)
+  }
 }
 
 onMounted(() => {
@@ -45,10 +65,11 @@ onMounted(() => {
         :key="item.id"
         class="notification-item"
         :class="{ unread: !item.is_read }"
-        @click="!item.is_read && notification.markRead(item.id)"
+        @click="openNotification(item)"
       >
         <span class="dot"></span>
         <span class="notification-copy">
+          <span class="notice-type">{{ typeText(item.type) }}</span>
           <b>{{ item.title }}</b>
           <small>{{ item.content }}</small>
         </span>
@@ -129,6 +150,19 @@ onMounted(() => {
 
 .notification-item.unread .dot {
   background: var(--primary);
+}
+
+.notice-type {
+  width: fit-content;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--card));
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .notification-copy {

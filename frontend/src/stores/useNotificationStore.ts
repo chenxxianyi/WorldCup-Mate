@@ -12,6 +12,8 @@ export interface NotificationItem {
   title: string
   content: string
   type: string
+  target_type?: string
+  target_id?: number
   is_read: boolean
   created_at: string
 }

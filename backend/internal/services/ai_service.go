@@ -108,6 +108,22 @@ type ShareCopyRequest struct {
 	Length   string `json:"length" binding:"required"`
 }
 
+type PostMatchSummaryRequest struct {
+	MatchID      uint `json:"match_id" binding:"required"`
+	ForceRefresh bool `json:"force_refresh"`
+}
+
+type PostMatchSummaryResponse struct {
+	Summary             string    `json:"summary"`
+	ScoreLine           string    `json:"score_line"`
+	KeyTakeaways        []string  `json:"key_takeaways"`
+	QualificationImpact string    `json:"qualification_impact"`
+	WorthWatching       string    `json:"worth_watching"`
+	SpoilerLevel        string    `json:"spoiler_level"`
+	DataNote            string    `json:"data_note"`
+	GeneratedAt         time.Time `json:"generated_at"`
+}
+
 type ShareCopyResponse struct {
 	Title   string   `json:"title,omitempty"`
 	Content string   `json:"content"`
@@ -204,6 +220,10 @@ func GenerateShareCopy(ctx context.Context, req ShareCopyRequest, userID *uint, 
 	return currentAI().GenerateShareCopy(ctx, req, userID, ip)
 }
 
+func GeneratePostMatchSummary(ctx context.Context, req PostMatchSummaryRequest, userID *uint, ip string) (*PostMatchSummaryResponse, error) {
+	return currentAI().GeneratePostMatchSummary(ctx, req, userID, ip)
+}
+
 func Chat(ctx context.Context, req AIChatRequest, userID uint, ip string) (*AIChatResponse, error) {
 	return currentAI().Chat(ctx, req, userID, ip)
 }
@@ -242,6 +262,10 @@ func currentAI() *AIService {
 		_ = ConfigureAI(AIServiceConfig{Provider: "openai", Model: "gpt-4o-mini", DailyLimitUser: 50, MaxTokens: 1200, CacheEnabled: true})
 	}
 	return aiSvc
+}
+
+func GetAIProvider() string {
+	return currentAI().cfg.Provider
 }
 
 func (s *AIService) GenerateMatchInsight(ctx context.Context, req MatchInsightRequest, userID *uint, ip string) (*MatchInsightResponse, error) {
@@ -476,6 +500,162 @@ func (s *AIService) GenerateShareCopy(ctx context.Context, req ShareCopyRequest,
 	s.saveGenerated(userID, "share_copy", "match", req.MatchID, cacheKey, jsonText, raw, providerRes)
 	s.logUsage(userID, ip, "share_copy", "success", nil, providerRes, latency)
 	return &res, nil
+}
+
+func (s *AIService) GeneratePostMatchSummary(ctx context.Context, req PostMatchSummaryRequest, userID *uint, ip string) (*PostMatchSummaryResponse, error) {
+	if req.MatchID == 0 {
+		return nil, fmt.Errorf("请选择比赛")
+	}
+
+	// Check match exists and is finished
+	match, err := repositories.GetMatchByID(req.MatchID)
+	if err != nil {
+		s.logUsage(userID, ip, "post_match_summary", "failed", err, nil, 0)
+		return nil, fmt.Errorf("比赛不存在")
+	}
+	if match.Status != "finished" {
+		return nil, fmt.Errorf("post match summary is only available after match finished")
+	}
+	if match.HomeScore == nil || match.AwayScore == nil {
+		return nil, fmt.Errorf("比赛比分尚未更新")
+	}
+
+	// Check cache
+	cacheKey := s.cacheKey("post_match_summary", fmt.Sprintf("%d", match.ID))
+	var cached PostMatchSummaryResponse
+	if s.getCached(ctx, cacheKey, req.ForceRefresh, &cached) {
+		return &cached, nil
+	}
+
+	// Build context with match info + lineups
+	factCtx := s.buildPostMatchContext(match)
+	if err := s.checkLimit(ctx, userID); err != nil {
+		return nil, err
+	}
+
+	prompt := `TASK:post_match_summary
+Return JSON with summary, score_line, key_takeaways, qualification_impact, worth_watching, spoiler_level, data_note.
+Rules:
+- Use ONLY the facts provided in Context below.
+- Do NOT invent goals, cards, injuries, shots, possession, or news that are not in the facts.
+- If only score, lineups, and standings are available, state that clearly.
+- Output in Chinese.
+Context:
+` + factCtx
+
+	raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
+	if err != nil {
+		s.logUsage(userID, ip, "post_match_summary", "failed", err, providerRes, latency)
+		return nil, aiUserError(err)
+	}
+	if err := ai.ValidateOutput(raw); err != nil {
+		s.logUsage(userID, ip, "post_match_summary", "failed", err, providerRes, latency)
+		return nil, fmt.Errorf("AI 输出未通过安全检查")
+	}
+
+	res, jsonText, err := ai.DecodeJSON(raw, PostMatchSummaryResponse{})
+	if err != nil || strings.TrimSpace(res.Summary) == "" {
+		s.logUsage(userID, ip, "post_match_summary", "failed", fmt.Errorf("invalid AI response format"), providerRes, latency)
+		return nil, fmt.Errorf("AI 返回内容格式不正确，请稍后重试")
+	}
+	res.KeyTakeaways = nonNilStrings(res.KeyTakeaways)
+	if res.GeneratedAt.IsZero() {
+		res.GeneratedAt = time.Now().UTC()
+	}
+	if res.DataNote == "" {
+		res.DataNote = "当前摘要仅基于比分、阵容和积分信息生成。"
+	}
+	if res.SpoilerLevel == "" {
+		res.SpoilerLevel = "full"
+	}
+
+	s.saveGenerated(userID, "post_match_summary", "match", match.ID, cacheKey, jsonText, raw, providerRes)
+	s.setCached(ctx, cacheKey, res, 2*time.Hour)
+	s.logUsage(userID, ip, "post_match_summary", "success", nil, providerRes, latency)
+	return &res, nil
+}
+
+func (s *AIService) buildPostMatchContext(match *models.Match) string {
+	lines := []string{
+		fmt.Sprintf("Match ID: %d", match.ID),
+		fmt.Sprintf("Match No: %d", match.MatchNo),
+		fmt.Sprintf("Stage: %s", match.Stage),
+		fmt.Sprintf("Status: %s", match.Status),
+		fmt.Sprintf("Kickoff UTC: %s", match.KickoffTimeUTC.UTC().Format(time.RFC3339)),
+		fmt.Sprintf("Home team: %s (%s)", match.HomeTeam.Name, match.HomeTeam.FIFACode),
+		fmt.Sprintf("Away team: %s (%s)", match.AwayTeam.Name, match.AwayTeam.FIFACode),
+		fmt.Sprintf("Score: %d-%d", *match.HomeScore, *match.AwayScore),
+		fmt.Sprintf("City: %s", match.City.Name),
+		fmt.Sprintf("Stadium: %s", match.Stadium.Name),
+	}
+	if match.Group != nil {
+		lines = append(lines, fmt.Sprintf("Group: %s", match.Group.Name))
+	}
+
+	// Add lineup and formation info
+	lineups, err := repositories.GetLineupsByMatch(match.ID)
+	if err == nil && len(lineups) > 0 {
+		lines = append(lines, "Lineups:")
+		for _, lu := range lineups {
+			side := lu.Side
+			formation := lu.Formation
+			if formation == "" {
+				formation = "unknown"
+			}
+			teamName := lu.Team.Name
+			if teamName == "" {
+				teamName = lu.Team.NameEn
+			}
+			lines = append(lines, fmt.Sprintf("  %s (%s), formation: %s", side, teamName, formation))
+			startingPlayers := make([]string, 0)
+			substitutes := make([]string, 0)
+			for _, p := range lu.Players {
+				name := p.Name
+				if name == "" {
+					name = p.NameEn
+				}
+				playerStr := fmt.Sprintf("#%d %s (%s)", p.ShirtNumber, name, p.Position)
+				if p.Role == "starting" {
+					startingPlayers = append(startingPlayers, playerStr)
+				} else {
+					substitutes = append(substitutes, playerStr)
+				}
+			}
+			if len(startingPlayers) > 0 {
+				lines = append(lines, "  Starting XI:")
+				for _, pl := range startingPlayers {
+					lines = append(lines, "    - "+pl)
+				}
+			}
+			if len(substitutes) > 0 {
+				lines = append(lines, "  Substitutes:")
+				for _, pl := range substitutes {
+					lines = append(lines, "    - "+pl)
+				}
+			}
+		}
+	} else {
+		lines = append(lines, "Lineups: not available")
+	}
+
+	// Add group standings
+	if match.GroupID != nil {
+		lines = append(lines, "Group standings:")
+		standings, err := repositories.GetStandingsByGroupID(*match.GroupID)
+		if err == nil && len(standings) > 0 {
+			for _, s := range standings {
+				teamName := s.Team.Name
+				if teamName == "" {
+					teamName = s.Team.NameEn
+				}
+				lines = append(lines, fmt.Sprintf("  - %d. %s: %d pts, GD %d, status %s", s.Rank, teamName, s.Points, s.GoalDifference, s.QualificationStatus))
+			}
+		} else {
+			lines = append(lines, "  No standings data yet")
+		}
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 func (s *AIService) Chat(ctx context.Context, req AIChatRequest, userID uint, ip string) (*AIChatResponse, error) {

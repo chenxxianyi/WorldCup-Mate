@@ -18,6 +18,8 @@ const navItems = [
 
 function isActive(itemRoute: string) {
   if (itemRoute === '/') return route.path === '/'
+  if (itemRoute === '/schedule') return route.path.startsWith('/schedule') || route.path.startsWith('/matches') || route.path.startsWith('/bracket')
+  if (itemRoute === '/teams') return route.path.startsWith('/teams')
   return route.path.startsWith(itemRoute)
 }
 </script>

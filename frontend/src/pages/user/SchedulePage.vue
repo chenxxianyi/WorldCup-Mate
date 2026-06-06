@@ -332,9 +332,14 @@ watch(search, () => {
     <div class="section-head">
       <div>
         <h2>全部赛程</h2>
-        <span>默认展示最近三天，下滑继续加载</span>
       </div>
-      <SyncStatusBadge />
+      <button class="pill-btn bracket-entry" @click="router.push('/bracket')">
+        <span class="material-symbols-outlined">account_tree</span>
+        对阵图
+      </button>
+      <div class="schedule-actions">
+        <SyncStatusBadge />
+      </div>
     </div>
 
     <SearchInput v-model="search" placeholder="搜索球队 / 城市 / 球场" />
@@ -360,7 +365,8 @@ watch(search, () => {
 
     <div ref="loadMoreTarget" class="load-more" :class="{ active: hasMore && !loading }">
       {{ loadText }}
-    </div>
+    </div>
+
   </div>
 </template>
 
@@ -368,9 +374,14 @@ watch(search, () => {
 .section-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 10px;
   margin-bottom: 12px;
+}
+
+.section-head > div:first-of-type {
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
 .section-head h2 {
@@ -382,6 +393,27 @@ watch(search, () => {
 .section-head span {
   color: var(--muted);
   font-size: 13px;
+}
+
+.schedule-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.bracket-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.bracket-entry .material-symbols-outlined {
+  font-size: 16px;
 }
 
 .section {
