@@ -2,7 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types/user'
 import { normalizeUser } from '@/types/user'
-import { apiLogin as apiLoginReq, apiRegister as apiRegisterReq, apiGetProfile, apiLogout as apiLogoutReq, apiUploadAvatar, apiChangePassword } from '@/api/auth'
+import { apiLogin as apiLoginReq, apiRegister as apiRegisterReq, apiGetProfile, apiUploadAvatar, apiChangePassword } from '@/api/auth'
+import { useFavoriteStore } from '@/stores/useFavoriteStore'
+import { useReminderStore } from '@/stores/useReminderStore'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 const TOKEN_KEY = 'wm-token'
 const getStoredToken = () => localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
@@ -54,20 +57,30 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = normalizeUser(res)
       return user.value
     } catch {
-      logout()
+      clearSession()
       return null
     } finally {
       isCheckingProfile.value = false
     }
   }
 
-  function logout() {
+  function clearSession() {
     token.value = null
     user.value = null
     isCheckingProfile.value = false
     localStorage.removeItem(TOKEN_KEY)
     sessionStorage.removeItem(TOKEN_KEY)
-    apiLogoutReq().catch(() => {})
+    clearUserScopedStores()
+  }
+
+  function logout() {
+    clearSession()
+  }
+
+  function clearUserScopedStores() {
+    useFavoriteStore().clearFavorites()
+    useReminderStore().clearReminders()
+    useNotificationStore().clearNotifications()
   }
 
   async function uploadAvatar(file: File) {

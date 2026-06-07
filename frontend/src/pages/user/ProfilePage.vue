@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import NotificationList from '@/components/common/NotificationList.vue'
 import StatCard from '@/components/common/StatCard.vue'
+import ChangePasswordModal from '@/components/common/ChangePasswordModal.vue'
 import { useSettingStore } from '@/stores/useSettingStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useReminderStore } from '@/stores/useReminderStore'
@@ -23,6 +24,10 @@ const notificationEmail = ref('')
 const emailSaving = ref(false)
 
 function startEditEmail() {
+  if (!auth.isLoggedIn) {
+    router.replace('/login').catch(() => {})
+    return
+  }
   notificationEmail.value = auth.user?.notificationEmail || ''
   editingEmail.value = true
 }
@@ -33,6 +38,11 @@ function cancelEditEmail() {
 }
 
 async function saveEmail() {
+  if (!auth.isLoggedIn) {
+    cancelEditEmail()
+    router.replace('/login').catch(() => {})
+    return
+  }
   emailSaving.value = true
   try {
     await apiUpdateProfile({ notification_email: notificationEmail.value })
@@ -65,6 +75,10 @@ const avatarTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const maxAvatarSize = 5 * 1024 * 1024
 
 function triggerUpload() {
+  if (!auth.isLoggedIn) {
+    router.replace('/login').catch(() => {})
+    return
+  }
   fileInput.value?.click()
 }
 
@@ -72,6 +86,11 @@ async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  if (!auth.isLoggedIn) {
+    input.value = ''
+    router.replace('/login').catch(() => {})
+    return
+  }
   if (!avatarTypes.includes(file.type)) {
     alert('仅支持 JPG、PNG、GIF、WebP 图片')
     input.value = ''
@@ -95,44 +114,13 @@ async function onFileChange(e: Event) {
 
 // Change password
 const showPwdModal = ref(false)
-const oldPwd = ref('')
-const newPwd = ref('')
-const confirmPwd = ref('')
-const pwdLoading = ref(false)
-const pwdError = ref('')
 
 function openPwdModal() {
-  oldPwd.value = ''
-  newPwd.value = ''
-  confirmPwd.value = ''
-  pwdError.value = ''
+  if (!auth.isLoggedIn) {
+    router.replace('/login').catch(() => {})
+    return
+  }
   showPwdModal.value = true
-}
-
-async function submitPassword() {
-  pwdError.value = ''
-  if (!oldPwd.value || !newPwd.value) {
-    pwdError.value = '请填写所有字段'
-    return
-  }
-  if (newPwd.value.length < 6) {
-    pwdError.value = '新密码至少 6 位'
-    return
-  }
-  if (newPwd.value !== confirmPwd.value) {
-    pwdError.value = '两次输入的密码不一致'
-    return
-  }
-  pwdLoading.value = true
-  try {
-    await auth.changePassword(oldPwd.value, newPwd.value)
-    showPwdModal.value = false
-    alert('密码修改成功')
-  } catch (err: any) {
-    pwdError.value = err?.response?.data?.message || '修改失败，请检查旧密码'
-  } finally {
-    pwdLoading.value = false
-  }
 }
 
 onMounted(() => {
@@ -143,6 +131,17 @@ onMounted(() => {
     reminder.fetchReminders()
   }
 })
+
+watch(
+  () => auth.isLoggedIn,
+  (loggedIn) => {
+    if (loggedIn) return
+    editingEmail.value = false
+    emailSaving.value = false
+    uploading.value = false
+    showPwdModal.value = false
+  },
+)
 </script>
 
 <template>
@@ -230,35 +229,9 @@ onMounted(() => {
       </div>
     </section>
 
-    <NotificationList />
+    <NotificationList v-if="auth.isLoggedIn" />
 
-    <!-- Password Modal -->
-    <Teleport to="body">
-      <div v-if="showPwdModal" class="modal-mask" @click.self="showPwdModal = false">
-        <div class="modal-box">
-          <h3>修改密码</h3>
-          <div class="form-group">
-            <label>旧密码</label>
-            <input v-model="oldPwd" type="password" placeholder="请输入旧密码" />
-          </div>
-          <div class="form-group">
-            <label>新密码</label>
-            <input v-model="newPwd" type="password" placeholder="至少 6 位" />
-          </div>
-          <div class="form-group">
-            <label>确认新密码</label>
-            <input v-model="confirmPwd" type="password" placeholder="再次输入新密码" />
-          </div>
-          <p v-if="pwdError" class="form-error">{{ pwdError }}</p>
-          <div class="modal-actions">
-            <button class="pill-btn" @click="showPwdModal = false">取消</button>
-            <button class="pill-btn primary" :disabled="pwdLoading" @click="submitPassword">
-              {{ pwdLoading ? '提交中...' : '确认修改' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ChangePasswordModal v-model="showPwdModal" />
   </div>
 </template>
 
@@ -372,69 +345,6 @@ onMounted(() => {
 }
 
 /* Modal */
-.modal-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-}
-
-.modal-box {
-  width: min(90vw, 380px);
-  padding: 24px;
-  border-radius: 20px;
-  background: var(--card);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-}
-
-.modal-box h3 {
-  margin: 0 0 18px;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  font-size: 14px;
-  background: var(--card-soft);
-  outline: none;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  border-color: var(--primary);
-}
-
-.form-error {
-  margin: 0 0 12px;
-  color: #dc3545;
-  font-size: 13px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 18px;
-}
-
 .pill-btn {
   padding: 8px 18px;
   border: 1px solid var(--line);
@@ -499,7 +409,7 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.clickable {
+.profile-card h2.clickable {
   color: var(--primary);
   cursor: pointer;
   text-decoration: underline;

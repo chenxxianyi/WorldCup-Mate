@@ -38,24 +38,37 @@ export const useNotificationStore = defineStore('notification', () => {
       const res = await apiListNotifications({ page: 1, page_size: 20 }) as any
       notifications.value = res.list || res || []
       unreadCount.value = notifications.value.filter((item) => !item.is_read).length
+    } catch {
+      notifications.value = []
+      unreadCount.value = 0
     } finally {
       loading.value = false
     }
   }
 
   async function markRead(id: number) {
-    await apiMarkNotificationRead(id)
-    const item = notifications.value.find((n) => n.id === id)
-    if (item && !item.is_read) {
-      item.is_read = true
-      unreadCount.value = Math.max(0, unreadCount.value - 1)
-    }
+    try {
+      await apiMarkNotificationRead(id)
+      const item = notifications.value.find((n) => n.id === id)
+      if (item && !item.is_read) {
+        item.is_read = true
+        unreadCount.value = Math.max(0, unreadCount.value - 1)
+      }
+    } catch {}
   }
 
   async function markAllRead() {
-    await apiMarkAllNotificationsRead()
-    notifications.value = notifications.value.map((item) => ({ ...item, is_read: true }))
+    try {
+      await apiMarkAllNotificationsRead()
+      notifications.value = notifications.value.map((item) => ({ ...item, is_read: true }))
+      unreadCount.value = 0
+    } catch {}
+  }
+
+  function clearNotifications() {
+    notifications.value = []
     unreadCount.value = 0
+    loading.value = false
   }
 
   return {
@@ -66,5 +79,6 @@ export const useNotificationStore = defineStore('notification', () => {
     fetchNotifications,
     markRead,
     markAllRead,
+    clearNotifications,
   }
 })

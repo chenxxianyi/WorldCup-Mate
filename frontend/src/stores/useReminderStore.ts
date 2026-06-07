@@ -35,6 +35,11 @@ export const useReminderStore = defineStore('reminder', () => {
     matchReminderIds.value = new Set(reminders.value.map((r) => r.match_id))
   }
 
+  function clearReminders() {
+    reminders.value = []
+    refreshMatchReminderIds()
+  }
+
   async function fetchReminders() {
     try {
       const res = await apiListReminders() as any[]
@@ -92,6 +97,7 @@ export const useReminderStore = defineStore('reminder', () => {
   return {
     reminders,
     count,
+    clearReminders,
     hasReminder,
     remindersForMatch,
     fetchReminders,

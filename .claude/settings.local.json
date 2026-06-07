@@ -29,7 +29,22 @@
       "Bash(findstr LISTENING)",
       "Bash(taskkill /PID 24720 /F)",
       "PowerShell(Stop-Process -Id 24720 -Force)",
-      "Bash(npx tailwindcss *)"
+      "Bash(npx tailwindcss *)",
+      "Read(//c/Users/chenxianyi/.codex/**)",
+      "Read(//c/Windows/System32/WindowsPowerShell/v1.0/**)",
+      "Bash(powershell -Command \"echo 'PowerShell works'\")",
+      "Bash(pwsh -Command \"echo 'pwsh works'\")",
+      "Bash(docker --version)",
+      "Bash(docker info *)",
+      "Bash(codex --version)",
+      "Bash(codex --help)",
+      "Bash(codex sandbox *)",
+      "Bash(codex debug *)",
+      "Bash(cd /d/MyProject/WorldCup-Mate/frontend && grep -rl \"退出登录\\\\|logout\\\\|loginOut\\\\|signOut\" src --include=\"*.vue\" --include=\"*.ts\" --include=\"*.js\" -i)",
+      "Read(//d/d/MyProject/WorldCup-Mate/frontend/**)",
+      "Bash(xargs grep -l \"beforeEach\\\\|createRouter\\\\|requiresAuth\")",
+      "WebSearch",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }

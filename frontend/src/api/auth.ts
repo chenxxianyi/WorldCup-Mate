@@ -8,10 +8,6 @@ export function apiLogin(data: { email: string; password: string; remember_me?: 
   return request.post('/auth/login', data) as Promise<{ token: string; user: any }>
 }
 
-export function apiLogout() {
-  return request.post('/auth/logout')
-}
-
 export function apiGetProfile() {
   return request.get('/user/profile') as Promise<any>
 }

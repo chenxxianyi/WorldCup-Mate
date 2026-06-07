@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useNotificationStore } from '@/stores/useNotificationStore'
 import { useSettingStore } from '@/stores/useSettingStore'
+import { LOGOUT_LOGIN_PATH, clearAuthStorage } from '@/utils/logout'
 
 const settings = useSettingStore()
 const auth = useAuthStore()
 const notification = useNotificationStore()
-const router = useRouter()
 
-function refreshUnread() {
-  if (auth.isLoggedIn) notification.fetchUnreadCount()
+function refreshUnread(loggedIn = auth.isLoggedIn) {
+  if (loggedIn) notification.fetchUnreadCount()
 }
 
 onMounted(refreshUnread)
@@ -36,7 +35,7 @@ watch(() => auth.isLoggedIn, refreshUnread)
 
     <div class="top-actions">
       <template v-if="auth.isLoggedIn">
-        <button class="icon-btn user-btn" title="个人中心" @click="router.push('/profile')">
+        <button class="icon-btn user-btn" title="个人中心" @click="$router.push('/profile')">
           <span class="btn-label">{{ auth.user?.username || '用户' }}</span>
           <span v-if="notification.unreadCount > 0" class="badge-dot">{{ notification.unreadCount > 9 ? '9+' : notification.unreadCount }}</span>
           <template v-if="auth.user?.avatar && auth.user.avatar.startsWith('/')">
@@ -46,7 +45,7 @@ watch(() => auth.isLoggedIn, refreshUnread)
             <span class="user-avatar">{{ auth.user?.avatar || 'U' }}</span>
           </template>
         </button>
-        <button class="icon-btn logout-btn" title="退出登录" @click="auth.logout()">
+        <a class="icon-btn logout-btn" :href="LOGOUT_LOGIN_PATH" title="退出登录" @click.capture="clearAuthStorage">
           <span class="btn-label">退出</span>
           <span class="action-orb logout-orb" aria-hidden="true">
             <svg class="action-icon" viewBox="0 0 24 24">
@@ -55,10 +54,10 @@ watch(() => auth.isLoggedIn, refreshUnread)
               <path d="M18 12H9" />
             </svg>
           </span>
-        </button>
+        </a>
       </template>
       <template v-else>
-        <button class="icon-btn login-btn primary-btn" title="登录" @click="router.push('/login')">
+        <button class="icon-btn login-btn primary-btn" title="登录" @click="$router.push('/login')">
           <span class="btn-label">登录</span>
           <span class="action-orb login-orb" aria-hidden="true">
             <svg class="action-icon" viewBox="0 0 24 24">
@@ -191,6 +190,7 @@ watch(() => auth.isLoggedIn, refreshUnread)
   transition: border-color 180ms ease-out, background 180ms ease-out;
   font-size: 13px;
   font-weight: 750;
+  text-decoration: none;
   cursor: pointer;
 }
 

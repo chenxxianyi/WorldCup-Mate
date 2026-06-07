@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { LOGOUT_QUERY_KEY, LOGOUT_QUERY_VALUE, clearAuthStorage } from '@/utils/logout'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -38,6 +39,14 @@ const showTestAccount = import.meta.env.DEV
 
 watch(autoLogin, (enabled) => {
   if (enabled) rememberPassword.value = true
+})
+
+onMounted(() => {
+  if (route.query[LOGOUT_QUERY_KEY] !== LOGOUT_QUERY_VALUE) return
+
+  clearAuthStorage()
+  auth.logout()
+  router.replace({ name: 'login' }).catch(() => {})
 })
 
 async function handleSubmit() {

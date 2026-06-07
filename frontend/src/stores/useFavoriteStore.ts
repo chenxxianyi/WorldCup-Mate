@@ -15,6 +15,12 @@ export const useFavoriteStore = defineStore('favorite', () => {
   const favoriteMatchIds = ref<number[]>([])
   const favoriteMatches = ref<Match[]>([])
 
+  function clearFavorites() {
+    followedTeamIds.value = []
+    favoriteMatchIds.value = []
+    favoriteMatches.value = []
+  }
+
   function isTeamFollowed(teamId: number) {
     return followedTeamIds.value.includes(teamId)
   }
@@ -94,6 +100,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
 
   return {
     followedTeamIds, favoriteMatchIds, favoriteMatches,
+    clearFavorites,
     isTeamFollowed, isMatchFavorite, fetchFavoriteTeams, fetchFavoriteMatches,
     toggleTeamFollow, toggleMatchFavorite, addMatchFavorite,
   }
