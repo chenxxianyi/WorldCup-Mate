@@ -19,13 +19,15 @@ import (
 )
 
 type RegisterInput struct {
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	Username        string `json:"username" binding:"required"`
+	Email           string `json:"email" binding:"required,email"`
+	Password        string `json:"password" binding:"required,min=6"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,min=6"`
 }
 
 type LoginInput struct {
-	Email      string `json:"email" binding:"required,email"`
+	Account    string `json:"account"`
+	Email      string `json:"email"`
 	Password   string `json:"password" binding:"required"`
 	RememberMe bool   `json:"remember_me"`
 }
@@ -38,9 +40,13 @@ type UpdateProfileInput struct {
 }
 
 func Register(input RegisterInput) (*models.User, error) {
+	if input.Password != input.ConfirmPassword {
+		return nil, errors.New("两次输入的密码不一致")
+	}
+
 	_, err := repositories.GetUserByEmail(input.Email)
 	if err == nil {
-		return nil, errors.New("email already registered")
+		return nil, errors.New("邮箱已被注册")
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -66,13 +72,17 @@ func Register(input RegisterInput) (*models.User, error) {
 }
 
 func Login(input LoginInput) (string, *models.User, error) {
-	user, err := repositories.GetUserByEmail(input.Email)
-	if err != nil {
-		return "", nil, errors.New("invalid email or password")
+	account := strings.TrimSpace(input.Account)
+	if account == "" {
+		account = strings.TrimSpace(input.Email)
+	}
+	if account == "" {
+		return "", nil, errors.New("请输入邮箱或用户名")
 	}
 
-	if !utils.CheckPassword(input.Password, user.PasswordHash) {
-		return "", nil, errors.New("invalid email or password")
+	user, err := findLoginUser(account, input.Password)
+	if err != nil {
+		return "", nil, errors.New("邮箱/用户名或密码错误")
 	}
 
 	tokenTTL := 72 * time.Hour
@@ -84,6 +94,27 @@ func Login(input LoginInput) (string, *models.User, error) {
 		return "", nil, err
 	}
 	return token, user, nil
+}
+
+func findLoginUser(account, password string) (*models.User, error) {
+	if strings.Contains(account, "@") {
+		user, err := repositories.GetUserByEmail(account)
+		if err == nil && utils.CheckPassword(password, user.PasswordHash) {
+			return user, nil
+		}
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	users, err := repositories.ListUsersByUsername(account)
+	if err != nil {
+		return nil, err
+	}
+	for i := range users {
+		if utils.CheckPassword(password, users[i].PasswordHash) {
+			return &users[i], nil
+		}
+	}
+	return nil, gorm.ErrRecordNotFound
 }
 
 func GetProfile(userID uint) (*models.User, error) {

@@ -15,6 +15,12 @@ func GetUserByEmail(email string) (*models.User, error) {
 	return &user, err
 }
 
+func ListUsersByUsername(username string) ([]models.User, error) {
+	var users []models.User
+	err := database.DB.Where("username = ?", username).Order("id ASC").Find(&users).Error
+	return users, err
+}
+
 func GetUserByID(id uint) (*models.User, error) {
 	var user models.User
 	err := database.DB.First(&user, id).Error

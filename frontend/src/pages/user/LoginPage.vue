@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { LOGOUT_QUERY_KEY, LOGOUT_QUERY_VALUE, clearAuthStorage } from '@/utils/logout'
@@ -14,6 +14,7 @@ const SAVED_LOGIN_KEY = 'wm-saved-login'
 const AUTO_LOGIN_KEY = 'wm-auto-login'
 
 type SavedLogin = {
+  account?: string
   email?: string
   password?: string
 }
@@ -29,16 +30,25 @@ function getSavedLogin(): SavedLogin {
 const savedLogin = getSavedLogin()
 const isRegister = ref(false)
 const username = ref('')
-const email = ref(savedLogin.email || '')
+const account = ref(savedLogin.account || savedLogin.email || '')
+const email = ref('')
 const password = ref(savedLogin.password || '')
-const rememberPassword = ref(Boolean(savedLogin.email && savedLogin.password))
+const confirmPassword = ref('')
+const showPassword = ref(false)
+const rememberPassword = ref(Boolean(savedLogin.account && savedLogin.password))
 const autoLogin = ref(localStorage.getItem(AUTO_LOGIN_KEY) === '1')
 const error = ref('')
 const loading = ref(false)
 const showTestAccount = import.meta.env.DEV
+const passwordMismatch = computed(() => isRegister.value && confirmPassword.value.length > 0 && password.value !== confirmPassword.value)
 
 watch(autoLogin, (enabled) => {
   if (enabled) rememberPassword.value = true
+})
+
+watch(isRegister, () => {
+  error.value = ''
+  confirmPassword.value = ''
 })
 
 onMounted(() => {
@@ -51,14 +61,19 @@ onMounted(() => {
 
 async function handleSubmit() {
   error.value = ''
+  if (isRegister.value && password.value !== confirmPassword.value) {
+    error.value = '两次输入的密码不一致'
+    return
+  }
+
   loading.value = true
   try {
     if (isRegister.value) {
-      await auth.register(username.value, email.value, password.value)
+      await auth.register(username.value, email.value, password.value, confirmPassword.value)
     } else {
-      await auth.login(email.value, password.value, autoLogin.value)
+      await auth.login(account.value, password.value, autoLogin.value)
       if (rememberPassword.value) {
-        localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({ email: email.value, password: password.value }))
+        localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({ account: account.value, password: password.value }))
       } else {
         localStorage.removeItem(SAVED_LOGIN_KEY)
       }
@@ -87,12 +102,59 @@ async function handleSubmit() {
           <input v-model="username" placeholder="请输入用户名" required />
         </div>
         <div class="field">
-          <label>邮箱</label>
-          <input v-model="email" type="email" placeholder="请输入邮箱" required />
+          <label>{{ isRegister ? '邮箱' : '邮箱 / 用户名' }}</label>
+          <input
+            v-if="isRegister"
+            v-model="email"
+            type="email"
+            placeholder="请输入邮箱"
+            required
+          />
+          <input
+            v-else
+            v-model="account"
+            type="text"
+            placeholder="请输入邮箱或用户名"
+            autocomplete="username"
+            required
+          />
         </div>
         <div class="field">
           <label>密码</label>
-          <input v-model="password" type="password" placeholder="请输入密码" required />
+          <div class="password-input">
+            <input
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="请输入密码"
+              :minlength="isRegister ? 6 : undefined"
+              :autocomplete="isRegister ? 'new-password' : 'current-password'"
+              required
+            />
+            <button
+              class="password-toggle"
+              type="button"
+              :title="showPassword ? '隐藏密码' : '显示密码'"
+              :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+              :aria-pressed="showPassword"
+              @click="showPassword = !showPassword"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+        <div v-if="isRegister" class="field">
+          <label>确认密码</label>
+          <input
+            v-model="confirmPassword"
+            type="password"
+            placeholder="请再次输入密码"
+            minlength="6"
+            autocomplete="new-password"
+            required
+            :aria-invalid="passwordMismatch"
+            :class="{ invalid: passwordMismatch }"
+          />
+          <p v-if="passwordMismatch" class="field-error">两次输入的密码不一致</p>
         </div>
         <div v-if="!isRegister" class="login-options" aria-label="登录选项">
           <label class="option-row">
@@ -164,6 +226,49 @@ async function handleSubmit() {
 
 .field input:focus {
   border-color: var(--primary);
+}
+
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  padding-right: 52px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 44px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -4px;
+  border-radius: 10px;
+}
+
+.password-toggle .material-symbols-outlined {
+  font-size: 21px;
+  line-height: 1;
+}
+
+.field input.invalid {
+  border-color: var(--live);
+}
+
+.field-error {
+  margin: 6px 0 0;
+  color: var(--live);
+  font-size: 12px;
 }
 
 .login-options {

@@ -102,6 +102,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
 	}
+	if err := database.EnsureUserUsernameIsNotUnique(); err != nil {
+		log.Fatalf("user username index migration failed: %v", err)
+	}
 	if err := database.EnsureNoDefaultAdminPassword(cfg.AppEnv); err != nil {
 		log.Fatalf("security validation failed: %v", err)
 	}

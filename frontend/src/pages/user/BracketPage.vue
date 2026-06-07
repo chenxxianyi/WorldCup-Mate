@@ -107,6 +107,15 @@ function goTeam(teamId?: number) {
   if (teamId) router.push(`/teams/${teamId}`)
 }
 
+function goBack() {
+  const canGoBack = Boolean(window.history.state?.back)
+  if (canGoBack) {
+    router.back()
+    return
+  }
+  router.push('/schedule').catch(() => {})
+}
+
 function winner(m: Match): 'home' | 'away' | null {
   if (m.home_score == null || m.away_score == null) return null
   if (m.home_score > m.away_score) return 'home'
@@ -128,6 +137,12 @@ onMounted(loadAll)
 
 <template>
   <div class="bracket-page">
+    <div class="bracket-nav-row">
+      <button class="back-action" type="button" title="返回" aria-label="返回上一页" @click="goBack">
+        <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      </button>
+    </div>
+
     <div class="page-head">
       <div>
         <h2>淘汰赛对阵图</h2>
@@ -236,7 +251,14 @@ onMounted(loadAll)
 <style scoped>
 .bracket-page {
   display: grid;
-  gap: 14px;
+  gap: 12px;
+}
+
+.bracket-nav-row {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: -2px;
 }
 
 .page-head {
@@ -244,6 +266,43 @@ onMounted(loadAll)
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.page-head > div {
+  min-width: 0;
+}
+
+.back-action {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  margin-left: -10px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  transition: color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out;
+}
+
+.back-action:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.back-action:active {
+  transform: scale(0.97);
+}
+
+.back-action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.back-action .material-symbols-outlined {
+  font-size: 24px;
 }
 
 .page-head h2 {

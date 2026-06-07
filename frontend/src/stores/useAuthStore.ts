@@ -28,16 +28,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function login(email: string, password: string, autoLogin = false) {
-    const res = await apiLoginReq({ email, password, remember_me: autoLogin }) as any
+  async function login(account: string, password: string, autoLogin = false) {
+    const res = await apiLoginReq({ account, password, remember_me: autoLogin }) as any
     persistToken(res.token, autoLogin)
     user.value = normalizeUser(res.user)
     isCheckingProfile.value = false
     return user.value
   }
 
-  async function register(username: string, email: string, password: string) {
-    const res = await apiRegisterReq({ username, email, password }) as any
+  async function register(username: string, email: string, password: string, confirmPassword: string) {
+    const res = await apiRegisterReq({ username, email, password, confirm_password: confirmPassword }) as any
     token.value = res.token
     sessionStorage.setItem(TOKEN_KEY, res.token)
     localStorage.removeItem(TOKEN_KEY)
