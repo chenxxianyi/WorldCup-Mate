@@ -1,6 +1,9 @@
 package ai
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestDecodeJSONExtractsObject(t *testing.T) {
 	type payload struct {
@@ -21,7 +24,19 @@ func TestValidateOutputBlocksUnsafeTerms(t *testing.T) {
 	if err := ValidateOutput("this mentions odds and betting lines"); err == nil {
 		t.Fatal("expected unsafe output to be rejected")
 	}
+	if err := ValidateOutput("这场比赛不要参考赔率和盘口"); err == nil {
+		t.Fatal("expected Chinese betting terms to be rejected")
+	}
 	if err := ValidateOutput("watch the opening tempo and substitutions"); err != nil {
 		t.Fatalf("expected safe output, got %v", err)
+	}
+}
+
+func TestPromptRequiresContextForLiveFacts(t *testing.T) {
+	prompt := BuildSystemPrompt()
+	for _, want := range []string{"不能把模型记忆当作最新事实", "不要声称已经联网查询"} {
+		if !strings.Contains(prompt, want) {
+			t.Fatalf("prompt should contain %q, got: %s", want, prompt)
+		}
 	}
 }

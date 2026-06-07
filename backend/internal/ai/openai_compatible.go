@@ -13,19 +13,21 @@ import (
 )
 
 type OpenAICompatibleConfig struct {
-	Name    string
-	BaseURL string
-	APIKey  string
-	Model   string
-	Timeout time.Duration
+	Name     string
+	BaseURL  string
+	APIKey   string
+	Model    string
+	Timeout  time.Duration
+	Thinking string
 }
 
 type OpenAICompatibleProvider struct {
-	name   string
-	base   string
-	key    string
-	model  string
-	client *http.Client
+	name     string
+	base     string
+	key      string
+	model    string
+	thinking string
+	client   *http.Client
 }
 
 func NewOpenAICompatibleProvider(cfg OpenAICompatibleConfig) *OpenAICompatibleProvider {
@@ -46,11 +48,12 @@ func NewOpenAICompatibleProvider(cfg OpenAICompatibleConfig) *OpenAICompatiblePr
 		timeout = 60 * time.Second
 	}
 	return &OpenAICompatibleProvider{
-		name:   name,
-		base:   base,
-		key:    cfg.APIKey,
-		model:  model,
-		client: &http.Client{Timeout: timeout},
+		name:     name,
+		base:     base,
+		key:      cfg.APIKey,
+		model:    model,
+		thinking: strings.TrimSpace(cfg.Thinking),
+		client:   &http.Client{Timeout: timeout},
 	}
 }
 
@@ -83,27 +86,34 @@ func (p *OpenAICompatibleProvider) Chat(ctx context.Context, req ChatRequest) (*
 		"temperature": req.Temperature,
 		"max_tokens":  req.MaxTokens,
 	}
+	addThinkingParams(payload, firstNonEmpty(req.Thinking, p.thinking))
+	if req.JSONMode {
+		payload["response_format"] = map[string]string{"type": "json_object"}
+	}
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode AI request")
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.base+"/chat/completions", bytes.NewReader(body))
+	resp, respBody, err := p.chatCompletion(ctx, body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create AI request")
+		return nil, err
 	}
-	httpReq.Header.Set("Authorization", "Bearer "+p.key)
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := p.client.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("AI provider request failed")
-	}
-	defer resp.Body.Close()
-
-	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("AI provider returned status %d", resp.StatusCode)
+		if req.JSONMode && shouldRetryWithoutResponseFormat(resp.StatusCode, respBody) {
+			delete(payload, "response_format")
+			body, err = json.Marshal(payload)
+			if err != nil {
+				return nil, fmt.Errorf("failed to encode AI request")
+			}
+			resp, respBody, err = p.chatCompletion(ctx, body)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return nil, fmt.Errorf("AI provider returned status %d", resp.StatusCode)
+		}
 	}
 
 	var parsed struct {
@@ -135,6 +145,36 @@ func (p *OpenAICompatibleProvider) Chat(ctx context.Context, req ChatRequest) (*
 	}, nil
 }
 
+func (p *OpenAICompatibleProvider) chatCompletion(ctx context.Context, body []byte) (*http.Response, []byte, error) {
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.base+"/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create AI request")
+	}
+	httpReq.Header.Set("Authorization", "Bearer "+p.key)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := p.client.Do(httpReq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("AI provider request failed")
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
+	return resp, respBody, nil
+}
+
+func shouldRetryWithoutResponseFormat(statusCode int, body []byte) bool {
+	if statusCode != http.StatusBadRequest && statusCode != http.StatusUnprocessableEntity {
+		return false
+	}
+	msg := strings.ToLower(string(body))
+	return strings.Contains(msg, "response_format") ||
+		strings.Contains(msg, "json_object") ||
+		strings.Contains(msg, "unsupported") ||
+		strings.Contains(msg, "unknown parameter") ||
+		strings.Contains(msg, "invalid parameter")
+}
+
 func (p *OpenAICompatibleProvider) ChatStream(ctx context.Context, req ChatRequest, cb StreamCallback) (*ChatResponse, error) {
 	if strings.TrimSpace(p.key) == "" {
 		return nil, fmt.Errorf("AI provider is not configured")
@@ -161,6 +201,7 @@ func (p *OpenAICompatibleProvider) ChatStream(ctx context.Context, req ChatReque
 		"max_tokens":  req.MaxTokens,
 		"stream":      true,
 	}
+	addThinkingParams(payload, firstNonEmpty(req.Thinking, p.thinking))
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode AI request")
@@ -256,4 +297,28 @@ func (p *OpenAICompatibleProvider) ChatStream(ctx context.Context, req ChatReque
 		}
 	}
 	return final, nil
+}
+
+func addThinkingParams(payload map[string]interface{}, thinking string) {
+	thinking = strings.ToLower(strings.TrimSpace(thinking))
+	if thinking == "" || thinking == "default" {
+		return
+	}
+	switch thinking {
+	case "off":
+		payload["thinking"] = map[string]string{"type": "disabled"}
+	case "low", "medium", "high":
+		payload["reasoning_effort"] = thinking
+	default:
+		payload["thinking"] = map[string]string{"type": thinking}
+	}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return value
+		}
+	}
+	return ""
 }

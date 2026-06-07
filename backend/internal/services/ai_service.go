@@ -27,6 +27,7 @@ type AIServiceConfig struct {
 	Temperature    float64
 	MaxTokens      int
 	CacheEnabled   bool
+	Thinking       string
 }
 
 type MatchInsightRequest struct {
@@ -182,6 +183,7 @@ func ConfigureAI(cfg AIServiceConfig) error {
 		APIKey:         cfg.APIKey,
 		Model:          cfg.Model,
 		TimeoutSeconds: cfg.TimeoutSeconds,
+		Thinking:       cfg.Thinking,
 	})
 	if err != nil {
 		return err
@@ -191,6 +193,9 @@ func ConfigureAI(cfg AIServiceConfig) error {
 	}
 	if cfg.MaxTokens <= 0 {
 		cfg.MaxTokens = 1200
+	}
+	if cfg.Temperature < 0 {
+		cfg.Temperature = 0.3
 	}
 	aiSvc = &AIService{
 		cfg:      cfg,
@@ -473,6 +478,7 @@ func (s *AIService) GenerateShareCopy(ctx context.Context, req ShareCopyRequest,
 	if req.MatchID == 0 {
 		return nil, fmt.Errorf("请选择比赛")
 	}
+	req = normalizeShareCopyRequest(req)
 	matchCtx, _, err := s.builder.MatchContext(req.MatchID, userID)
 	if err != nil {
 		s.logUsage(userID, ip, "share_copy", "failed", err, nil, 0)
@@ -481,25 +487,34 @@ func (s *AIService) GenerateShareCopy(ctx context.Context, req ShareCopyRequest,
 	if err := s.checkLimit(ctx, userID); err != nil {
 		return nil, err
 	}
-	prompt := fmt.Sprintf("TASK:share_copy\nReturn JSON with title, content, tips. Platform=%s Tone=%s Length=%s. Do not mention betting or invented facts.\nContext:\n%s", req.Platform, req.Tone, req.Length, matchCtx)
-	raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
-	if err != nil {
-		s.logUsage(userID, ip, "share_copy", "failed", err, providerRes, latency)
-		return nil, aiUserError(err)
+
+	// Retry up to 2 times for format errors
+	var lastErr error
+	for attempt := 0; attempt < 2; attempt++ {
+		prompt := buildShareCopyPrompt(req, matchCtx, attempt > 0)
+
+		raw, providerRes, latency, err := s.callJSONProvider(ctx, prompt, nil)
+		if err != nil {
+			s.logUsage(userID, ip, "share_copy", "failed", err, providerRes, latency)
+			lastErr = aiUserError(err)
+			continue
+		}
+		if err := ai.ValidateOutput(raw); err != nil {
+			s.logUsage(userID, ip, "share_copy", "failed", err, providerRes, latency)
+			lastErr = fmt.Errorf("AI 输出未通过安全检查")
+			continue
+		}
+		res, jsonText, err := decodeShareCopy(raw)
+		if err == nil && strings.TrimSpace(res.Content) != "" {
+			cacheKey := s.cacheKey("share_copy", fmt.Sprintf("%d", req.MatchID), req.Platform, req.Tone, req.Length, userKey(userID))
+			s.saveGenerated(userID, "share_copy", "match", req.MatchID, cacheKey, jsonText, raw, providerRes)
+			s.logUsage(userID, ip, "share_copy", "success", nil, providerRes, latency)
+			return &res, nil
+		}
+		s.logUsage(userID, ip, "share_copy", "failed", fmt.Errorf("invalid AI response format: %v", err), providerRes, latency)
+		lastErr = fmt.Errorf("AI 返回内容格式不正确，请稍后重试")
 	}
-	if err := ai.ValidateOutput(raw); err != nil {
-		s.logUsage(userID, ip, "share_copy", "failed", err, providerRes, latency)
-		return nil, fmt.Errorf("AI 输出未通过安全检查")
-	}
-	res, jsonText, err := ai.DecodeJSON(raw, ShareCopyResponse{})
-	if err != nil || strings.TrimSpace(res.Content) == "" {
-		s.logUsage(userID, ip, "share_copy", "failed", fmt.Errorf("invalid AI response format"), providerRes, latency)
-		return nil, fmt.Errorf("AI 返回内容格式不正确，请稍后重试")
-	}
-	cacheKey := s.cacheKey("share_copy", fmt.Sprintf("%d", req.MatchID), req.Platform, req.Tone, req.Length, userKey(userID))
-	s.saveGenerated(userID, "share_copy", "match", req.MatchID, cacheKey, jsonText, raw, providerRes)
-	s.logUsage(userID, ip, "share_copy", "success", nil, providerRes, latency)
-	return &res, nil
+	return nil, lastErr
 }
 
 func (s *AIService) GeneratePostMatchSummary(ctx context.Context, req PostMatchSummaryRequest, userID *uint, ip string) (*PostMatchSummaryResponse, error) {
@@ -697,7 +712,7 @@ func (s *AIService) Chat(ctx context.Context, req AIChatRequest, userID uint, ip
 		messages = append(messages, ai.Message{Role: msg.Role, Content: msg.Content})
 	}
 	factContext := s.builder.ChatContext(contextType, req.ContextID, userID)
-	prompt := "TASK:chat\n你是世界杯聊天助手。优先按 2026 世界杯、国家队、赛程、分组、晋级规则、观赛建议来理解用户问题。若用户问球员或球队且没有说明俱乐部，请先回答其国家队/世界杯相关身份，再用一句话补充俱乐部背景。不要把俱乐部信息当作唯一答案。回答使用简洁中文，先给结论，再给关键说明；只使用必要事实，不确定时说明需要以最新官方名单/赛程为准。使用纯文本输出，不要使用 Markdown 加粗、斜体或标题语法，不要输出 **、__、# 等格式符号。\nFacts:\n" + factContext
+	prompt := ai.BuildChatTaskPrompt(factContext)
 	raw, providerRes, latency, err := s.callProvider(ctx, prompt, messages)
 	if err != nil {
 		s.logUsage(&userID, ip, "chat", "failed", err, providerRes, latency)
@@ -779,7 +794,7 @@ func (s *AIService) ChatStream(ctx context.Context, req AIChatRequest, userID ui
 		messages = append(messages, ai.Message{Role: msg.Role, Content: msg.Content})
 	}
 	factContext := s.builder.ChatContext(contextType, req.ContextID, userID)
-	prompt := "TASK:chat\n你是世界杯聊天助手。优先按 2026 世界杯、国家队、赛程、分组、晋级规则、观赛建议来理解用户问题。若用户问球员或球队且没有说明俱乐部，请先回答其国家队/世界杯相关身份，再用一句话补充俱乐部背景。不要把俱乐部信息当作唯一答案。回答使用简洁中文，先给结论，再给关键说明；只使用必要事实，不确定时说明需要以最新官方名单/赛程为准。使用纯文本输出，不要使用 Markdown 加粗、斜体或标题语法，不要输出 **、__、# 等格式符号。\nFacts:\n" + factContext
+	prompt := ai.BuildChatTaskPrompt(factContext)
 
 	start := time.Now()
 	timeout := time.Duration(s.cfg.TimeoutSeconds) * time.Second
@@ -795,6 +810,7 @@ func (s *AIService) ChatStream(ctx context.Context, req AIChatRequest, userID ui
 		Model:        s.cfg.Model,
 		Temperature:  s.cfg.Temperature,
 		MaxTokens:    s.cfg.MaxTokens,
+		Thinking:     s.cfg.Thinking,
 	}, func(delta ai.StreamDelta) error {
 		if delta.Content == "" || onEvent == nil {
 			return nil
@@ -851,14 +867,14 @@ func (s *AIService) ChatStream(ctx context.Context, req AIChatRequest, userID ui
 }
 
 func (s *AIService) callProvider(ctx context.Context, prompt string, messages []ai.Message) (string, *ai.ChatResponse, int64, error) {
-	return s.callProviderWithSystem(ctx, ai.BuildSystemPrompt(), prompt, messages)
+	return s.callProviderWithSystem(ctx, ai.BuildSystemPrompt(), prompt, messages, false)
 }
 
 func (s *AIService) callJSONProvider(ctx context.Context, prompt string, messages []ai.Message) (string, *ai.ChatResponse, int64, error) {
-	return s.callProviderWithSystem(ctx, ai.BuildJSONSystemPrompt(), prompt, messages)
+	return s.callProviderWithSystem(ctx, ai.BuildJSONSystemPrompt(), prompt, messages, true)
 }
 
-func (s *AIService) callProviderWithSystem(ctx context.Context, systemPrompt, prompt string, messages []ai.Message) (string, *ai.ChatResponse, int64, error) {
+func (s *AIService) callProviderWithSystem(ctx context.Context, systemPrompt, prompt string, messages []ai.Message, jsonMode bool) (string, *ai.ChatResponse, int64, error) {
 	start := time.Now()
 	timeout := time.Duration(s.cfg.TimeoutSeconds) * time.Second
 	if timeout <= 0 {
@@ -873,6 +889,8 @@ func (s *AIService) callProviderWithSystem(ctx context.Context, systemPrompt, pr
 		Model:        s.cfg.Model,
 		Temperature:  s.cfg.Temperature,
 		MaxTokens:    s.cfg.MaxTokens,
+		Thinking:     s.cfg.Thinking,
+		JSONMode:     jsonMode,
 	})
 	latency := time.Since(start).Milliseconds()
 	if err != nil {
@@ -1118,6 +1136,208 @@ func nonNilStrings(v []string) []string {
 		return []string{}
 	}
 	return v
+}
+
+func normalizeShareCopyRequest(req ShareCopyRequest) ShareCopyRequest {
+	req.Platform = normalizeShareCopyOption(req.Platform, "general", map[string]bool{
+		"wechat":      true,
+		"group":       true,
+		"xiaohongshu": true,
+		"weibo":       true,
+		"general":     true,
+	})
+	req.Tone = normalizeShareCopyOption(req.Tone, "relaxed", map[string]bool{
+		"relaxed":      true,
+		"passionate":   true,
+		"professional": true,
+		"beginner":     true,
+	})
+	req.Length = normalizeShareCopyOption(req.Length, "short", map[string]bool{
+		"short":  true,
+		"medium": true,
+		"long":   true,
+	})
+	return req
+}
+
+func normalizeShareCopyOption(value, fallback string, allowed map[string]bool) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	if allowed[value] {
+		return value
+	}
+	return fallback
+}
+
+func buildShareCopyPrompt(req ShareCopyRequest, matchCtx string, retry bool) string {
+	retryRule := ""
+	if retry {
+		retryRule = "\nThis is a retry. The previous output was not valid enough; keep the same style requirements and fix the JSON format."
+	}
+	return fmt.Sprintf(`TASK:share_copy
+Do not think step by step. Do not output reasoning.
+Output ONLY one valid JSON object with exactly these fields:
+{"title":"","content":"","tips":[]}
+
+Hard rules:
+- Write in simplified Chinese.
+- The content must be directly copyable for social sharing.
+- Use only the match facts in Context. Do not invent lineups, injuries, news, scores, odds, probabilities, rankings, or certainty claims.
+- Do not mention betting, gambling, "sure win", "must hit", or similar wording.
+- If Context lacks a detail, avoid that detail instead of guessing.
+- "tips" should contain 0 to 3 short posting suggestions, not facts outside Context.
+
+Selected options:
+- platform=%s: %s
+- tone=%s: %s
+- length=%s: %s%s
+
+Context:
+%s`, req.Platform, shareCopyPlatformInstruction(req.Platform), req.Tone, shareCopyToneInstruction(req.Tone), req.Length, shareCopyLengthInstruction(req.Length), retryRule, matchCtx)
+}
+
+func shareCopyPlatformInstruction(platform string) string {
+	switch platform {
+	case "wechat":
+		return "朋友圈风格，适合个人动态，2-4句，有轻松的观赛邀约感，可以有一句互动式收尾。"
+	case "group":
+		return "微信群风格，像发给朋友约看球，口语直接，重点突出开球信息和一起看的理由。"
+	case "xiaohongshu":
+		return "小红书风格，标题要抓人，正文可分点呈现，看点清楚，但不要夸大或制造噱头。"
+	case "weibo":
+		return "微博风格，短促有话题感，可加入1-2个相关话题标签，避免堆砌标签。"
+	default:
+		return "通用平台风格，克制清楚，适合复制到多个社交平台。"
+	}
+}
+
+func shareCopyToneInstruction(tone string) string {
+	switch tone {
+	case "passionate":
+		return "热血、有比赛氛围，适度调动情绪，但不要使用确定性预测。"
+	case "professional":
+		return "专业、冷静，像赛前导语，优先基于赛程、球队、分组或积分信息。"
+	case "beginner":
+		return "小白友好，少术语，说明为什么值得看，让不熟悉足球的人也能读懂。"
+	default:
+		return "轻松自然、不端着，像朋友间分享一场值得看的比赛。"
+	}
+}
+
+func shareCopyLengthInstruction(length string) string {
+	switch length {
+	case "medium":
+		return "正文约100-160个中文字符，2-3句，信息完整但不啰嗦。"
+	case "long":
+		return "正文约220-320个中文字符，可以有自然分段或分点，但仍要像社交文案。"
+	default:
+		return "正文约40-80个中文字符，1-2句，标题和正文都要短。"
+	}
+}
+
+func decodeShareCopy(raw string) (ShareCopyResponse, string, error) {
+	res, jsonText, err := ai.DecodeJSON(raw, ShareCopyResponse{})
+	normalizeShareCopy(&res)
+	if err == nil && strings.TrimSpace(res.Content) != "" {
+		return res, marshalShareCopy(res, jsonText), nil
+	}
+
+	candidate := strings.TrimSpace(ai.ExtractJSON(raw))
+	if strings.HasPrefix(candidate, "{") {
+		var obj map[string]json.RawMessage
+		if mapErr := json.Unmarshal([]byte(candidate), &obj); mapErr == nil {
+			if mapped, ok := shareCopyFromMap(obj); ok {
+				return mapped, marshalShareCopy(mapped, ""), nil
+			}
+			for _, key := range []string{"data", "result", "share_copy", "copy", "output", "message"} {
+				var nested map[string]json.RawMessage
+				if value, ok := obj[key]; ok && json.Unmarshal(value, &nested) == nil {
+					if mapped, ok := shareCopyFromMap(nested); ok {
+						return mapped, marshalShareCopy(mapped, ""), nil
+					}
+				}
+			}
+		}
+	}
+
+	content := strings.TrimSpace(raw)
+	if content == "" {
+		if err != nil {
+			return ShareCopyResponse{}, raw, err
+		}
+		return ShareCopyResponse{}, raw, fmt.Errorf("empty share copy content")
+	}
+	res = ShareCopyResponse{Content: stripCodeFence(content), Tips: []string{}}
+	return res, marshalShareCopy(res, ""), nil
+}
+
+func shareCopyFromMap(obj map[string]json.RawMessage) (ShareCopyResponse, bool) {
+	res := ShareCopyResponse{
+		Title:   firstJSONText(obj, "title", "headline", "subject", "标题"),
+		Content: firstJSONText(obj, "content", "text", "copy", "body", "message", "caption", "文案", "正文", "内容"),
+		Tips:    firstJSONStringArray(obj, "tips", "notes", "suggestions", "提示", "建议"),
+	}
+	normalizeShareCopy(&res)
+	return res, strings.TrimSpace(res.Content) != ""
+}
+
+func firstJSONText(obj map[string]json.RawMessage, keys ...string) string {
+	for _, key := range keys {
+		value, ok := obj[key]
+		if !ok {
+			continue
+		}
+		var text string
+		if json.Unmarshal(value, &text) == nil && strings.TrimSpace(text) != "" {
+			return text
+		}
+		var parts []string
+		if json.Unmarshal(value, &parts) == nil && len(parts) > 0 {
+			return strings.Join(nonNilStrings(parts), "\n")
+		}
+	}
+	return ""
+}
+
+func firstJSONStringArray(obj map[string]json.RawMessage, keys ...string) []string {
+	for _, key := range keys {
+		value, ok := obj[key]
+		if !ok {
+			continue
+		}
+		var items []string
+		if json.Unmarshal(value, &items) == nil {
+			return nonNilStrings(items)
+		}
+		var item string
+		if json.Unmarshal(value, &item) == nil && strings.TrimSpace(item) != "" {
+			return []string{item}
+		}
+	}
+	return []string{}
+}
+
+func normalizeShareCopy(res *ShareCopyResponse) {
+	res.Title = strings.TrimSpace(res.Title)
+	res.Content = strings.TrimSpace(stripCodeFence(res.Content))
+	res.Tips = nonNilStrings(res.Tips)
+}
+
+func marshalShareCopy(res ShareCopyResponse, fallback string) string {
+	body, err := json.Marshal(res)
+	if err != nil {
+		return fallback
+	}
+	return string(body)
+}
+
+func stripCodeFence(value string) string {
+	s := strings.TrimSpace(value)
+	if strings.HasPrefix(s, "```") {
+		s = strings.TrimPrefix(s, "```json")
+		s = strings.TrimPrefix(s, "```")
+		s = strings.TrimSuffix(s, "```")
+	}
+	return strings.TrimSpace(s)
 }
 
 func minInt(a, b int) int {

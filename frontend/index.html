@@ -1,17 +1,35 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>WorldCup Mate</title>
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0"
-    />
-    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WC Mate">
+<title>WorldCup Mate</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0">
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/icon-192x192.svg">
+<script>
+!function(){
+  var t=localStorage.getItem("wm-token")||sessionStorage.getItem("wm-token");
+  if(!t&&location.pathname!=='/login')location.replace('/login');
+  new MutationObserver(function(){
+    var hs=document.querySelectorAll('h2');
+    for(var i=0;i<hs.length;i++){
+      if(hs[i].textContent.includes('未登录')){
+        hs[i].style.cssText='color:var(--primary);cursor:pointer;text-decoration:underline';
+        hs[i].textContent='未登录 · 点击登录';
+        hs[i].onclick=function(){location.href='/login'};
+      }
+    }
+  }).observe(document.body||document.documentElement,{childList:true,subtree:true});
+}();
+</script>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="/src/main.ts"></script>
+</body>
 </html>

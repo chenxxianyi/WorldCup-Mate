@@ -19,6 +19,8 @@ type ChatRequest struct {
 	Model        string
 	Temperature  float64
 	MaxTokens    int
+	JSONMode     bool
+	Thinking     string
 }
 
 type ChatResponse struct {
@@ -53,6 +55,7 @@ type ProviderConfig struct {
 	APIKey         string
 	Model          string
 	TimeoutSeconds int
+	Thinking       string
 }
 
 func NewProvider(cfg ProviderConfig) (Provider, error) {
@@ -67,11 +70,12 @@ func NewProvider(cfg ProviderConfig) (Provider, error) {
 		return NewUnavailableProvider(name, "AI_API_KEY is required"), nil
 	}
 	return NewOpenAICompatibleProvider(OpenAICompatibleConfig{
-		Name:    name,
-		BaseURL: cfg.BaseURL,
-		APIKey:  cfg.APIKey,
-		Model:   cfg.Model,
-		Timeout: time.Duration(cfg.TimeoutSeconds) * time.Second,
+		Name:     name,
+		BaseURL:  cfg.BaseURL,
+		APIKey:   cfg.APIKey,
+		Model:    cfg.Model,
+		Timeout:  time.Duration(cfg.TimeoutSeconds) * time.Second,
+		Thinking: cfg.Thinking,
 	}), nil
 }
 

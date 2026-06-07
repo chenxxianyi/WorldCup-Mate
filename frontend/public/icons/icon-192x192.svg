@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#1a1a2e"/>
+  <circle cx="96" cy="86" r="36" fill="none" stroke="#e94560" stroke-width="4"/>
+  <path d="M72 74 Q96 62 120 74" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M75 80 Q96 70 117 80" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <text x="96" y="150" font-family="Arial,sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle">WC26</text>
+</svg>

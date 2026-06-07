@@ -62,6 +62,7 @@ func main() {
 		Temperature:    cfg.AITemperature,
 		MaxTokens:      cfg.AIMaxTokens,
 		CacheEnabled:   cfg.AICacheEnabled,
+		Thinking:       cfg.AIThinking,
 	}); err != nil {
 		log.Fatalf("AI config failed: %v", err)
 	}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import ShareCopyCard from '@/components/ai/ShareCopyCard.vue'
 import { apiGetUpcomingMatches, apiListMatches } from '@/api/matches'
 import { normalizeMatch, type Match } from '@/types/match'
@@ -9,11 +9,17 @@ import { useAIStore } from '@/stores/useAIStore'
 const ai = useAIStore()
 const matches = ref<Match[]>([])
 const selectedMatchId = ref<number | null>(null)
+const matchDropdownOpen = ref(false)
+const matchSelectRef = ref<HTMLElement | null>(null)
 const platform = ref<ShareCopyPlatform>('wechat')
 const tone = ref<ShareCopyTone>('relaxed')
 const length = ref<ShareCopyLength>('short')
 
 const selectedMatch = computed(() => matches.value.find((item) => item.id === selectedMatchId.value) || null)
+const selectedMatchLabel = computed(() => {
+  if (!selectedMatch.value) return '请选择比赛'
+  return `${selectedMatch.value.home_team_name} vs ${selectedMatch.value.away_team_name}`
+})
 
 const platforms: Array<{ value: ShareCopyPlatform; label: string }> = [
   { value: 'wechat', label: '朋友圈' },
@@ -56,7 +62,46 @@ function generate() {
   ai.generateShareCopy(selectedMatchId.value, platform.value, tone.value, length.value).catch(() => {})
 }
 
-onMounted(loadMatches)
+function toggleMatchDropdown() {
+  if (!matches.value.length) return
+  matchDropdownOpen.value = !matchDropdownOpen.value
+}
+
+function closeMatchDropdown() {
+  matchDropdownOpen.value = false
+}
+
+function selectMatch(matchId: number) {
+  selectedMatchId.value = matchId
+  closeMatchDropdown()
+}
+
+function moveMatchSelection(step: 1 | -1) {
+  if (!matches.value.length) return
+  const currentIndex = matches.value.findIndex((item) => item.id === selectedMatchId.value)
+  const fallbackIndex = step > 0 ? 0 : matches.value.length - 1
+  const nextIndex =
+    currentIndex === -1
+      ? fallbackIndex
+      : (currentIndex + step + matches.value.length) % matches.value.length
+  selectedMatchId.value = matches.value[nextIndex].id
+  matchDropdownOpen.value = true
+}
+
+function handleDocumentPointerDown(event: PointerEvent) {
+  if (!matchSelectRef.value?.contains(event.target as Node)) {
+    closeMatchDropdown()
+  }
+}
+
+onMounted(() => {
+  loadMatches()
+  document.addEventListener('pointerdown', handleDocumentPointerDown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', handleDocumentPointerDown)
+})
 </script>
 
 <template>
@@ -69,14 +114,48 @@ onMounted(loadMatches)
     </div>
 
     <section class="card form-card">
-      <label>
+      <div ref="matchSelectRef" class="match-field">
         <span>比赛</span>
-        <select v-model.number="selectedMatchId">
-          <option v-for="match in matches" :key="match.id" :value="match.id">
-            {{ match.home_team_name }} vs {{ match.away_team_name }}
-          </option>
-        </select>
-      </label>
+        <button
+          class="match-select"
+          type="button"
+          :class="{ open: matchDropdownOpen }"
+          :disabled="!matches.length"
+          aria-haspopup="listbox"
+          :aria-expanded="matchDropdownOpen"
+          @click="toggleMatchDropdown"
+          @keydown.down.prevent="moveMatchSelection(1)"
+          @keydown.up.prevent="moveMatchSelection(-1)"
+          @keydown.esc.prevent="closeMatchDropdown"
+        >
+          <span class="match-select-text">{{ selectedMatchLabel }}</span>
+          <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+        </button>
+
+        <Transition name="match-options">
+          <div
+            v-if="matchDropdownOpen"
+            class="match-menu"
+            role="listbox"
+            :aria-activedescendant="selectedMatchId ? `match-option-${selectedMatchId}` : undefined"
+          >
+            <button
+              v-for="match in matches"
+              :id="`match-option-${match.id}`"
+              :key="match.id"
+              class="match-option"
+              type="button"
+              role="option"
+              :aria-selected="selectedMatchId === match.id"
+              :class="{ active: selectedMatchId === match.id }"
+              @click="selectMatch(match.id)"
+            >
+              <span class="match-pair">{{ match.home_team_name }} vs {{ match.away_team_name }}</span>
+              <span class="material-symbols-outlined" aria-hidden="true">check</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
 
       <div class="option-group">
         <span>平台</span>
@@ -161,26 +240,165 @@ onMounted(loadMatches)
   padding: 16px;
 }
 
-label,
+.match-field,
 .option-group {
   display: grid;
   gap: 8px;
 }
 
-label span,
+.match-field > span,
 .option-group > span {
   color: var(--muted);
   font-size: 13px;
   font-weight: 750;
 }
 
-select {
-  min-height: 42px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: 0 12px;
+.match-field {
+  position: relative;
+  z-index: 4;
+}
+
+.match-select {
+  width: 100%;
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, var(--text));
+  border-radius: 14px;
+  outline: none;
+  padding: 0 13px 0 15px;
   color: var(--text);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, var(--card-soft)), var(--card-soft));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 64%, transparent);
+  text-align: left;
+  transition: border-color 160ms ease-out, background 160ms ease-out, box-shadow 160ms ease-out;
+}
+
+.match-select:hover:not(:disabled),
+.match-select.open {
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--line));
+  background: var(--card);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.match-select:focus-visible {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+.match-select:disabled {
+  cursor: not-allowed;
+  color: var(--weak);
   background: var(--card-soft);
+}
+
+.match-select .material-symbols-outlined {
+  color: var(--weak);
+  font-size: 22px;
+  transition: transform 160ms ease-out, color 160ms ease-out;
+}
+
+.match-select.open .material-symbols-outlined {
+  color: var(--primary);
+  transform: rotate(180deg);
+}
+
+.match-select-text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 286px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--line) 86%, var(--text));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(16px);
+}
+
+.match-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.match-menu::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--weak) 36%, transparent);
+  background-clip: padding-box;
+}
+
+.match-option {
+  width: 100%;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 11px;
+  padding: 0 10px 0 12px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  transition: background 140ms ease-out, color 140ms ease-out;
+}
+
+.match-option:hover,
+.match-option:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--primary) 7%, var(--card));
+}
+
+.match-option.active {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 11%, var(--card));
+}
+
+.match-pair {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 720;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-option .material-symbols-outlined {
+  opacity: 0;
+  color: var(--primary);
+  font-size: 19px;
+}
+
+.match-option.active .material-symbols-outlined {
+  opacity: 1;
+}
+
+.match-options-enter-active,
+.match-options-leave-active {
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+
+.match-options-enter-from,
+.match-options-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .segmented {

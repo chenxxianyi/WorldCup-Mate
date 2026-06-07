@@ -162,7 +162,7 @@ onMounted(() => {
       </div>
       <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden @change="onFileChange" />
       <div>
-        <h2>{{ auth.user?.nickname || auth.user?.username || '未登录' }}</h2>
+        <h2 :class="{ clickable: !auth.isLoggedIn }" @click="!auth.isLoggedIn && router.push('/login')">{{ auth.isLoggedIn ? (auth.user?.nickname || auth.user?.username) : '未登录 · 点击登录' }}</h2>
         <p>{{ settings.timezone }} · 已关注 {{ fav.followedTeamIds.length }} 支球队</p>
       </div>
     </article>
@@ -497,5 +497,12 @@ onMounted(() => {
 .pill-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.clickable {
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 </style>

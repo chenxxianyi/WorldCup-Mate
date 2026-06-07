@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const router = useRouter()
 const auth = useAuthStore()
+const route = useRoute()
+
+const redirectTo = (route.query.redirect as string) || '/'
 
 const SAVED_LOGIN_KEY = 'wm-saved-login'
 const AUTO_LOGIN_KEY = 'wm-auto-login'
@@ -56,7 +59,7 @@ async function handleSubmit() {
         localStorage.removeItem(AUTO_LOGIN_KEY)
       }
     }
-    router.push('/')
+    router.push(redirectTo)
   } catch (e: any) {
     error.value = e.message || '操作失败'
   } finally {
