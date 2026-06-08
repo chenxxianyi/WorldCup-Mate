@@ -14,6 +14,9 @@ const INITIAL_DAYS = 3
 const DAYS_PER_LOAD = 2
 const PAGE_SIZE = 8
 const LOAD_MORE_MIN_MS = 760
+const SWIPE_MIN_DISTANCE = 56
+const SWIPE_MAX_DURATION_MS = 700
+const SWIPE_DIRECTION_RATIO = 1.35
 
 const FILTER_ALL = '全部'
 const FILTER_TODAY = '今日'
@@ -42,6 +45,9 @@ const loadHintVisible = ref(false)
 let observer: IntersectionObserver | null = null
 let requestToken = 0
 let searchTimer: number | undefined
+let touchStartX = 0
+let touchStartY = 0
+let touchStartAt = 0
 
 const filterOptions = [
   FILTER_ALL,
@@ -303,6 +309,43 @@ function goToLogin() {
   router.push('/login')
 }
 
+function switchFilterByOffset(offset: number) {
+  const currentIndex = filterOptions.indexOf(activeFilter.value)
+  if (currentIndex < 0) return
+
+  const nextIndex = currentIndex + offset
+  if (nextIndex < 0 || nextIndex >= filterOptions.length) return
+  activeFilter.value = filterOptions[nextIndex]
+}
+
+function onSwipeStart(event: TouchEvent) {
+  if (event.touches.length !== 1) return
+  if ((event.target as HTMLElement | null)?.closest('.chips')) {
+    touchStartAt = 0
+    return
+  }
+  const touch = event.touches[0]
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
+  touchStartAt = Date.now()
+}
+
+function onSwipeEnd(event: TouchEvent) {
+  if (!touchStartAt || event.changedTouches.length !== 1) return
+
+  const touch = event.changedTouches[0]
+  const deltaX = touch.clientX - touchStartX
+  const deltaY = touch.clientY - touchStartY
+  const duration = Date.now() - touchStartAt
+
+  touchStartAt = 0
+  if (duration > SWIPE_MAX_DURATION_MS) return
+  if (Math.abs(deltaX) < SWIPE_MIN_DISTANCE) return
+  if (Math.abs(deltaX) < Math.abs(deltaY) * SWIPE_DIRECTION_RATIO) return
+
+  switchFilterByOffset(deltaX < 0 ? 1 : -1)
+}
+
 onMounted(async () => {
   observer = new IntersectionObserver(
     ([entry]) => {
@@ -328,7 +371,7 @@ watch(search, () => {
 </script>
 
 <template>
-  <div>
+  <div class="schedule-page" @touchstart.passive="onSwipeStart" @touchend.passive="onSwipeEnd">
     <div class="section-head">
       <div>
         <h2>全部赛程</h2>
@@ -371,6 +414,10 @@ watch(search, () => {
 </template>
 
 <style scoped>
+.schedule-page {
+  touch-action: pan-y;
+}
+
 .section-head {
   display: flex;
   align-items: center;

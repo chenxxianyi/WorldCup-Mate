@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps<{
+import { nextTick, ref, watch } from 'vue'
+
+const props = defineProps<{
   options: string[]
   modelValue: string
 }>()
@@ -7,10 +9,25 @@ defineProps<{
 defineEmits<{
   (e: 'update:modelValue', value: string): void
 }>()
+
+const chipsEl = ref<HTMLElement | null>(null)
+
+function scrollActiveIntoView() {
+  const active = chipsEl.value?.querySelector('.chip.active') as HTMLElement | null
+  active?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+}
+
+watch(
+  () => props.modelValue,
+  async () => {
+    await nextTick()
+    scrollActiveIntoView()
+  },
+)
 </script>
 
 <template>
-  <div class="chips">
+  <div ref="chipsEl" class="chips">
     <button
       v-for="opt in options"
       :key="opt"
