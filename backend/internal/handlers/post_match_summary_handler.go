@@ -18,15 +18,8 @@ func GetPostMatchSummary(c *gin.Context) {
 		return
 	}
 
-	// Try to fetch with ForceRefresh=false, but don't generate if not exists.
-	// GeneratePostMatchSummary with ForceRefresh=false will return cached if exists,
-	// or error if not. We treat "no summary" as a valid empty response.
-	res, err := services.GeneratePostMatchSummary(c.Request.Context(), services.PostMatchSummaryRequest{
-		MatchID:      uint(id),
-		ForceRefresh: false,
-	}, optionalUserID(c), c.ClientIP())
+	res, err := services.GetCachedPostMatchSummary(c.Request.Context(), uint(id))
 	if err != nil {
-		// Return empty state - no summary available yet
 		utils.Success(c, gin.H{
 			"summary":       "",
 			"score_line":    "",

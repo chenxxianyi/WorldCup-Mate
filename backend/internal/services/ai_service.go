@@ -229,6 +229,10 @@ func GeneratePostMatchSummary(ctx context.Context, req PostMatchSummaryRequest, 
 	return currentAI().GeneratePostMatchSummary(ctx, req, userID, ip)
 }
 
+func GetCachedPostMatchSummary(ctx context.Context, matchID uint) (*PostMatchSummaryResponse, error) {
+	return currentAI().GetCachedPostMatchSummary(ctx, matchID)
+}
+
 func Chat(ctx context.Context, req AIChatRequest, userID uint, ip string) (*AIChatResponse, error) {
 	return currentAI().Chat(ctx, req, userID, ip)
 }
@@ -588,6 +592,18 @@ Context:
 	s.setCached(ctx, cacheKey, res, 2*time.Hour)
 	s.logUsage(userID, ip, "post_match_summary", "success", nil, providerRes, latency)
 	return &res, nil
+}
+
+func (s *AIService) GetCachedPostMatchSummary(ctx context.Context, matchID uint) (*PostMatchSummaryResponse, error) {
+	if matchID == 0 {
+		return nil, fmt.Errorf("invalid match id")
+	}
+	cacheKey := s.cacheKey("post_match_summary", fmt.Sprintf("%d", matchID))
+	var cached PostMatchSummaryResponse
+	if s.getCached(ctx, cacheKey, false, &cached) {
+		return &cached, nil
+	}
+	return nil, gorm.ErrRecordNotFound
 }
 
 func (s *AIService) buildPostMatchContext(match *models.Match) string {

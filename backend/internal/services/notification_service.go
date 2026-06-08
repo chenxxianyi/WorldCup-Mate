@@ -13,8 +13,8 @@ func CountUnreadNotifications(userID uint) (int64, error) {
 	return repositories.CountUnreadNotifications(userID)
 }
 
-func MarkNotificationRead(id uint) error {
-	return repositories.MarkNotificationRead(id)
+func MarkNotificationRead(userID, id uint) error {
+	return repositories.MarkNotificationRead(userID, id)
 }
 
 func MarkAllNotificationsRead(userID uint) error {

@@ -32,13 +32,14 @@ func CountUnreadNotifications(c *gin.Context) {
 }
 
 func MarkNotificationRead(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.Error(c, 400, "invalid notification id")
 		return
 	}
-	if err := services.MarkNotificationRead(uint(id)); err != nil {
-		utils.Error(c, 500, err.Error())
+	if err := services.MarkNotificationRead(userID, uint(id)); err != nil {
+		utils.Error(c, 404, "notification not found")
 		return
 	}
 	utils.Success(c, gin.H{"read": true})

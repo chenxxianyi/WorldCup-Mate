@@ -3,6 +3,8 @@ package repositories
 import (
 	"worldcup-mate/internal/database"
 	"worldcup-mate/internal/models"
+
+	"gorm.io/gorm"
 )
 
 func CreateNotification(n *models.Notification) error {
@@ -28,8 +30,17 @@ func CountUnreadNotifications(userID uint) (int64, error) {
 	return total, err
 }
 
-func MarkNotificationRead(id uint) error {
-	return database.DB.Model(&models.Notification{}).Where("id = ?", id).Update("is_read", true).Error
+func MarkNotificationRead(userID, id uint) error {
+	result := database.DB.Model(&models.Notification{}).
+		Where("id = ? AND user_id = ?", id, userID).
+		Update("is_read", true)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func MarkAllNotificationsRead(userID uint) error {

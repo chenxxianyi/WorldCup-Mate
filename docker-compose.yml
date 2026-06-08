@@ -5,10 +5,10 @@ services:
     image: mysql:8.0
     container_name: wc-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: worldcup_mate
-    ports:
-      - "3306:3306"
+      MYSQL_USER: worldcup_app
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -20,10 +20,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: wc-redis
-    ports:
-      - "6379:6379"
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}"]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?set REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,16 +32,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: wc-backend
-    ports:
-      - "8080:8080"
     environment:
       APP_ENV: production
       APP_PORT: 8080
-      JWT_SECRET: change_this_in_production
-      MYSQL_DSN: xxladmin:XXLadmin_2021!@tcp(mysql:3306)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      MYSQL_DSN: worldcup_app:${MYSQL_PASSWORD:?set MYSQL_PASSWORD}@tcp(mysql:3306)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local
       REDIS_ADDR: redis:6379
-      REDIS_PASSWORD: ""
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
       REDIS_DB: "0"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?set CORS_ALLOWED_ORIGINS}
     depends_on:
       mysql:
         condition: service_healthy

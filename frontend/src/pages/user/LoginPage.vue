@@ -16,7 +16,6 @@ const AUTO_LOGIN_KEY = 'wm-auto-login'
 type SavedLogin = {
   account?: string
   email?: string
-  password?: string
 }
 
 function getSavedLogin(): SavedLogin {
@@ -32,19 +31,14 @@ const isRegister = ref(false)
 const username = ref('')
 const account = ref(savedLogin.account || savedLogin.email || '')
 const email = ref('')
-const password = ref(savedLogin.password || '')
+const password = ref('')
 const confirmPassword = ref('')
 const showPassword = ref(false)
-const rememberPassword = ref(Boolean(savedLogin.account && savedLogin.password))
 const autoLogin = ref(localStorage.getItem(AUTO_LOGIN_KEY) === '1')
 const error = ref('')
 const loading = ref(false)
 const showTestAccount = import.meta.env.DEV
 const passwordMismatch = computed(() => isRegister.value && confirmPassword.value.length > 0 && password.value !== confirmPassword.value)
-
-watch(autoLogin, (enabled) => {
-  if (enabled) rememberPassword.value = true
-})
 
 watch(isRegister, () => {
   error.value = ''
@@ -72,11 +66,7 @@ async function handleSubmit() {
       await auth.register(username.value, email.value, password.value, confirmPassword.value)
     } else {
       await auth.login(account.value, password.value, autoLogin.value)
-      if (rememberPassword.value) {
-        localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({ account: account.value, password: password.value }))
-      } else {
-        localStorage.removeItem(SAVED_LOGIN_KEY)
-      }
+      localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({ account: account.value }))
       if (autoLogin.value) {
         localStorage.setItem(AUTO_LOGIN_KEY, '1')
       } else {
@@ -157,8 +147,7 @@ async function handleSubmit() {
           <p v-if="passwordMismatch" class="field-error">两次输入的密码不一致</p>
         </div>
         <div v-if="!isRegister" class="login-options" aria-label="登录选项">
-          <label class="option-row">
-            <input v-model="rememberPassword" type="checkbox" />
+          <label v-if="false" class="option-row">
             <span>记住密码</span>
           </label>
           <label class="option-row">
@@ -274,7 +263,7 @@ async function handleSubmit() {
 .login-options {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   margin: 0 0 12px;
 }

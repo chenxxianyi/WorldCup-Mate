@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"worldcup-mate/internal/handlers"
 	"worldcup-mate/internal/middleware"
 
@@ -12,14 +14,15 @@ func Setup() *gin.Engine {
 	r.Use(middleware.Logger())
 	r.Use(middleware.Recover())
 	r.Use(middleware.CORS())
+	r.Use(middleware.SecurityHeaders())
 
 	api := r.Group("/api")
 
 	// Auth (public)
 	auth := api.Group("/auth")
 	{
-		auth.POST("/register", handlers.Register)
-		auth.POST("/login", handlers.Login)
+		auth.POST("/register", middleware.RateLimit("auth_register", 10, time.Hour), handlers.Register)
+		auth.POST("/login", middleware.RateLimit("auth_login", 10, 5*time.Minute), handlers.Login)
 		auth.POST("/logout", handlers.Logout)
 	}
 
@@ -71,19 +74,8 @@ func Setup() *gin.Engine {
 	api.GET("/stadiums/:id", handlers.GetStadiumDetail)
 	api.GET("/sync/status", handlers.GetSyncStatus)
 
-	// AI generation (public with optional user context)
-	aiPublic := api.Group("/ai")
-	{
-		aiPublic.POST("/match-insight", handlers.AIMatchInsight)
-		aiPublic.POST("/today-recommendations", handlers.AITodayRecommendations)
-		aiPublic.POST("/group-analysis", handlers.AIGroupAnalysis)
-		aiPublic.POST("/explain", handlers.AIExplain)
-		aiPublic.POST("/share-copy", handlers.AIShareCopy)
-	}
-
-	// Post-match summary (public, within matches group for RESTful path)
+	// Post-match summary read is public, but must not trigger AI generation.
 	matches.GET("/:id/post-match-summary", handlers.GetPostMatchSummary)
-	matches.POST("/:id/post-match-summary/generate", handlers.GeneratePostMatchSummary)
 
 	// Authenticated routes
 	authRequired := api.Group("")
@@ -126,19 +118,27 @@ func Setup() *gin.Engine {
 
 		// AI chat history
 		aiAuth := authRequired.Group("/ai")
+		aiAuth.Use(middleware.RateLimit("ai", 30, time.Hour))
 		{
+			aiAuth.POST("/match-insight", handlers.AIMatchInsight)
+			aiAuth.POST("/today-recommendations", handlers.AITodayRecommendations)
+			aiAuth.POST("/group-analysis", handlers.AIGroupAnalysis)
+			aiAuth.POST("/explain", handlers.AIExplain)
+			aiAuth.POST("/share-copy", handlers.AIShareCopy)
 			aiAuth.POST("/chat", handlers.AIChat)
 			aiAuth.POST("/chat/stream", handlers.AIChatStream)
 			aiAuth.GET("/conversations", handlers.AIListConversations)
 			aiAuth.GET("/conversations/:id", handlers.AIGetConversation)
 			aiAuth.DELETE("/conversations/:id", handlers.AIDeleteConversation)
 		}
+
+		authRequired.POST("/matches/:id/post-match-summary/generate", middleware.RateLimit("ai_post_match_summary", 10, time.Hour), handlers.GeneratePostMatchSummary)
 	}
 
 	// Admin routes
 	admin := api.Group("/admin")
 	{
-		admin.POST("/login", handlers.AdminLogin)
+		admin.POST("/login", middleware.RateLimit("admin_login", 5, 10*time.Minute), handlers.AdminLogin)
 
 		adminAuth := admin.Group("")
 		adminAuth.Use(middleware.JWTAuth(), middleware.AdminAuth())
