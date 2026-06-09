@@ -16,6 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isCheckingProfile = ref(!!token.value)
   const hasToken = computed(() => !!token.value)
   const isLoggedIn = computed(() => !!token.value && !!user.value)
+  const isAdmin = computed(() => user.value?.role === 'admin')
 
   function persistToken(nextToken: string, persistent: boolean) {
     token.value = nextToken
@@ -93,5 +94,5 @@ export const useAuthStore = defineStore('auth', () => {
     await apiChangePassword({ old_password: oldPassword, new_password: newPassword })
   }
 
-  return { token, user, hasToken, isCheckingProfile, isLoggedIn, login, register, logout, fetchProfile, uploadAvatar, changePassword }
+  return { token, user, hasToken, isCheckingProfile, isLoggedIn, isAdmin, login, register, logout, fetchProfile, uploadAvatar, changePassword }
 })

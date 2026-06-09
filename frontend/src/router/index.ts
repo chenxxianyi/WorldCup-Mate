@@ -30,6 +30,7 @@ const router = createRouter({
     },
     {
       path: '/admin',
+      meta: { requiresAdmin: true },
       component: () => import('@/layouts/AdminLayout.vue'),
       children: [
         { path: '', name: 'admin', component: () => import('@/pages/admin/AdminDashboard.vue') },
@@ -45,17 +46,29 @@ const router = createRouter({
   },
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to) => {
   if (publicRoutes.includes(to.name as string)) {
-    next()
-    return
+    return true
   }
+
   const auth = useAuthStore()
-  if (!auth.isLoggedIn) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
-  } else {
-    next()
+  if (!auth.hasToken) {
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
+
+  if (!auth.user) {
+    await auth.fetchProfile()
+  }
+
+  if (!auth.isLoggedIn) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.matched.some((record) => record.meta.requiresAdmin) && !auth.isAdmin) {
+    return { name: 'home' }
+  }
+
+  return true
 })
 
 export default router
