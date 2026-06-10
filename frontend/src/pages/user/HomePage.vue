@@ -50,7 +50,8 @@ const progress = ref<TournamentProgress>({
 })
 
 const nextMatch = ref<Match | null>(null)
-const timelineRaw = ref<any[]>([])
+type TimelineDisplayMatch = Match & { has_post_match_summary?: boolean }
+const timelineRaw = ref<TimelineDisplayMatch[]>([])
 const followedSchedule = ref<Match[]>([])
 
 const todayMatches = computed(() => matchStore.todayMatches)
@@ -122,7 +123,7 @@ function localDayKey(offset = 0) {
 
 function dateTitle(key: string) {
   const [month, day] = key.split('-')
-  if (!month || !day) return key
+  if (!month || !day) return '时间待定'
   return `${Number(month)}月${Number(day)}日`
 }
 
@@ -209,8 +210,11 @@ async function loadHomeData() {
 
   // Load timeline
   try {
-    const res = await apiGetTimeline({ days_back: 2, days_ahead: 2 }) as any[]
-    timelineRaw.value = res || []
+    const res = await apiGetTimeline({ days_back: 3, days_ahead: 3 }) as any[]
+    timelineRaw.value = (res || []).map((m) => ({
+      ...normalizeMatch(m),
+      has_post_match_summary: m.has_post_match_summary,
+    }))
   } catch {
     timelineRaw.value = []
   }
@@ -274,23 +278,44 @@ onMounted(loadHomeData)
         </div>
       </article>
 
-      <!-- My followed schedule (simplified row) -->
-      <section v-if="auth.isLoggedIn && followedTeams.length > 0" class="section">
+      <!-- My followed items -->
+      <section v-if="auth.isLoggedIn" class="section follow-section">
         <div class="section-head">
           <h2>我的关注</h2>
           <span>{{ followedTeams.length }} 支球队</span>
         </div>
-        <div v-if="nextFollowedMatch" class="stack">
-          <MatchCard :match="nextFollowedMatch" featured />
+        <div class="follow-block">
+          <div class="follow-subhead">关注的比赛</div>
+          <div v-if="nextFollowedMatch" class="stack">
+            <MatchCard :match="nextFollowedMatch" featured />
+          </div>
+          <div v-else class="card empty-card">关注球队暂无未开始比赛</div>
         </div>
-        <div v-else class="card empty-card">关注球队暂无未开始比赛</div>
+        <div class="follow-block">
+          <div class="follow-subhead">关注的球队</div>
+          <div v-if="followedTeams.length" class="followed-team-grid">
+            <article
+              v-for="t in followedTeams"
+              :key="t.id"
+              class="card profile-card"
+              @click="router.push(`/teams/${t.id}`)"
+            >
+              <TeamFlag :value="t.flag" :alt="t.name" :fallback="t.code" size="lg" />
+              <div>
+                <h2>{{ t.name }}</h2>
+                <p>{{ t.group_name }}</p>
+              </div>
+            </article>
+          </div>
+          <div v-else class="card empty-card">暂无关注球队</div>
+        </div>
       </section>
 
       <!-- ⏱ Timeline -->
       <section class="section">
         <div class="section-head">
           <h2>比赛时间线</h2>
-          <span>近 5 天</span>
+          <span>近 1 周</span>
         </div>
         <template v-for="group in groupedTimeline" :key="group.key">
           <div class="tl-date-head">
@@ -314,28 +339,6 @@ onMounted(loadHomeData)
     <!-- Desktop sidebar -->
     <aside class="desktop-side">
       <section class="section" style="margin-top: 0">
-        <div class="section-head">
-          <h2>我的关注</h2>
-          <span>{{ followedTeams.length }} 支球队</span>
-        </div>
-        <div v-if="followedTeams.length" class="stack">
-          <article
-            v-for="t in followedTeams"
-            :key="t.id"
-            class="card profile-card"
-            @click="router.push(`/teams/${t.id}`)"
-          >
-            <TeamFlag :value="t.flag" :alt="t.name" :fallback="t.code" size="lg" />
-            <div>
-              <h2>{{ t.name }}</h2>
-              <p>{{ t.group_name }}</p>
-            </div>
-          </article>
-        </div>
-        <div v-else class="card empty-card">暂无关注球队</div>
-      </section>
-
-      <section class="section">
         <div class="section-head">
           <h2>积分速览</h2>
           <div class="group-nav">
@@ -407,6 +410,31 @@ onMounted(loadHomeData)
 }
 
 .stack {
+  display: grid;
+  gap: 12px;
+}
+
+.follow-section {
+  display: grid;
+  gap: 14px;
+}
+
+.follow-section .section-head {
+  margin-bottom: 0;
+}
+
+.follow-block {
+  display: grid;
+  gap: 10px;
+}
+
+.follow-subhead {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.followed-team-grid {
   display: grid;
   gap: 12px;
 }
@@ -622,6 +650,10 @@ tr:last-child td {
   .dashboard-grid {
     grid-template-columns: minmax(0, 1.9fr) minmax(300px, 0.8fr);
     align-items: start;
+  }
+
+  .followed-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>
