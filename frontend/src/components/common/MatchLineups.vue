@@ -65,9 +65,9 @@ function playerPosition(player: LineupPlayer) {
       <strong class="lineups-status" :class="lineups?.status || 'unavailable'">{{ statusText }}</strong>
     </div>
 
-    <div v-if="loading" class="lineups-state card">正在加载首发阵容...</div>
-    <div v-else-if="error" class="lineups-state card error">{{ error }}</div>
-    <div v-else-if="!lineups || !hasLineupData" class="lineups-state card">
+    <div v-if="loading" class="empty-state lineups-state">正在加载首发阵容...</div>
+    <div v-else-if="error" class="empty-state lineups-state error">{{ error }}</div>
+    <div v-else-if="!lineups || !hasLineupData" class="empty-state lineups-state">
       {{ lineups?.message || '首发阵容暂未公布' }}
     </div>
 
@@ -84,7 +84,7 @@ function playerPosition(player: LineupPlayer) {
       />
 
       <div class="lineup-teams">
-        <article v-for="team in teams" :key="`${team.side}-${team.teamId}`" class="team-lineup card">
+        <article v-for="team in teams" :key="`${team.side}-${team.teamId}`" class="surface-section team-lineup">
           <div class="team-lineup-head">
             <div>
               <span>{{ sideText(team.side) }}</span>

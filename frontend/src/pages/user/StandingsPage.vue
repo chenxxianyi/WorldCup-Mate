@@ -99,7 +99,7 @@ watch(activeGroup, loadStandings)
           <StatCard :value="12" label="候选球队" />
           <StatCard :value="4" label="待定/淘汰" />
         </div>
-        <div class="card table-card table-scroll" style="margin-top: 12px">
+        <div class="surface-section table-card table-scroll" style="margin-top: 12px">
           <table class="standing-table">
             <thead>
               <tr>

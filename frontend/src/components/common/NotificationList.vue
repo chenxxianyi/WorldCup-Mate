@@ -56,10 +56,10 @@ onMounted(() => {
       </button>
     </div>
 
-    <div v-if="!auth.isLoggedIn" class="card empty-card">登录后查看通知</div>
-    <div v-else-if="notification.loading" class="card empty-card">通知加载中...</div>
-    <div v-else-if="!notification.notifications.length" class="card empty-card">暂无通知</div>
-    <div v-else class="card notification-card">
+    <div v-if="!auth.isLoggedIn" class="empty-state">登录后查看通知</div>
+    <div v-else-if="notification.loading" class="empty-state">通知加载中...</div>
+    <div v-else-if="!notification.notifications.length" class="empty-state">暂无通知</div>
+    <div v-else class="surface-section notification-card">
       <button
         v-for="item in notification.notifications"
         :key="item.id"
@@ -105,12 +105,6 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 750;
   cursor: pointer;
-}
-
-.empty-card {
-  padding: 20px;
-  text-align: center;
-  color: var(--muted);
 }
 
 .notification-card {

@@ -15,7 +15,7 @@ function rowClass(status: string) {
 </script>
 
 <template>
-  <div class="card table-card">
+  <div class="surface-section table-card">
     <div class="table-scroll">
       <table class="standing-table">
         <thead>

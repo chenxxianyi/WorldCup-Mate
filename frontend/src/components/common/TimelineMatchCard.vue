@@ -4,6 +4,8 @@ import TeamFlag from '@/components/common/TeamFlag.vue'
 
 const props = defineProps<{
   match: any
+  first?: boolean
+  last?: boolean
 }>()
 
 const router = useRouter()
@@ -11,11 +13,6 @@ const router = useRouter()
 function timeText() {
   const local = props.match.local_kickoff_time || ''
   return local.split(' ')[1] || ''
-}
-
-function matchDateKey() {
-  const local = props.match.local_kickoff_time || ''
-  return local.split(' ')[0] || ''
 }
 
 function goDetail() {
@@ -30,6 +27,8 @@ function goDetail() {
       'tl-live': match.status === 'live',
       'tl-finished': match.status === 'finished',
       'tl-scheduled': match.status === 'scheduled' || match.status === 'upcoming',
+      'tl-first': first,
+      'tl-last': last,
     }"
     @click="goDetail"
   >
@@ -37,13 +36,14 @@ function goDetail() {
     <div class="tl-time">
       <template v-if="match.status === 'live'">
         <span class="tl-live-pulse"></span>
-        {{ match.live_minute || match.minute || 0 }}'
+        <span class="tl-time-text">{{ match.live_minute || match.minute || 0 }}'</span>
       </template>
       <template v-else-if="match.status === 'finished'">
         <span class="material-symbols-outlined tl-done">check_circle</span>
+        <span class="tl-time-text done">FT</span>
       </template>
       <template v-else>
-        {{ timeText() || 'TBD' }}
+        <span class="tl-time-text">{{ timeText() || 'TBD' }}</span>
       </template>
     </div>
 
@@ -71,6 +71,9 @@ function goDetail() {
       </div>
       <div class="tl-meta">
         <span v-if="match.stage_label || match.group_name">{{ match.group_name || match.stage }}</span>
+        <span v-if="match.status === 'live'" class="tl-status live">直播中</span>
+        <span v-else-if="match.status === 'finished'" class="tl-status finished">已结束</span>
+        <span v-else class="tl-status scheduled">未开始</span>
         <span v-if="match.status === 'finished' && match.has_post_match_summary" class="tl-summary-link">赛后摘要</span>
       </div>
     </div>
@@ -80,27 +83,29 @@ function goDetail() {
 <style scoped>
 .tl-card {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 12px;
   min-height: 64px;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--card);
+  padding: 6px 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
-  transition: border-color 180ms ease, background 180ms ease;
+  transition: background 180ms ease;
 }
 
 .tl-card:active {
-  transform: scale(0.99);
+  transform: scale(0.995);
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
 }
 
 .tl-live {
-  border-color: var(--live);
-  background: color-mix(in srgb, var(--live) 5%, var(--card));
+  border-radius: 12px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--live) 8%, transparent), transparent 62%);
 }
 
 .tl-time {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -111,8 +116,71 @@ function goDetail() {
   color: var(--muted);
 }
 
+.tl-time::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  bottom: -14px;
+  left: 50%;
+  width: 1px;
+  background: color-mix(in srgb, var(--line) 82%, transparent);
+  transform: translateX(-50%);
+}
+
+.tl-first .tl-time::before {
+  top: 50%;
+}
+
+.tl-last .tl-time::before {
+  bottom: 50%;
+}
+
+.tl-time::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--card);
+  border-radius: 999px;
+  background: var(--weak);
+  box-shadow: 0 0 0 1px var(--line);
+  transform: translate(-50%, -50%);
+}
+
+.tl-time > * {
+  position: relative;
+  z-index: 1;
+}
+
+.tl-time-text {
+  min-width: 40px;
+  display: inline-grid;
+  place-items: center;
+  padding: 2px 4px;
+  border-radius: 999px;
+  background: var(--bg);
+  line-height: 1.2;
+}
+
+.tl-time-text.done {
+  color: var(--success);
+  font-size: 10px;
+  font-weight: 850;
+}
+
 .tl-live .tl-time {
   color: var(--live);
+}
+
+.tl-live .tl-time::after {
+  background: var(--live);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--live) 14%, transparent);
+}
+
+.tl-finished .tl-time::after {
+  background: var(--success);
 }
 
 .tl-live-pulse {
@@ -132,12 +200,19 @@ function goDetail() {
 .tl-done {
   font-size: 18px;
   color: var(--success);
+  margin-bottom: -2px;
 }
 
 .tl-body {
   min-width: 0;
   display: grid;
   gap: 6px;
+  padding: 10px 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+}
+
+.tl-last .tl-body {
+  border-bottom-color: transparent;
 }
 
 .tl-teams {
@@ -185,10 +260,27 @@ function goDetail() {
 
 .tl-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   font-size: 11px;
   color: var(--weak);
+}
+
+.tl-status {
+  font-weight: 800;
+}
+
+.tl-status.live {
+  color: var(--live);
+}
+
+.tl-status.finished {
+  color: var(--success);
+}
+
+.tl-status.scheduled {
+  color: var(--muted);
 }
 
 .tl-summary-link {

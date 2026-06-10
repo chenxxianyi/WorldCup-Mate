@@ -3,7 +3,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiGetTeamMatches, apiGetTeamPlayers } from '@/api/teams'
 import { apiGetGroupStandings } from '@/api/standings'
-import MatchCard from '@/components/common/MatchCard.vue'
+import FeaturedMatchPanel from '@/components/common/FeaturedMatchPanel.vue'
+import MatchTicketRow from '@/components/common/MatchTicketRow.vue'
 import PlayerRoster from '@/components/common/PlayerRoster.vue'
 import StandingTable from '@/components/common/StandingTable.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
@@ -243,7 +244,7 @@ watch(() => route.params.id, loadTeamDetail)
           <h2>下一场比赛</h2>
           <span>{{ nextMatch.local_kickoff_time || '时间待定' }}</span>
         </div>
-        <MatchCard :match="nextMatch" featured />
+        <FeaturedMatchPanel :match="nextMatch" />
       </section>
 
       <section class="section">
@@ -252,9 +253,9 @@ watch(() => route.params.id, loadTeamDetail)
           <span>{{ matches.length }} 场比赛</span>
         </div>
         <div v-if="sortedMatches.length" class="match-list">
-          <MatchCard v-for="match in sortedMatches" :key="match.id" :match="match" />
+          <MatchTicketRow v-for="match in sortedMatches" :key="match.id" :match="match" />
         </div>
-        <div v-else class="card empty-card">暂无球队赛程</div>
+        <div v-else class="empty-state">暂无球队赛程</div>
       </section>
 
       <section v-if="standings.length" class="section">
@@ -393,12 +394,11 @@ watch(() => route.params.id, loadTeamDetail)
 
 .match-list {
   display: grid;
-  gap: 12px;
+  gap: 4px;
 }
 
-.empty-card,
 .state-text {
-  padding: 24px;
+  padding: 22px 4px;
   text-align: center;
   color: var(--muted);
 }

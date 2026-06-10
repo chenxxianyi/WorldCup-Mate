@@ -303,7 +303,7 @@ watch(() => route.params.id, loadMatch)
         <h2>所在小组积分</h2>
         <span>{{ match.group_name }}</span>
       </div>
-      <div class="card table-card table-scroll">
+      <div class="surface-section table-card table-scroll">
         <table class="standing-table">
           <thead>
             <tr>

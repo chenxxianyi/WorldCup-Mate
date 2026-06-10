@@ -53,13 +53,13 @@ onMounted(load)
       </div>
     </div>
 
-    <div v-if="loading" class="card state-card">正在加载关注球队...</div>
-    <div v-else-if="!auth.isLoggedIn" class="card state-card">
+    <div v-if="loading" class="empty-state">正在加载关注球队...</div>
+    <div v-else-if="!auth.isLoggedIn" class="empty-state">
       <span>登录后可以查看关注球队</span>
       <button class="pill-btn primary" @click="router.push('/login')">去登录</button>
     </div>
-    <div v-else-if="error" class="card state-card error">{{ error }}</div>
-    <div v-else-if="!followedTeams.length" class="card state-card">
+    <div v-else-if="error" class="empty-state state-error">{{ error }}</div>
+    <div v-else-if="!followedTeams.length" class="empty-state">
       <span>还没有关注球队</span>
       <button class="pill-btn" @click="router.push('/teams')">去关注球队</button>
     </div>
@@ -68,7 +68,7 @@ onMounted(load)
       <article
         v-for="team in followedTeams"
         :key="team.id"
-        class="card team-row"
+        class="surface-row team-row"
         tabindex="0"
         @click="goTeam(team.id)"
         @keydown.enter="goTeam(team.id)"
@@ -125,8 +125,8 @@ onMounted(load)
 }
 
 .team-list {
-  display: grid;
-  gap: 10px;
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .team-row {
@@ -135,14 +135,13 @@ onMounted(load)
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
-  padding: 13px;
+  padding: 13px 2px;
   cursor: pointer;
   transition: border-color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out;
 }
 
 .team-row:hover {
-  border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
-  background: color-mix(in srgb, var(--primary) 4%, var(--card));
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
 }
 
 .team-row:active {
@@ -181,17 +180,7 @@ onMounted(load)
   font-size: 20px;
 }
 
-.state-card {
-  min-height: 120px;
-  display: grid;
-  place-items: center;
-  gap: 12px;
-  padding: 20px;
-  color: var(--muted);
-  text-align: center;
-}
-
-.state-card.error {
+.state-error {
   color: var(--primary);
 }
 

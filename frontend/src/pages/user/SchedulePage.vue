@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchInput from '@/components/common/SearchInput.vue'
 import ChipFilter from '@/components/common/ChipFilter.vue'
-import MatchCard from '@/components/common/MatchCard.vue'
+import MatchTicketRow from '@/components/common/MatchTicketRow.vue'
 import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 import { apiListMatches } from '@/api/matches'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -402,7 +402,7 @@ watch(search, () => {
     <template v-for="group in groupedByDate" :key="group.key">
       <div class="date-group">{{ group.title }}</div>
       <div class="stack">
-        <MatchCard v-for="m in group.matches" :key="m.id" :match="m" />
+        <MatchTicketRow v-for="m in group.matches" :key="m.id" :match="m" />
       </div>
     </template>
 
@@ -476,7 +476,7 @@ watch(search, () => {
 
 .stack {
   display: grid;
-  gap: 12px;
+  gap: 4px;
 }
 
 .state-text,

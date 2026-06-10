@@ -120,7 +120,48 @@ button {
 
 .card:hover {
   transform: none;
-  box-shadow: var(--shadow-hover);
+  box-shadow: var(--shadow);
+}
+
+.surface-hero {
+  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.surface-section {
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 54%, transparent), transparent),
+    color-mix(in srgb, var(--card-soft) 48%, transparent);
+}
+
+.surface-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+  background: transparent;
+}
+
+.surface-row:last-child {
+  border-bottom: 0;
+}
+
+.empty-state {
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 18px 4px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+}
+
+.empty-state.compact {
+  min-height: 46px;
+  justify-items: start;
+  padding: 8px 2px;
 }
 
 /* ── Tags ── */

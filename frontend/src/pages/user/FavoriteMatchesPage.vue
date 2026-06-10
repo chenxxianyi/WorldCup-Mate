@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import MatchCard from '@/components/common/MatchCard.vue'
+import MatchTicketRow from '@/components/common/MatchTicketRow.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 
@@ -40,19 +40,19 @@ onMounted(load)
       </div>
     </div>
 
-    <div v-if="loading" class="card state-card">正在加载收藏比赛...</div>
-    <div v-else-if="!auth.isLoggedIn" class="card state-card">
+    <div v-if="loading" class="empty-state">正在加载收藏比赛...</div>
+    <div v-else-if="!auth.isLoggedIn" class="empty-state">
       <span>登录后可以查看收藏比赛</span>
       <button class="pill-btn primary" @click="router.push('/login')">去登录</button>
     </div>
-    <div v-else-if="error" class="card state-card error">{{ error }}</div>
-    <div v-else-if="!fav.favoriteMatches.length" class="card state-card">
+    <div v-else-if="error" class="empty-state state-error">{{ error }}</div>
+    <div v-else-if="!fav.favoriteMatches.length" class="empty-state">
       <span>还没有收藏比赛</span>
       <button class="pill-btn" @click="router.push('/schedule')">去赛程收藏</button>
     </div>
 
     <div v-else class="match-list">
-      <MatchCard
+      <MatchTicketRow
         v-for="match in fav.favoriteMatches"
         :key="match.id"
         :match="match"
@@ -102,20 +102,10 @@ onMounted(load)
 
 .match-list {
   display: grid;
-  gap: 12px;
+  gap: 4px;
 }
 
-.state-card {
-  min-height: 120px;
-  display: grid;
-  place-items: center;
-  gap: 12px;
-  padding: 20px;
-  color: var(--muted);
-  text-align: center;
-}
-
-.state-card.error {
+.state-error {
   color: var(--primary);
 }
 </style>

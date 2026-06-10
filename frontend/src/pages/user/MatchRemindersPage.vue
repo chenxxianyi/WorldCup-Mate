@@ -62,13 +62,13 @@ onMounted(load)
       </div>
     </div>
 
-    <div v-if="loading" class="card state-card">正在加载比赛提醒...</div>
-    <div v-else-if="!auth.isLoggedIn" class="card state-card">
+    <div v-if="loading" class="empty-state">正在加载比赛提醒...</div>
+    <div v-else-if="!auth.isLoggedIn" class="empty-state">
       <span>登录后可以查看比赛提醒</span>
       <button class="pill-btn primary" @click="router.push('/login')">去登录</button>
     </div>
-    <div v-else-if="error" class="card state-card error">{{ error }}</div>
-    <div v-else-if="!sortedReminders.length" class="card state-card">
+    <div v-else-if="error" class="empty-state state-error">{{ error }}</div>
+    <div v-else-if="!sortedReminders.length" class="empty-state">
       <span>还没有设置比赛提醒</span>
       <button class="pill-btn" @click="router.push('/schedule')">去赛程设置</button>
     </div>
@@ -77,7 +77,7 @@ onMounted(load)
       <article
         v-for="item in sortedReminders"
         :key="item.id"
-        class="card reminder-item"
+        class="surface-row reminder-item"
         tabindex="0"
         @click="goMatch(item.match_id)"
         @keydown.enter="goMatch(item.match_id)"
@@ -153,21 +153,20 @@ onMounted(load)
 }
 
 .reminder-list {
-  display: grid;
-  gap: 12px;
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .reminder-item {
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: 13px 2px;
   cursor: pointer;
   transition: border-color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out;
 }
 
 .reminder-item:hover {
-  border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
-  background: color-mix(in srgb, var(--primary) 4%, var(--card));
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
 }
 
 .reminder-item:active {
@@ -269,17 +268,7 @@ onMounted(load)
   font-size: 12px;
 }
 
-.state-card {
-  min-height: 120px;
-  display: grid;
-  place-items: center;
-  gap: 12px;
-  padding: 20px;
-  color: var(--muted);
-  text-align: center;
-}
-
-.state-card.error {
+.state-error {
   color: var(--primary);
 }
 </style>
