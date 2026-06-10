@@ -315,13 +315,22 @@ button {
 
 .back-top-enter-active,
 .back-top-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease,
+    filter 0.22s ease;
+}
+
+.back-top-leave-active {
+  transition-duration: 1s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .back-top-enter-from,
 .back-top-leave-to {
   opacity: 0;
   transform: translateY(10px) scale(0.94);
+  filter: blur(10px);
 }
 
 @media (min-width: 768px) {

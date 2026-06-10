@@ -3,13 +3,38 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+const SHOW_SCROLL_Y = 420
+const IDLE_HIDE_DELAY_MS = 1500
+
 const showBackTop = ref(false)
+let hideTimer: number | undefined
+
+function clearHideTimer() {
+  if (!hideTimer) return
+  window.clearTimeout(hideTimer)
+  hideTimer = undefined
+}
+
+function scheduleIdleHide() {
+  clearHideTimer()
+  if (window.scrollY <= SHOW_SCROLL_Y) return
+
+  hideTimer = window.setTimeout(() => {
+    showBackTop.value = false
+    hideTimer = undefined
+  }, IDLE_HIDE_DELAY_MS)
+}
 
 function updateBackTopVisibility() {
-  showBackTop.value = window.scrollY > 420
+  const shouldShow = window.scrollY > SHOW_SCROLL_Y
+  showBackTop.value = shouldShow
+  if (shouldShow) scheduleIdleHide()
+  else clearHideTimer()
 }
 
 function backToTop() {
+  clearHideTimer()
+  showBackTop.value = false
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -19,6 +44,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  clearHideTimer()
   window.removeEventListener('scroll', updateBackTopVisibility)
 })
 
