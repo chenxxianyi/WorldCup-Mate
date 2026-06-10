@@ -18,6 +18,11 @@ function timeText() {
 function goDetail() {
   router.push(`/matches/${props.match.id}`)
 }
+
+function goTeam(teamId: number) {
+  if (!teamId) return
+  router.push(`/teams/${teamId}`)
+}
 </script>
 
 <template>
@@ -30,7 +35,10 @@ function goDetail() {
       'tl-first': first,
       'tl-last': last,
     }"
+    role="link"
+    tabindex="0"
     @click="goDetail"
+    @keydown.enter.self="goDetail"
   >
     <!-- 时间标注 -->
     <div class="tl-time">
@@ -51,7 +59,14 @@ function goDetail() {
     <div class="tl-body">
       <div class="tl-teams">
         <div class="tl-team tl-home">
-          <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" size="sm" />
+          <button
+            class="tl-flag-action"
+            type="button"
+            :aria-label="`查看${match.home_team_name}详情`"
+            @click.stop="goTeam(match.home_team_id)"
+          >
+            <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" size="sm" />
+          </button>
           <span class="tl-team-name">{{ match.home_team_name }}</span>
           <span v-if="match.status === 'live' || match.status === 'finished'" class="tl-score">
             {{ match.home_score ?? '-' }}
@@ -66,7 +81,14 @@ function goDetail() {
             {{ match.away_score ?? '-' }}
           </span>
           <span class="tl-team-name">{{ match.away_team_name }}</span>
-          <TeamFlag :value="match.away_flag" :alt="match.away_team_name" :fallback="match.away_team_code" size="sm" />
+          <button
+            class="tl-flag-action"
+            type="button"
+            :aria-label="`查看${match.away_team_name}详情`"
+            @click.stop="goTeam(match.away_team_id)"
+          >
+            <TeamFlag :value="match.away_flag" :alt="match.away_team_name" :fallback="match.away_team_code" size="sm" />
+          </button>
         </div>
       </div>
       <div class="tl-meta">
@@ -97,6 +119,11 @@ function goDetail() {
 .tl-card:active {
   transform: scale(0.995);
   background: color-mix(in srgb, var(--primary) 4%, transparent);
+}
+
+.tl-card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 3px;
 }
 
 .tl-live {
@@ -240,6 +267,29 @@ function goDetail() {
   white-space: nowrap;
   font-size: 14px;
   font-weight: 650;
+}
+
+.tl-flag-action {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tl-flag-action:active {
+  transform: scale(0.94);
+}
+
+.tl-flag-action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 3px;
 }
 
 .tl-score {

@@ -48,10 +48,21 @@ function kickoffText(match: Match) {
 function goDetail() {
   router.push(`/matches/${props.match.id}`)
 }
+
+function goTeam(teamId: number) {
+  if (!teamId) return
+  router.push(`/teams/${teamId}`)
+}
 </script>
 
 <template>
-  <article class="match-ticket-row">
+  <article
+    class="match-ticket-row"
+    role="link"
+    tabindex="0"
+    @click="goDetail"
+    @keydown.enter.self="goDetail"
+  >
     <div class="match-top">
       <span class="tag blue">{{ stageTagText(match) }}</span>
       <span
@@ -63,9 +74,16 @@ function goDetail() {
       </span>
     </div>
 
-    <div class="teams-line" @click="goDetail">
+    <div class="teams-line">
       <div class="team-side">
-        <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" />
+        <button
+          class="team-flag-action"
+          type="button"
+          :aria-label="`查看${match.home_team_name}详情`"
+          @click.stop="goTeam(match.home_team_id)"
+        >
+          <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" />
+        </button>
         <div class="team-copy">
           <span class="team-name">{{ match.home_team_name }}</span>
           <span class="team-meta">{{ match.home_team_code }}</span>
@@ -80,7 +98,14 @@ function goDetail() {
           <span class="team-name">{{ match.away_team_name }}</span>
           <span class="team-meta">{{ match.away_team_code }}</span>
         </div>
-        <TeamFlag :value="match.away_flag" :alt="match.away_team_name" :fallback="match.away_team_code" />
+        <button
+          class="team-flag-action"
+          type="button"
+          :aria-label="`查看${match.away_team_name}详情`"
+          @click.stop="goTeam(match.away_team_id)"
+        >
+          <TeamFlag :value="match.away_flag" :alt="match.away_team_name" :fallback="match.away_team_code" />
+        </button>
       </div>
     </div>
 
@@ -119,6 +144,7 @@ function goDetail() {
   border-left: 2px solid color-mix(in srgb, var(--primary) 36%, transparent);
   border-radius: 0;
   background: transparent;
+  cursor: pointer;
   transition: background 160ms ease-out, border-color 160ms ease-out;
 }
 
@@ -136,6 +162,11 @@ function goDetail() {
   background: color-mix(in srgb, var(--primary) 4%, transparent);
 }
 
+.match-ticket-row:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 3px;
+}
+
 .match-top {
   display: flex;
   align-items: center;
@@ -149,7 +180,6 @@ function goDetail() {
   align-items: center;
   gap: 14px;
   margin: 14px 0 12px;
-  cursor: pointer;
 }
 
 .team-side {
@@ -163,6 +193,29 @@ function goDetail() {
 .team-side.away {
   justify-content: flex-end;
   text-align: right;
+}
+
+.team-flag-action {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.team-flag-action:active {
+  transform: scale(0.94);
+}
+
+.team-flag-action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 3px;
 }
 
 .team-copy {

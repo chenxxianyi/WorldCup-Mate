@@ -58,6 +58,7 @@ const timelineRaw = ref<TimelineDisplayMatch[]>([])
 const followedSchedule = ref<Match[]>([])
 const followedMatchRail = ref<HTMLElement | null>(null)
 const activeFollowedMatchIndex = ref(0)
+const followedSlideDirection = ref<'from-left' | 'from-right'>('from-right')
 
 const todayMatches = computed(() => matchStore.todayMatches)
 const followedTeams = computed(() =>
@@ -192,7 +193,10 @@ function updateFollowedMatchIndex() {
   if (!rail) return
   const width = rail.clientWidth || 1
   const lastIndex = Math.max(0, followedMatchCards.value.length - 1)
-  activeFollowedMatchIndex.value = Math.min(lastIndex, Math.max(0, Math.round(rail.scrollLeft / width)))
+  const nextIndex = Math.min(lastIndex, Math.max(0, Math.round(rail.scrollLeft / width)))
+  if (nextIndex === activeFollowedMatchIndex.value) return
+  followedSlideDirection.value = nextIndex > activeFollowedMatchIndex.value ? 'from-right' : 'from-left'
+  activeFollowedMatchIndex.value = nextIndex
 }
 
 async function loadGroupStandings() {
@@ -343,7 +347,10 @@ onBeforeUnmount(() => {
                 v-for="match in followedMatchCards"
                 :key="match.id"
                 class="followed-match-slide"
-                :class="{ active: match.id === followedMatchCards[activeFollowedMatchIndex]?.id }"
+                :class="[
+                  { active: match.id === followedMatchCards[activeFollowedMatchIndex]?.id },
+                  followedSlideDirection,
+                ]"
               >
                 <MatchTicketRow :match="match" />
               </div>
@@ -519,6 +526,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 8px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .followed-match-rail {
@@ -539,25 +547,57 @@ onBeforeUnmount(() => {
   min-width: 0;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  opacity: 0.72;
-  transform: translateY(4px) scale(0.985);
-  transition: opacity 180ms ease-out, transform 180ms ease-out;
+  opacity: 0.88;
+  transform: translateX(0);
+  transition: opacity 260ms ease-out;
 }
 
 .followed-match-slide.active {
   opacity: 1;
-  transform: translateY(0) scale(1);
-  animation: followed-ticket-in 220ms ease-out both;
+  animation: followed-ticket-in-right 420ms cubic-bezier(0.22, 0.72, 0.2, 1) both;
 }
 
-@keyframes followed-ticket-in {
+.followed-match-slide.active.from-left {
+  animation-name: followed-ticket-in-left;
+}
+
+.followed-match-slide.active.from-right {
+  animation-name: followed-ticket-in-right;
+}
+
+.followed-match-slide :deep(.match-ticket-row) {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.followed-match-slide.active :deep(.match-ticket-row) {
+  padding-left: 12px;
+  border-left: 3px solid color-mix(in srgb, var(--primary) 48%, transparent);
+}
+
+.followed-match-slide :deep(.match-ticket-row::before) {
+  left: 0;
+}
+
+@keyframes followed-ticket-in-right {
   from {
-    opacity: 0.82;
-    transform: translateY(6px) scale(0.985);
+    opacity: 0.72;
+    transform: translateX(18px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0);
+  }
+}
+
+@keyframes followed-ticket-in-left {
+  from {
+    opacity: 0.72;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

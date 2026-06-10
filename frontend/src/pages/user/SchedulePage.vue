@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import SearchInput from '@/components/common/SearchInput.vue'
 import ChipFilter from '@/components/common/ChipFilter.vue'
 import MatchTicketRow from '@/components/common/MatchTicketRow.vue'
@@ -26,6 +26,7 @@ const FILTER_KNOCKOUT = '淘汰赛'
 const FILTER_FOLLOWED = '只看关注'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const fav = useFavoriteStore()
 
@@ -70,6 +71,15 @@ const filterOptions = [
   'Group L',
 ]
 
+const scopedTeamId = computed(() => Number(route.query.teamId || 0))
+const scopedTeamName = computed(() => String(route.query.teamName || '').trim())
+const hasTeamScope = computed(() => scopedTeamId.value > 0)
+const pageTitle = computed(() => hasTeamScope.value ? `${scopedTeamName.value || '球队'}赛程` : '全部赛程')
+const searchPlaceholder = computed(() =>
+  hasTeamScope.value
+    ? `搜索${scopedTeamName.value || '该球队'}的城市 / 球场`
+    : '搜索球队 / 城市 / 球场',
+)
 const followedOnly = computed(() => activeFilter.value === FILTER_FOLLOWED)
 
 const clientFilteredMatches = computed(() => {
@@ -116,6 +126,7 @@ const hasMore = computed(() => {
 })
 
 const emptyText = computed(() => {
+  if (hasTeamScope.value) return `${scopedTeamName.value || '该球队'}暂无符合条件的赛程`
   if (followedOnly.value && !auth.isLoggedIn) return '登录后可以查看关注球队的赛程'
   if (followedOnly.value && fav.followedTeamIds.length === 0) return '还没有关注球队'
   return '暂无符合条件的比赛'
@@ -143,6 +154,10 @@ function requestParams() {
   const params: Record<string, any> = {
     page: page.value,
     page_size: PAGE_SIZE,
+  }
+
+  if (hasTeamScope.value) {
+    params.teamId = scopedTeamId.value
   }
 
   if (activeFilter.value === FILTER_TODAY) {
@@ -309,6 +324,18 @@ function goToLogin() {
   router.push('/login')
 }
 
+function clearTeamScope() {
+  router.replace('/schedule')
+}
+
+function goBackFromTeamSchedule() {
+  if (hasTeamScope.value) {
+    router.push(`/teams/${scopedTeamId.value}`)
+    return
+  }
+  router.back()
+}
+
 function switchFilterByOffset(offset: number) {
   const currentIndex = filterOptions.indexOf(activeFilter.value)
   if (currentIndex < 0) return
@@ -364,6 +391,7 @@ onBeforeUnmount(() => {
 })
 
 watch(activeFilter, resetAndLoad)
+watch(() => route.query.teamId, resetAndLoad)
 watch(search, () => {
   if (searchTimer) window.clearTimeout(searchTimer)
   searchTimer = window.setTimeout(resetAndLoad, 320)
@@ -372,9 +400,19 @@ watch(search, () => {
 
 <template>
   <div class="schedule-page" @touchstart.passive="onSwipeStart" @touchend.passive="onSwipeEnd">
+    <button
+      v-if="hasTeamScope"
+      class="schedule-back-btn"
+      type="button"
+      title="返回球队详情"
+      @click="goBackFromTeamSchedule"
+    >
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+
     <div class="section-head">
       <div>
-        <h2>全部赛程</h2>
+        <h2>{{ pageTitle }}</h2>
       </div>
       <button class="pill-btn bracket-entry" @click="router.push('/bracket')">
         <span class="material-symbols-outlined">account_tree</span>
@@ -385,7 +423,15 @@ watch(search, () => {
       </div>
     </div>
 
-    <SearchInput v-model="search" placeholder="搜索球队 / 城市 / 球场" />
+    <SearchInput v-model="search" :placeholder="searchPlaceholder" />
+
+    <div v-if="hasTeamScope" class="scope-strip">
+      <span>
+        <span class="material-symbols-outlined">filter_alt</span>
+        正在查看 {{ scopedTeamName || '该球队' }} 的赛程
+      </span>
+      <button type="button" @click="clearTeamScope">查看全部</button>
+    </div>
 
     <div class="section">
       <ChipFilter v-model="activeFilter" :options="filterOptions" />
@@ -415,7 +461,37 @@ watch(search, () => {
 
 <style scoped>
 .schedule-page {
+  position: relative;
   touch-action: pan-y;
+}
+
+.schedule-back-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  margin: -2px 0 4px;
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  border-radius: 999px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.schedule-back-btn:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--primary) 22%, var(--line));
+  background: var(--card);
+}
+
+.schedule-back-btn:active {
+  transform: translateX(-2px);
+}
+
+.schedule-back-btn .material-symbols-outlined {
+  font-size: 21px;
 }
 
 .section-head {
@@ -465,6 +541,43 @@ watch(search, () => {
 
 .section {
   margin-top: 18px;
+}
+
+.scope-strip {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 0 12px;
+  border-left: 3px solid var(--primary);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.scope-strip span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scope-strip .material-symbols-outlined {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+.scope-strip button {
+  flex: 0 0 auto;
+  border: 0;
+  color: var(--primary);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .date-group {

@@ -85,6 +85,17 @@ const teamStanding = computed(() =>
   team.value ? standings.value.find((item) => item.team_id === team.value?.id) || null : null,
 )
 
+function goTeamSchedule() {
+  if (!team.value) return
+  router.push({
+    path: '/schedule',
+    query: {
+      teamId: String(team.value.id),
+      teamName: team.value.name,
+    },
+  })
+}
+
 async function loadPlayers(teamId: number) {
   const requestId = ++playersRequestId
   playersLoading.value = true
@@ -211,7 +222,7 @@ watch(() => route.params.id, loadTeamDetail)
             <span class="material-symbols-outlined">bookmark_add</span>
             {{ collectingMatches ? '收藏中...' : allMatchFavorited ? '已全部收藏' : '收藏所有比赛' }}
           </button>
-          <button class="pill-btn primary" @click="router.push('/schedule')">
+          <button class="pill-btn primary" @click="goTeamSchedule">
             <span class="material-symbols-outlined">calendar_month</span>
             查看赛程
           </button>

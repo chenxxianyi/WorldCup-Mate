@@ -116,7 +116,13 @@ async function createReminders() {
       </span>
     </button>
 
-    <div v-if="open && !hasReminder" class="reminder-popover">
+    <div
+      v-if="open && !hasReminder"
+      class="reminder-dismiss-layer"
+      @click.stop="open = false"
+    ></div>
+
+    <div v-if="open && !hasReminder" class="reminder-popover" @click.stop>
       <div class="popover-title">提醒时间</div>
       <div class="option-grid">
         <button
@@ -247,6 +253,13 @@ async function createReminders() {
   border-radius: 14px;
   background: var(--card);
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+}
+
+.reminder-dismiss-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 119;
+  background: transparent;
 }
 
 .popover-title {
