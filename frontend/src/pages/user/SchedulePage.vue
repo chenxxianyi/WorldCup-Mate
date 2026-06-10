@@ -82,12 +82,16 @@ const searchPlaceholder = computed(() =>
 )
 const followedOnly = computed(() => activeFilter.value === FILTER_FOLLOWED)
 
+const followedMatches = computed(() =>
+  [...fav.favoriteMatches]
+    .filter((match) => matchesTeamScope(match))
+    .filter((match) => matchesKeyword(match))
+    .sort((a, b) => new Date(a.kickoff_time_utc).getTime() - new Date(b.kickoff_time_utc).getTime()),
+)
+
 const clientFilteredMatches = computed(() => {
-  if (!followedOnly.value) return matches.value
-  const followedIds = new Set(fav.followedTeamIds)
-  return matches.value.filter(
-    (match) => followedIds.has(match.home_team_id) || followedIds.has(match.away_team_id),
-  )
+  if (followedOnly.value) return followedMatches.value
+  return matches.value
 })
 
 const loadedDateKeys = computed(() => {
@@ -121,14 +125,16 @@ const groupedByDate = computed(() => {
 const hasBufferedDays = computed(() => loadedDateKeys.value.length > visibleDateLimit.value)
 const hasMore = computed(() => {
   if (followedOnly.value && !auth.isLoggedIn) return false
-  if (followedOnly.value && auth.isLoggedIn && fav.followedTeamIds.length === 0) return false
+  if (followedOnly.value) return hasBufferedDays.value
   return hasBufferedDays.value || !reachedEnd.value
 })
 
 const emptyText = computed(() => {
+  if (hasTeamScope.value && followedOnly.value) return `${scopedTeamName.value || '该球队'}暂无关注比赛`
   if (hasTeamScope.value) return `${scopedTeamName.value || '该球队'}暂无符合条件的赛程`
-  if (followedOnly.value && !auth.isLoggedIn) return '登录后可以查看关注球队的赛程'
-  if (followedOnly.value && fav.followedTeamIds.length === 0) return '还没有关注球队'
+  if (followedOnly.value && !auth.isLoggedIn) return '登录后可以查看关注的比赛'
+  if (followedOnly.value && fav.favoriteMatchIds.length === 0) return '还没有关注比赛'
+  if (followedOnly.value) return '暂无符合条件的关注比赛'
   return '暂无符合条件的比赛'
 })
 
@@ -177,6 +183,25 @@ function requestParams() {
   return params
 }
 
+function matchesTeamScope(match: Match) {
+  if (!hasTeamScope.value) return true
+  return match.home_team_id === scopedTeamId.value || match.away_team_id === scopedTeamId.value
+}
+
+function matchesKeyword(match: Match) {
+  const keyword = search.value.trim().toLowerCase()
+  if (!keyword) return true
+  return [
+    match.home_team_name,
+    match.away_team_name,
+    match.home_team_code,
+    match.away_team_code,
+    match.city,
+    match.stadium,
+    match.group_name || '',
+  ].some((value) => value.toLowerCase().includes(keyword))
+}
+
 function matchDateKey(match: Match) {
   return (match.local_kickoff_time || '').split(' ')[0] || '其他日期'
 }
@@ -193,12 +218,9 @@ async function prepareFollowedFilter() {
     reachedEnd.value = true
     return false
   }
-  await fav.fetchFavoriteTeams()
-  if (fav.followedTeamIds.length === 0) {
-    reachedEnd.value = true
-    return false
-  }
-  return true
+  await fav.fetchFavoriteMatches()
+  reachedEnd.value = true
+  return false
 }
 
 async function fetchNextPage(token: number) {
@@ -316,8 +338,8 @@ function onWindowScroll() {
   maybeLoadAfterHint()
 }
 
-function goToTeams() {
-  router.push('/teams')
+function showAllMatches() {
+  activeFilter.value = FILTER_ALL
 }
 
 function goToLogin() {
@@ -442,7 +464,7 @@ watch(search, () => {
     <div v-else-if="!groupedByDate.length" class="state-text">
       <span>{{ emptyText }}</span>
       <button v-if="followedOnly && !auth.isLoggedIn" class="inline-action" @click="goToLogin">去登录</button>
-      <button v-else-if="followedOnly" class="inline-action" @click="goToTeams">去关注球队</button>
+      <button v-else-if="followedOnly" class="inline-action" @click="showAllMatches">查看全部赛程</button>
     </div>
 
     <template v-for="group in groupedByDate" :key="group.key">

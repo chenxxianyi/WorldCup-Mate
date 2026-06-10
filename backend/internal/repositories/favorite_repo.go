@@ -43,7 +43,12 @@ func IsMatchFavorited(userID, matchID uint) bool {
 
 func GetFavoriteMatches(userID uint) ([]models.UserFavoriteMatch, error) {
 	var favs []models.UserFavoriteMatch
-	err := database.DB.Preload("Match").Preload("Match.HomeTeam").Preload("Match.AwayTeam").
+	err := database.DB.Preload("Match").
+		Preload("Match.HomeTeam").
+		Preload("Match.AwayTeam").
+		Preload("Match.Stadium").
+		Preload("Match.City").
+		Preload("Match.Group").
 		Where("user_id = ?", userID).Find(&favs).Error
 	return favs, err
 }

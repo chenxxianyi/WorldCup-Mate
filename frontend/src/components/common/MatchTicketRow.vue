@@ -124,7 +124,7 @@ function goTeam(teamId: number) {
           class="icon-action star"
           :class="{ active: fav.isMatchFavorite(match.id), ghost: !fav.isMatchFavorite(match.id) }"
           title="收藏"
-          @click.stop="fav.toggleMatchFavorite(match.id)"
+          @click.stop="fav.toggleMatchFavorite(match.id, match)"
         >
           <span
             class="material-symbols-outlined"

@@ -16,12 +16,12 @@ func AddFavoriteTeam(c *gin.Context) {
 		utils.Error(c, 400, "invalid team id")
 		return
 	}
-	added, err := services.ToggleFavoriteTeam(userID, uint(teamID))
+	err = services.AddFavoriteTeam(userID, uint(teamID))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
 	}
-	utils.Success(c, gin.H{"added": added})
+	utils.Success(c, gin.H{"added": true})
 }
 
 func RemoveFavoriteTeam(c *gin.Context) {
@@ -31,7 +31,7 @@ func RemoveFavoriteTeam(c *gin.Context) {
 		utils.Error(c, 400, "invalid team id")
 		return
 	}
-	_, err = services.ToggleFavoriteTeam(userID, uint(teamID))
+	err = services.RemoveFavoriteTeam(userID, uint(teamID))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -56,12 +56,12 @@ func AddFavoriteMatch(c *gin.Context) {
 		utils.Error(c, 400, "invalid match id")
 		return
 	}
-	added, err := services.ToggleFavoriteMatch(userID, uint(matchID))
+	err = services.AddFavoriteMatch(userID, uint(matchID))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
 	}
-	utils.Success(c, gin.H{"added": added})
+	utils.Success(c, gin.H{"added": true})
 }
 
 func RemoveFavoriteMatch(c *gin.Context) {
@@ -71,7 +71,7 @@ func RemoveFavoriteMatch(c *gin.Context) {
 		utils.Error(c, 400, "invalid match id")
 		return
 	}
-	_, err = services.ToggleFavoriteMatch(userID, uint(matchID))
+	err = services.RemoveFavoriteMatch(userID, uint(matchID))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return

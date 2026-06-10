@@ -73,7 +73,7 @@ async function collectAllTeamMatches() {
       (m) => m.status !== 'finished' && m.status !== 'cancelled',
     )
     for (const match of target) {
-      await fav.addMatchFavorite(match.id)
+      await fav.addMatchFavorite(match.id, match)
     }
     await fav.fetchFavoriteMatches()
   } finally {

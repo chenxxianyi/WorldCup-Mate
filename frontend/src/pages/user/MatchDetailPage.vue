@@ -260,7 +260,7 @@ watch(() => route.params.id, loadMatch)
           class="pill-btn"
           :class="{ active: fav.isMatchFavorite(match.id) }"
           type="button"
-          @click="fav.toggleMatchFavorite(match.id)"
+          @click="fav.toggleMatchFavorite(match.id, match)"
         >
           <span class="material-symbols-outlined">star</span>
           {{ fav.isMatchFavorite(match.id) ? '已收藏' : '收藏' }}

@@ -6,7 +6,7 @@ import MatchTicketRow from '@/components/common/MatchTicketRow.vue'
 import TimelineDayGroup from '@/components/common/TimelineDayGroup.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetGroupStandings } from '@/api/standings'
-import { apiGetTournamentProgress, apiGetUpcomingMatches, apiGetTimeline, apiListMatches } from '@/api/matches'
+import { apiGetTournamentProgress, apiGetUpcomingMatches, apiGetTimeline } from '@/api/matches'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useMatchStore } from '@/stores/useMatchStore'
@@ -55,7 +55,6 @@ const progress = ref<TournamentProgress>({
 const nextMatch = ref<Match | null>(null)
 type TimelineDisplayMatch = Match & { has_post_match_summary?: boolean }
 const timelineRaw = ref<TimelineDisplayMatch[]>([])
-const followedSchedule = ref<Match[]>([])
 const followedMatchRail = ref<HTMLElement | null>(null)
 const activeFollowedMatchIndex = ref(0)
 const followedSlideDirection = ref<'from-left' | 'from-right'>('from-right')
@@ -109,26 +108,13 @@ const groupedTimeline = computed(() => {
   return result
 })
 
-const sortedFollowedSchedule = computed(() =>
-  [...followedSchedule.value].sort((a, b) =>
-    new Date(a.kickoff_time_utc).getTime() - new Date(b.kickoff_time_utc).getTime(),
-  ),
-)
-
 const sortedFavoriteMatches = computed(() =>
   [...fav.favoriteMatches].sort((a, b) =>
     new Date(a.kickoff_time_utc).getTime() - new Date(b.kickoff_time_utc).getTime(),
   ),
 )
 
-const followedMatchCards = computed(() =>
-  sortedFavoriteMatches.value.length ? sortedFavoriteMatches.value : sortedFollowedSchedule.value,
-)
-
-const todayFollowedMatches = computed(() => {
-  const todayKey = localDayKey()
-  return sortedFollowedSchedule.value.filter((match) => match.local_kickoff_time.startsWith(todayKey))
-})
+const followedMatchCards = computed(() => sortedFavoriteMatches.value)
 
 function localDayKey(offset = 0) {
   const d = new Date()
@@ -223,21 +209,6 @@ async function loadNextMatch() {
   }
 }
 
-async function loadFollowedSchedule() {
-  followedSchedule.value = []
-  if (!auth.isLoggedIn || fav.followedTeamIds.length === 0) return
-  try {
-    const res = await apiListMatches({ status: 'scheduled', page: 1, page_size: 100 }) as any
-    const list = (res.list || res || []).map(normalizeMatch)
-    const followedIds = new Set(fav.followedTeamIds)
-    followedSchedule.value = list.filter(
-      (match: Match) => followedIds.has(match.home_team_id) || followedIds.has(match.away_team_id),
-    )
-  } catch {
-    followedSchedule.value = []
-  }
-}
-
 async function loadHomeData() {
   matchStore.fetchTodayMatches()
   matchStore.fetchRecommendedMatches()
@@ -264,7 +235,6 @@ async function loadHomeData() {
   if (auth.isLoggedIn) {
     await fav.fetchFavoriteTeams()
     await fav.fetchFavoriteMatches()
-    await loadFollowedSchedule()
   }
 }
 
@@ -273,12 +243,11 @@ watch(
   () => auth.isLoggedIn,
   async (loggedIn) => {
     if (!loggedIn) {
-      followedSchedule.value = []
+      fav.clearFavorites()
       return
     }
     await fav.fetchFavoriteTeams()
     await fav.fetchFavoriteMatches()
-    await loadFollowedSchedule()
   },
 )
 
@@ -356,7 +325,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
-          <div v-else class="empty-state compact">关注球队暂无未开始比赛</div>
+          <div v-else class="empty-state compact">暂无关注比赛</div>
         </div>
         <div class="follow-block">
           <div class="follow-subhead">关注的球队</div>

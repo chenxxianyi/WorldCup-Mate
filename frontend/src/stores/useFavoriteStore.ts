@@ -22,17 +22,18 @@ export const useFavoriteStore = defineStore('favorite', () => {
   }
 
   function isTeamFollowed(teamId: number) {
-    return followedTeamIds.value.includes(teamId)
+    return followedTeamIds.value.includes(Number(teamId))
   }
 
   function isMatchFavorite(matchId: number) {
-    return favoriteMatchIds.value.includes(matchId)
+    const id = Number(matchId)
+    return favoriteMatchIds.value.includes(id) || favoriteMatches.value.some((match) => match.id === id)
   }
 
   async function fetchFavoriteTeams() {
     try {
       const res = await apiListFavoriteTeams() as any[]
-      followedTeamIds.value = res.map((f: any) => f.team_id)
+      followedTeamIds.value = res.map((f: any) => Number(f.team_id)).filter(Number.isFinite)
     } catch {
       followedTeamIds.value = []
     }
@@ -41,7 +42,9 @@ export const useFavoriteStore = defineStore('favorite', () => {
   async function fetchFavoriteMatches() {
     try {
       const res = await apiListFavoriteMatches() as any[]
-      favoriteMatchIds.value = res.map((f: any) => f.match_id)
+      favoriteMatchIds.value = res
+        .map((f: any) => Number(f.match_id ?? f.match?.id))
+        .filter(Number.isFinite)
       favoriteMatches.value = res.filter((f: any) => f.match).map((f: any) => normalizeMatch(f.match))
     } catch {
       favoriteMatchIds.value = []
@@ -50,51 +53,65 @@ export const useFavoriteStore = defineStore('favorite', () => {
   }
 
   async function toggleTeamFollow(teamId: number) {
-    const wasFollowed = followedTeamIds.value.includes(teamId)
+    const id = Number(teamId)
+    const wasFollowed = followedTeamIds.value.includes(id)
     if (wasFollowed) {
-      followedTeamIds.value = followedTeamIds.value.filter((id) => id !== teamId)
+      followedTeamIds.value = followedTeamIds.value.filter((teamId) => teamId !== id)
     } else {
-      followedTeamIds.value.push(teamId)
+      followedTeamIds.value.push(id)
     }
     try {
       if (wasFollowed) {
-        await apiRemoveFavoriteTeam(teamId)
+        await apiRemoveFavoriteTeam(id)
       } else {
-        await apiAddFavoriteTeam(teamId)
+        await apiAddFavoriteTeam(id)
       }
     } catch {
-      if (wasFollowed) followedTeamIds.value.push(teamId)
-      else followedTeamIds.value = followedTeamIds.value.filter((id) => id !== teamId)
+      if (wasFollowed) followedTeamIds.value.push(id)
+      else followedTeamIds.value = followedTeamIds.value.filter((teamId) => teamId !== id)
     }
   }
 
-  async function toggleMatchFavorite(matchId: number) {
-    const wasFav = favoriteMatchIds.value.includes(matchId)
+  async function toggleMatchFavorite(matchId: number, match?: Match) {
+    const id = Number(matchId)
+    const wasFav = isMatchFavorite(id)
+    const prevIds = [...favoriteMatchIds.value]
+    const prevMatches = [...favoriteMatches.value]
     if (wasFav) {
-      favoriteMatchIds.value = favoriteMatchIds.value.filter((id) => id !== matchId)
+      favoriteMatchIds.value = favoriteMatchIds.value.filter((matchId) => matchId !== id)
+      favoriteMatches.value = favoriteMatches.value.filter((match) => match.id !== id)
     } else {
-      favoriteMatchIds.value.push(matchId)
+      favoriteMatchIds.value.push(id)
+      if (match && !favoriteMatches.value.some((item) => item.id === id)) {
+        favoriteMatches.value.push(match)
+      }
     }
     try {
       if (wasFav) {
-        await apiRemoveFavoriteMatch(matchId)
+        await apiRemoveFavoriteMatch(id)
       } else {
-        await apiAddFavoriteMatch(matchId)
+        await apiAddFavoriteMatch(id)
       }
     } catch {
-      if (wasFav) favoriteMatchIds.value.push(matchId)
-      else favoriteMatchIds.value = favoriteMatchIds.value.filter((id) => id !== matchId)
+      favoriteMatchIds.value = prevIds
+      favoriteMatches.value = prevMatches
     }
   }
 
-  async function addMatchFavorite(matchId: number) {
-    if (favoriteMatchIds.value.includes(matchId)) return
+  async function addMatchFavorite(matchId: number, match?: Match) {
+    const id = Number(matchId)
+    if (isMatchFavorite(id)) return
     const prev = [...favoriteMatchIds.value]
-    favoriteMatchIds.value.push(matchId)
+    const prevMatches = [...favoriteMatches.value]
+    favoriteMatchIds.value.push(id)
+    if (match && !favoriteMatches.value.some((item) => item.id === id)) {
+      favoriteMatches.value.push(match)
+    }
     try {
-      await apiAddFavoriteMatch(matchId)
+      await apiAddFavoriteMatch(id)
     } catch {
       favoriteMatchIds.value = prev
+      favoriteMatches.value = prevMatches
     }
   }
 
