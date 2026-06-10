@@ -61,11 +61,9 @@ function goProfileDetail(path: string) {
   router.push(auth.isLoggedIn ? path : '/login')
 }
 
-const followedTeamNames = computed(() =>
+const followedTeams = computed(() =>
   teamStore.teams
     .filter((t) => fav.isTeamFollowed(t.id))
-    .map((t) => t.name)
-    .join('、')
 )
 
 // Avatar upload
@@ -191,7 +189,25 @@ watch(
 
     <section class="section">
       <div class="card settings-list">
-        <div class="setting-item"><b>我的关注</b><span>{{ followedTeamNames }}</span></div>
+        <div class="setting-item follow-setting-item" @click="goProfileDetail('/profile/favorite-teams')">
+          <div class="follow-setting-head">
+            <b>我的关注</b>
+            <span class="follow-setting-count">{{ fav.followedTeamIds.length }} 支球队</span>
+          </div>
+          <div v-if="followedTeams.length" class="follow-setting-chips">
+            <span
+              v-for="team in followedTeams.slice(0, 5)"
+              :key="team.id"
+              class="follow-setting-chip"
+            >
+              {{ team.name }}
+            </span>
+            <span v-if="followedTeams.length > 5" class="follow-setting-more">
+              +{{ followedTeams.length - 5 }}
+            </span>
+          </div>
+          <span v-else class="follow-setting-empty">暂无关注球队</span>
+        </div>
         <div class="setting-item"><b>我的提醒</b><span>{{ reminder.count }} 个待发送</span></div>
         <div class="setting-item">
           <b>默认提醒渠道</b>
@@ -337,6 +353,75 @@ watch(
 .setting-item span {
   color: var(--muted);
   font-size: 13px;
+}
+
+.follow-setting-item {
+  min-height: 86px;
+  display: grid;
+  align-content: center;
+  justify-content: stretch;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.follow-setting-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.follow-setting-count {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 9%, transparent);
+  font-size: 12px !important;
+  font-weight: 800;
+}
+
+.follow-setting-chips {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.follow-setting-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.follow-setting-chip,
+.follow-setting-more {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--card-soft));
+  font-size: 12px !important;
+  font-weight: 750;
+}
+
+.follow-setting-chip {
+  max-width: 96px;
+  padding: 0 10px;
+  overflow: hidden;
+  color: var(--text) !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-setting-more {
+  padding: 0 9px;
+  color: var(--primary) !important;
+}
+
+.follow-setting-empty {
+  color: var(--muted);
 }
 
 .muted-arrow {
