@@ -88,6 +88,9 @@ watch(() => auth.isLoggedIn, refreshUnread)
 
 <style scoped>
 .topbar {
+  --topbar-glass: rgba(255, 255, 255, 0.82);
+  --topbar-glass-soft: rgba(255, 255, 255, 0.72);
+  --topbar-stroke: rgba(255, 255, 255, 0.9);
   position: relative;
   z-index: 10;
   display: flex;
@@ -95,17 +98,64 @@ watch(() => auth.isLoggedIn, refreshUnread)
   align-items: center;
   gap: 12px;
   margin: 0 0 18px;
-  padding: 10px 2px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
+  padding: 10px 12px;
+  border: 1px solid var(--topbar-stroke);
+  border-radius: 26px;
+  background:
+    radial-gradient(86% 150% at 10% 4%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 44%),
+    radial-gradient(96% 150% at 60% -28%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 48%),
+    radial-gradient(112% 160% at 96% 12%, color-mix(in srgb, var(--green-2) 13%, transparent), transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, #fff8ed 36%, #eefbf4 70%, #f3f7ff 100%),
+    var(--topbar-glass);
+  box-shadow:
+    0 20px 54px rgba(15, 23, 42, 0.09),
+    0 10px 24px color-mix(in srgb, var(--green) 8%, transparent),
+    0 2px 10px rgba(255, 255, 255, 0.52) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.56) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  backdrop-filter: blur(28px) saturate(1.45) contrast(1.03);
+  -webkit-backdrop-filter: blur(28px) saturate(1.45) contrast(1.03);
+  isolation: isolate;
   overflow: hidden;
 }
 
 .topbar::before {
-  content: none;
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: 25px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), transparent 31%),
+    linear-gradient(315deg, rgba(255, 255, 255, 0.36), transparent 46%),
+    radial-gradient(88% 150% at 50% -54%, rgba(255, 255, 255, 0.78), transparent 50%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.topbar::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 6px;
+  z-index: 0;
+  height: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.54);
+  border-radius: 0 0 999px 999px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--primary) 28%, transparent) 14%,
+      color-mix(in srgb, var(--accent) 34%, transparent) 48%,
+      color-mix(in srgb, var(--green-2) 28%, transparent) 74%,
+      color-mix(in srgb, var(--sky) 20%, transparent) 88%,
+      transparent
+    );
+  filter: blur(0.2px);
+  opacity: 0.86;
+  pointer-events: none;
 }
 
 .topbar > * {
@@ -121,14 +171,23 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 .brand-mark {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  border: 0;
-  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, rgba(255, 255, 255, 0.68));
+  border-radius: 13px;
   color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 8%, var(--card));
+  background:
+    radial-gradient(circle at 72% 20%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 247, 250, 0.58)),
+    color-mix(in srgb, var(--primary) 5%, var(--card));
+  box-shadow:
+    0 12px 28px color-mix(in srgb, var(--primary) 14%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(1.45);
+  -webkit-backdrop-filter: blur(20px) saturate(1.45);
   flex-shrink: 0;
 }
 
@@ -224,23 +283,38 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 .icon-btn {
+  --icon-glass-bg: rgba(255, 255, 255, 0.28);
+  --icon-glass-highlight: rgba(255, 255, 255, 0.5);
+  --icon-glass-stroke: rgba(255, 255, 255, 0.62);
   position: relative;
   width: auto;
   min-width: 108px;
-  height: 38px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 4px 6px 4px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--icon-glass-stroke);
   border-radius: 999px;
   color: var(--text);
-  background: var(--card);
-  box-shadow: none;
-  backdrop-filter: none;
+  background:
+    radial-gradient(circle at 30% 18%, var(--icon-glass-highlight), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08)),
+    var(--icon-glass-bg);
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
   outline: none;
-  transition: border-color 180ms ease-out, background 180ms ease-out;
+  transition:
+    transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 180ms ease-out,
+    background 180ms ease-out,
+    box-shadow 180ms ease-out;
   font-size: 13px;
   font-weight: 750;
   text-decoration: none;
@@ -248,8 +322,20 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 .icon-btn:hover {
-  border-color: color-mix(in srgb, var(--primary) 24%, var(--line));
-  background: color-mix(in srgb, var(--primary) 4%, var(--card));
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 18%, rgba(255, 255, 255, 0.7));
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.62), transparent 40%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.12)),
+    color-mix(in srgb, var(--accent) 8%, rgba(255, 255, 255, 0.24));
+  box-shadow:
+    0 16px 34px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.icon-btn:active {
+  transform: scale(0.97);
 }
 
 .badge-dot {
@@ -271,14 +357,22 @@ watch(() => auth.isLoggedIn, refreshUnread)
 
 .action-orb,
 .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   border-radius: 999px;
   color: var(--muted);
-  background: var(--card-soft);
-  box-shadow: none;
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.5), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+    rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 8px 18px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
   font-size: 16px;
 }
 
@@ -295,33 +389,44 @@ watch(() => auth.isLoggedIn, refreshUnread)
 
 .theme-orb {
   color: var(--muted);
-  background: var(--card-soft);
+  background:
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--accent) 24%, rgba(255, 255, 255, 0.2)), transparent 46%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.06)),
+    rgba(255, 255, 255, 0.12);
 }
 
 .theme-orb.dark {
-  color: var(--muted);
-  background: var(--card-soft);
+  color: #fff;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--blue) 74%, #000), color-mix(in srgb, var(--secondary) 58%, #000)),
+    var(--blue);
 }
 
 .login-orb {
-  background: var(--card-soft);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .logout-orb {
   color: var(--muted);
-  background: var(--card-soft);
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.46), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)),
+    color-mix(in srgb, var(--sky) 8%, rgba(255, 255, 255, 0.1));
 }
 
 .user-avatar {
   color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 9%, var(--card));
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.46), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+    color-mix(in srgb, var(--primary) 9%, rgba(255, 255, 255, 0.08));
   font-size: 14px;
   font-weight: 800;
 }
 
 .user-avatar-img {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   object-fit: cover;
 }
@@ -338,12 +443,17 @@ watch(() => auth.isLoggedIn, refreshUnread)
 
 .primary-btn {
   color: #fff;
-  background: var(--primary);
-  border-color: var(--primary);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 86%, #fff), var(--primary));
+  border-color: color-mix(in srgb, var(--primary) 52%, rgba(255, 255, 255, 0.56));
+  box-shadow:
+    0 12px 28px color-mix(in srgb, var(--primary) 24%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 .primary-btn:hover {
-  background: color-mix(in srgb, var(--primary) 85%, #000);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 92%, #fff), color-mix(in srgb, var(--primary) 88%, #000));
   border-color: color-mix(in srgb, var(--primary) 85%, #000);
 }
 
@@ -357,7 +467,27 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 [data-theme='dark'] .topbar {
-  background: transparent;
+  --topbar-glass: rgba(11, 18, 24, 0.78);
+  --topbar-glass-soft: rgba(18, 28, 34, 0.72);
+  --topbar-stroke: rgba(255, 255, 255, 0.18);
+  background:
+    radial-gradient(90% 150% at 9% 0%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 42%),
+    radial-gradient(94% 150% at 58% -28%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 46%),
+    radial-gradient(116% 160% at 98% 12%, color-mix(in srgb, var(--green-2) 16%, transparent), transparent 50%),
+    linear-gradient(135deg, rgba(18, 28, 34, 0.92), rgba(10, 23, 27, 0.82) 52%, rgba(14, 22, 40, 0.86)),
+    var(--topbar-glass);
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme='dark'] .topbar::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 34%),
+    linear-gradient(315deg, rgba(255, 255, 255, 0.1), transparent 42%),
+    radial-gradient(95% 180% at 50% -52%, rgba(255, 255, 255, 0.16), transparent 48%);
 }
 
 [data-theme='dark'] .title-world {
@@ -379,17 +509,36 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 [data-theme='dark'] .icon-btn {
+  --icon-glass-bg: rgba(255, 255, 255, 0.08);
+  --icon-glass-highlight: rgba(255, 255, 255, 0.2);
+  --icon-glass-stroke: rgba(255, 255, 255, 0.14);
   color: var(--text);
-  background: var(--card);
-  border-color: var(--line);
+  background:
+    radial-gradient(circle at 30% 18%, var(--icon-glass-highlight), transparent 40%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)),
+    var(--icon-glass-bg);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme='dark'] .brand-mark,
+[data-theme='dark'] .action-orb,
+[data-theme='dark'] .user-avatar {
+  border-color: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.16), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
+    color-mix(in srgb, var(--primary) 6%, transparent);
 }
 
 @media (max-width: 720px) {
   .topbar {
     align-items: center;
     flex-direction: row;
-    padding: 8px 0 10px;
-    border-radius: 0;
+    padding: 8px;
+    border-radius: 24px;
   }
 
   .brand {
@@ -398,13 +547,13 @@ watch(() => auth.isLoggedIn, refreshUnread)
   }
 
   .brand-mark {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
   }
 
   .brand-mark svg {
-    width: 23px;
-    height: 23px;
+    width: 24px;
+    height: 24px;
   }
 
   .brand-title {
@@ -412,9 +561,9 @@ watch(() => auth.isLoggedIn, refreshUnread)
   }
 
   .icon-btn {
-    width: 38px;
+    width: 44px;
     min-width: 0;
-    height: 38px;
+    height: 44px;
     justify-content: center;
     padding: 0;
     border-radius: 999px;
@@ -428,14 +577,50 @@ watch(() => auth.isLoggedIn, refreshUnread)
   .action-orb,
   .user-avatar,
   .user-avatar-img {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
   .logout-btn,
   .theme-btn {
-    border-color: var(--line);
-    background: var(--card);
+    border-color: var(--icon-glass-stroke);
+    background:
+      radial-gradient(circle at 30% 18%, var(--icon-glass-highlight), transparent 38%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08)),
+      var(--icon-glass-bg);
+  }
+
+  [data-theme='dark'] .logout-btn,
+  [data-theme='dark'] .theme-btn {
+    border-color: var(--icon-glass-stroke);
+    background:
+      radial-gradient(circle at 30% 18%, var(--icon-glass-highlight), transparent 40%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)),
+      var(--icon-glass-bg);
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar {
+    gap: 8px;
+    padding: 7px;
+  }
+
+  .brand {
+    gap: 7px;
+  }
+
+  .brand-title {
+    font-size: 18px;
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
   }
 }
 </style>

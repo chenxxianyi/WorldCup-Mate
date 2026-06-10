@@ -66,7 +66,7 @@ function setPart(key: UnitKey, nextValue: string, animate: boolean) {
   if (flipTimers[key] !== undefined) window.clearTimeout(flipTimers[key])
   flipTimers[key] = window.setTimeout(() => {
     part.flipping = false
-  }, 640)
+  }, 920)
 }
 
 function updateDisplay(total: number, animate = true) {
@@ -131,18 +131,21 @@ watch(() => [props.targetTime, props.hours, props.minutes, props.seconds], start
           class="time-box"
           :class="digitClass(part.value)"
         >
-          <div class="flip-stack" aria-hidden="true">
-            <div class="flip-face flip-face-current">
+          <div class="flip-stack" :class="{ 'is-flipping': part.flipping }" aria-hidden="true">
+            <div class="flip-panel flip-panel-top">
               <span class="flip-value">{{ part.value }}</span>
             </div>
-            <div v-if="part.flipping" :key="part.flipKey" class="flip-leaf">
-              <div class="flip-leaf-face flip-leaf-front">
+            <div class="flip-panel flip-panel-bottom">
+              <span class="flip-value">{{ part.value }}</span>
+            </div>
+            <template v-if="part.flipping">
+              <div :key="`${part.flipKey}-top`" class="score-flip score-flip-top">
                 <span class="flip-value">{{ part.previous }}</span>
               </div>
-              <div class="flip-leaf-face flip-leaf-back">
+              <div :key="`${part.flipKey}-bottom`" class="score-flip score-flip-bottom">
                 <span class="flip-value">{{ part.value }}</span>
               </div>
-            </div>
+            </template>
             <span class="flip-crease"></span>
           </div>
           <span class="sr-only">{{ part.value }} {{ part.label }}</span>
@@ -220,7 +223,7 @@ watch(() => [props.targetTime, props.hours, props.minutes, props.seconds], start
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -18px 30px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(16px);
-  perspective: 820px;
+  perspective: 1000px;
   transform-style: preserve-3d;
 }
 
@@ -236,48 +239,81 @@ watch(() => [props.targetTime, props.hours, props.minutes, props.seconds], start
   background: rgba(255, 255, 255, 0.18);
 }
 
-.flip-face,
-.flip-leaf,
-.flip-leaf-face {
+.flip-panel,
+.score-flip {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-}
-
-.flip-face,
-.flip-leaf-face {
+  left: 0;
+  right: 0;
+  height: 50%;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  border-radius: inherit;
+  background:
+    linear-gradient(145deg, rgba(42, 72, 116, 0.92), rgba(10, 22, 39, 0.95));
 }
 
-.flip-face-current {
+.flip-panel-top,
+.score-flip-top {
+  top: 0;
+  align-items: end;
+  border-radius: 14px 14px 0 0;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0 49%, rgba(2, 8, 23, 0.24) 50%, rgba(255, 255, 255, 0.05) 100%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08)),
+    linear-gradient(145deg, rgba(72, 98, 135, 0.92), rgba(31, 50, 76, 0.95));
 }
 
-.flip-leaf {
-  z-index: 3;
-  transform-origin: 50% 50%;
-  transform-style: preserve-3d;
-  animation: calendar-flip 620ms cubic-bezier(0.2, 0.76, 0.18, 1) both;
-}
-
-.flip-leaf-face {
-  overflow: hidden;
-  backface-visibility: hidden;
+.flip-panel-bottom,
+.score-flip-bottom {
+  bottom: 0;
+  align-items: start;
+  border-radius: 0 0 14px 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0 49%, rgba(0, 0, 0, 0.24) 50%, rgba(255, 255, 255, 0.07) 100%),
-    linear-gradient(145deg, rgba(30, 64, 112, 0.9), rgba(9, 20, 36, 0.92));
+    linear-gradient(180deg, rgba(2, 8, 23, 0.34), rgba(255, 255, 255, 0.06)),
+    linear-gradient(145deg, rgba(20, 38, 61, 0.95), rgba(8, 19, 34, 0.96));
 }
 
-.flip-leaf-front {
-  transform: rotateX(0deg);
+.flip-panel {
+  z-index: 1;
 }
 
-.flip-leaf-back {
-  transform: rotateX(180deg);
+.score-flip {
+  z-index: 3;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.score-flip-top {
+  transform-origin: 50% 100%;
+  animation: scoreboard-top-flip 420ms cubic-bezier(0.45, 0, 0.2, 1) forwards;
+}
+
+.score-flip-bottom {
+  z-index: 2;
+  transform-origin: 50% 0%;
+  transform: rotateX(90deg);
+  animation: scoreboard-bottom-flip 460ms 360ms cubic-bezier(0.16, 0.85, 0.22, 1) forwards;
+}
+
+.score-flip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.18));
+  opacity: 0;
+}
+
+.score-flip-top::after {
+  animation: scoreboard-top-shade 420ms cubic-bezier(0.45, 0, 0.2, 1) forwards;
+}
+
+.score-flip-bottom::after {
+  animation: scoreboard-bottom-shade 460ms 360ms cubic-bezier(0.16, 0.85, 0.22, 1) forwards;
 }
 
 .flip-crease {
@@ -287,19 +323,32 @@ watch(() => [props.targetTime, props.hours, props.minutes, props.seconds], start
   top: 50%;
   z-index: 5;
   height: 1px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.42);
   box-shadow:
-    0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 1px 0 rgba(255, 255, 255, 0.06);
+    0 -1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 7px 16px rgba(0, 0, 0, 0.2);
 }
 
 .flip-value {
+  position: relative;
+  z-index: 1;
   color: #fff;
   font-size: 44px;
   line-height: 1;
   font-weight: 850;
   letter-spacing: 0;
   text-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.flip-panel-top .flip-value,
+.score-flip-top .flip-value {
+  transform: translateY(50%);
+}
+
+.flip-panel-bottom .flip-value,
+.score-flip-bottom .flip-value {
+  transform: translateY(-50%);
 }
 
 .digits-medium .flip-value {
@@ -327,17 +376,47 @@ watch(() => [props.targetTime, props.hours, props.minutes, props.seconds], start
   clip-path: inset(50%);
 }
 
-@keyframes calendar-flip {
+@keyframes scoreboard-top-flip {
   0% {
     transform: rotateX(0deg);
   }
 
-  48% {
-    transform: rotateX(-92deg);
+  72% {
+    transform: rotateX(-88deg);
   }
 
   100% {
-    transform: rotateX(-180deg);
+    transform: rotateX(-92deg);
+  }
+}
+
+@keyframes scoreboard-bottom-flip {
+  0% {
+    transform: rotateX(92deg);
+  }
+
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes scoreboard-top-shade {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0.46;
+  }
+}
+
+@keyframes scoreboard-bottom-shade {
+  0% {
+    opacity: 0.42;
+  }
+
+  100% {
+    opacity: 0;
   }
 }
 
@@ -360,7 +439,7 @@ watch(() => [props.targetTime, props.hours, props.minutes, props.seconds], start
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flip-leaf {
+  .score-flip {
     display: none;
     animation: none;
   }
