@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Countdown from '@/components/common/Countdown.vue'
 import MatchCard from '@/components/common/MatchCard.vue'
@@ -30,6 +30,9 @@ const groupSlideDirection = ref<'left' | 'right'>('left')
 const groupTransitionName = computed(() =>
   groupSlideDirection.value === 'left' ? 'standings-next' : 'standings-prev',
 )
+const standingsMistVisible = ref(false)
+const standingsMistKey = ref(0)
+let standingsMistTimer: number | undefined
 
 interface TournamentProgress {
   stage_name: string
@@ -131,10 +134,21 @@ function swipeGroup(direction: 'left' | 'right') {
   if (direction === 'left' && activeGroupIndex.value < groups.length - 1) {
     groupSlideDirection.value = direction
     activeGroupIndex.value++
+    triggerStandingsMist()
   } else if (direction === 'right' && activeGroupIndex.value > 0) {
     groupSlideDirection.value = direction
     activeGroupIndex.value--
+    triggerStandingsMist()
   }
+}
+
+function triggerStandingsMist() {
+  standingsMistKey.value++
+  standingsMistVisible.value = true
+  if (standingsMistTimer) window.clearTimeout(standingsMistTimer)
+  standingsMistTimer = window.setTimeout(() => {
+    standingsMistVisible.value = false
+  }, 760)
 }
 
 function startGroupSwipe(event: PointerEvent) {
@@ -244,6 +258,10 @@ watch(
 )
 
 onMounted(loadHomeData)
+
+onBeforeUnmount(() => {
+  if (standingsMistTimer) window.clearTimeout(standingsMistTimer)
+})
 </script>
 
 <template>
@@ -255,7 +273,7 @@ onMounted(loadHomeData)
         <div class="countdown-title">
           <div>
             <h2>{{ nextMatch.home_team_name }} vs {{ nextMatch.away_team_name }}</h2>
-            <p>{{ nextMatchLocalTime }} 开球 · 本地时间</p>
+            <p>{{ nextMatchLocalTime }} 开球 · 北京时间</p>
           </div>
           <span v-if="nextMatch.is_featured" class="tag gold">推荐</span>
         </div>
@@ -312,7 +330,7 @@ onMounted(loadHomeData)
       </section>
 
       <!-- ⏱ Timeline -->
-      <section class="section">
+      <section class="section timeline-section timeline-mobile">
         <div class="section-head">
           <h2>比赛时间线</h2>
           <span>近 1 周</span>
@@ -338,7 +356,7 @@ onMounted(loadHomeData)
 
     <!-- Desktop sidebar -->
     <aside class="desktop-side">
-      <section class="section" style="margin-top: 0">
+      <section class="section standings-section">
         <div class="section-head">
           <h2>积分速览</h2>
           <div class="group-nav">
@@ -354,6 +372,13 @@ onMounted(loadHomeData)
           @pointercancel="cancelGroupSwipe"
           @pointerleave="cancelGroupSwipe"
         >
+          <div
+            v-if="standingsMistVisible"
+            :key="standingsMistKey"
+            class="standings-mist"
+            :class="groupSlideDirection"
+            aria-hidden="true"
+          ></div>
           <Transition :name="groupTransitionName" mode="out-in">
             <table :key="activeGroupName" class="standing-table" style="min-width: 0">
               <tbody>
@@ -370,12 +395,36 @@ onMounted(loadHomeData)
           </Transition>
         </div>
       </section>
+
+      <section class="section timeline-section timeline-desktop">
+        <div class="section-head">
+          <h2>比赛时间线</h2>
+          <span>近 1 周</span>
+        </div>
+        <template v-for="group in groupedTimeline" :key="group.key">
+          <div class="tl-date-head">
+            <span>{{ group.title }}</span>
+            <span v-if="group.isToday" class="tag live">今天</span>
+            <span v-else-if="group.isYesterday" class="tag">昨天</span>
+            <span v-else-if="group.isTomorrow" class="tag blue">明天</span>
+          </div>
+          <div class="tl-list">
+            <TimelineMatchCard
+              v-for="m in group.matches"
+              :key="m.id"
+              :match="m"
+            />
+          </div>
+        </template>
+        <div v-if="!timelineRaw.length" class="card empty-card">暂无比赛数据</div>
+      </section>
     </aside>
   </div>
 </template>
 
 <style scoped>
 .dashboard-grid {
+  width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
@@ -388,6 +437,10 @@ onMounted(loadHomeData)
 
 .section {
   margin-top: 18px;
+}
+
+.standings-section {
+  margin-top: 0;
 }
 
 .section-head {
@@ -534,6 +587,10 @@ onMounted(loadHomeData)
   gap: 8px;
 }
 
+.timeline-desktop {
+  display: none;
+}
+
 /* ── Sidebar ── */
 .profile-card {
   padding: 16px;
@@ -581,9 +638,73 @@ tr:last-child td {
 }
 
 .standings-swipe-area {
+  position: relative;
   min-height: 177px;
   touch-action: pan-y;
   user-select: none;
+}
+
+.standings-mist {
+  position: absolute;
+  inset: -14px -22px;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+  filter: saturate(1.08);
+}
+
+.standings-mist::before,
+.standings-mist::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 82%;
+  opacity: 0;
+  filter: blur(16px);
+  transform: translateX(0) scaleX(0.68);
+  background:
+    radial-gradient(ellipse at 42% 48%, rgba(255, 255, 255, 0.94) 0 18%, rgba(255, 255, 255, 0.56) 38%, transparent 72%),
+    radial-gradient(ellipse at 72% 28%, rgba(255, 255, 255, 0.5) 0 18%, transparent 54%),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.24), rgba(255, 255, 255, 0.82), rgba(245, 158, 11, 0.2));
+  mix-blend-mode: screen;
+}
+
+.standings-mist::after {
+  top: 16%;
+  bottom: 10%;
+  width: 64%;
+  filter: blur(24px);
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.86) 0 24%, rgba(255, 255, 255, 0.36) 52%, transparent 80%),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.18), rgba(255, 255, 255, 0.52), rgba(14, 165, 233, 0.16));
+}
+
+.standings-mist {
+  box-shadow:
+    inset 0 0 40px rgba(255, 255, 255, 0.7),
+    0 0 34px rgba(14, 165, 233, 0.08);
+}
+
+.standings-mist.left::before {
+  right: -28%;
+  animation: standings-mist-left 760ms ease-out both;
+}
+
+.standings-mist.left::after {
+  right: 2%;
+  animation: standings-mist-left-soft 760ms ease-out both;
+}
+
+.standings-mist.right::before {
+  left: -28%;
+  animation: standings-mist-right 760ms ease-out both;
+}
+
+.standings-mist.right::after {
+  left: 2%;
+  animation: standings-mist-right-soft 760ms ease-out both;
 }
 
 .standings-next-enter-active,
@@ -603,6 +724,87 @@ tr:last-child td {
 .standings-prev-enter-from {
   opacity: 0;
   transform: translateX(-34px);
+}
+
+@keyframes standings-mist-left {
+  0% {
+    opacity: 0;
+    transform: translateX(52px) scaleX(0.48);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  46% {
+    opacity: 0.56;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-118px) scaleX(1.28);
+  }
+}
+
+@keyframes standings-mist-left-soft {
+  0% {
+    opacity: 0;
+    transform: translateX(34px) scaleX(0.58);
+  }
+  20% {
+    opacity: 0.68;
+  }
+  52% {
+    opacity: 0.34;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-76px) scaleX(1.36);
+  }
+}
+
+@keyframes standings-mist-right {
+  0% {
+    opacity: 0;
+    transform: translateX(-52px) scaleX(0.48);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  46% {
+    opacity: 0.56;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(118px) scaleX(1.28);
+  }
+}
+
+@keyframes standings-mist-right-soft {
+  0% {
+    opacity: 0;
+    transform: translateX(-34px) scaleX(0.58);
+  }
+  20% {
+    opacity: 0.68;
+  }
+  52% {
+    opacity: 0.34;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(76px) scaleX(1.36);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .standings-mist {
+    display: none;
+  }
+
+  .standings-next-enter-active,
+  .standings-next-leave-active,
+  .standings-prev-enter-active,
+  .standings-prev-leave-active {
+    transition: none;
+  }
 }
 
 .group-nav {
@@ -647,13 +849,47 @@ tr:last-child td {
 }
 
 @media (min-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: minmax(0, 1.9fr) minmax(300px, 0.8fr);
-    align-items: start;
-  }
-
   .followed-team-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    max-width: 1080px;
+    margin: 0 auto;
+    grid-template-columns: minmax(0, 720px) minmax(300px, 320px);
+    align-items: start;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .timeline-mobile {
+    display: none;
+  }
+
+  .timeline-desktop {
+    display: block;
+  }
+
+  .timeline-desktop .section-head {
+    margin-bottom: 10px;
+  }
+
+  .timeline-desktop .tl-date-head {
+    margin: 13px 0 7px;
+  }
+
+  .timeline-desktop .tl-list {
+    gap: 7px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 760px) minmax(300px, 320px);
+    gap: 24px;
   }
 }
 </style>

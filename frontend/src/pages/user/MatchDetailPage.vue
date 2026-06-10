@@ -238,7 +238,7 @@ watch(() => route.params.id, loadMatch)
 
       <div class="info-grid">
         <div class="info-cell">
-          <span>本地时间</span>
+          <span>北京时间</span>
           <strong>{{ formatLocalTime(match.kickoff_time_utc) }}</strong>
         </div>
         <div class="info-cell">

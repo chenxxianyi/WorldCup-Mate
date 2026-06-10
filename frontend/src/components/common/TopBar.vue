@@ -28,8 +28,10 @@ watch(() => auth.isLoggedIn, refreshUnread)
         </svg>
       </div>
       <div>
-        <h1 class="brand-title">WorldCup Mate</h1>
-        <p class="brand-sub">2026 世界杯赛程助手 <span class="version-badge">美加墨</span></p>
+        <h1 class="brand-title" aria-label="WorldCup Mate">
+          <span class="title-world">WorldCup</span>
+          <span class="title-mate">Mate</span>
+        </h1>
       </div>
     </div>
 
@@ -138,30 +140,81 @@ watch(() => auth.isLoggedIn, refreshUnread)
 }
 
 .brand-title {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
   margin: 0;
   font-size: clamp(20px, 3vw, 28px);
-  line-height: 1.08;
-  font-weight: 850;
+  line-height: 1;
+  font-family: "Arial Black", "Impact", system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0;
+  transform: skewX(-4deg);
+  text-transform: none;
+  filter: drop-shadow(0 2px 0 rgba(15, 23, 42, 0.08));
 }
 
-.brand-sub {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: clamp(11px, 1.35vw, 14px);
-  line-height: 1.25;
+.brand-title::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 2px;
+  bottom: -5px;
+  height: 8px;
+  border-bottom: 2px solid color-mix(in srgb, var(--primary) 58%, #19a974);
+  border-radius: 0 0 999px 999px;
+  transform: skewX(4deg) rotate(-1deg);
+  opacity: 0.88;
 }
 
-.version-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 18px;
-  margin-left: 6px;
-  padding: 0 7px;
+.brand-title::after {
+  content: "";
+  position: absolute;
+  left: 16%;
+  right: 28%;
+  bottom: -2px;
+  height: 2px;
   border-radius: 999px;
-  color: var(--muted);
-  background: var(--card-soft);
-  font-size: 11px;
-  font-weight: 750;
+  background: linear-gradient(90deg, transparent, #ffffff 24%, color-mix(in srgb, var(--primary) 66%, #ffffff) 50%, transparent);
+  transform: skewX(4deg);
+  opacity: 0.78;
+}
+
+.title-world {
+  position: relative;
+  color: transparent;
+  background:
+    linear-gradient(180deg, #10223f 0%, var(--text) 44%, #020617 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 5px 14px rgba(15, 23, 42, 0.12);
+}
+
+.title-world::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 10%;
+  top: 18%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.68), transparent);
+  opacity: 0.7;
+}
+
+.title-mate {
+  position: relative;
+  color: transparent;
+  background:
+    linear-gradient(180deg, #fff7cc 0%, #f4b940 42%, #b7791f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.45),
+    0 5px 14px rgba(180, 83, 9, 0.14);
 }
 
 .top-actions {
@@ -307,6 +360,24 @@ watch(() => auth.isLoggedIn, refreshUnread)
   background: transparent;
 }
 
+[data-theme='dark'] .title-world {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #d9f99d 28%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12),
+    0 8px 18px rgba(56, 189, 248, 0.2);
+}
+
+[data-theme='dark'] .brand-title::before {
+  border-bottom-color: rgba(52, 211, 153, 0.82);
+}
+
+[data-theme='dark'] .brand-title::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), rgba(52, 211, 153, 0.8), transparent);
+}
+
 [data-theme='dark'] .icon-btn {
   color: var(--text);
   background: var(--card);
@@ -338,16 +409,6 @@ watch(() => auth.isLoggedIn, refreshUnread)
 
   .brand-title {
     font-size: 20px;
-  }
-
-  .brand-sub {
-    font-size: 11px;
-  }
-
-  .version-badge {
-    min-height: 18px;
-    padding: 0 6px;
-    font-size: 10px;
   }
 
   .icon-btn {
