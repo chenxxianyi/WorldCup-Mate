@@ -60,7 +60,7 @@ const stats = computed<StatItem[]>(() => {
 </script>
 
 <template>
-  <article v-if="stats.length" class="card stats-card">
+  <article v-if="stats.length" class="stats-card">
     <div class="stats-head">
       <span class="material-symbols-outlined">bar_chart</span>
       <span>比赛数据</span>
@@ -108,14 +108,16 @@ const stats = computed<StatItem[]>(() => {
 
 <style scoped>
 .stats-card {
-  padding: 16px;
+  display: grid;
+  gap: 14px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .stats-head {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 14px;
   font-size: 12px;
   font-weight: 750;
   color: var(--muted);
@@ -127,9 +129,7 @@ const stats = computed<StatItem[]>(() => {
 
 .stats-table {
   display: grid;
-  gap: 1px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
 }
 
 .stats-row {
@@ -137,8 +137,9 @@ const stats = computed<StatItem[]>(() => {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
-  background: var(--card-soft);
+  padding: 11px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: transparent;
 }
 
 .stats-header {

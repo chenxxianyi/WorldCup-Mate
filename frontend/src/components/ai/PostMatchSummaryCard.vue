@@ -17,7 +17,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <article class="card post-summary-card">
+  <article class="post-summary-card">
     <div class="summary-head">
       <div>
         <span class="tag blue">AI</span>
@@ -88,7 +88,10 @@ const emit = defineEmits<{
 
 <style scoped>
 .post-summary-card {
-  padding: 16px;
+  display: grid;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .summary-head {
@@ -133,16 +136,16 @@ const emit = defineEmits<{
 .summary-body {
   display: grid;
   gap: 14px;
-  margin-top: 16px;
 }
 
 .score-line {
   font-size: 20px;
   font-weight: 850;
   text-align: center;
-  padding: 12px;
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--primary) 9%, transparent);
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  background: transparent;
   color: var(--primary);
 }
 
@@ -150,9 +153,8 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 13px;
-  border-radius: var(--radius-md);
-  background: var(--card-soft);
+  padding: 2px 0;
+  background: transparent;
   font-size: 13px;
   font-weight: 700;
   color: var(--hot);
@@ -183,9 +185,8 @@ const emit = defineEmits<{
 }
 
 .note-box {
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
 }
 
 .note-box span {

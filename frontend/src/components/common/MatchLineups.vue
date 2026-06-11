@@ -84,7 +84,7 @@ function playerPosition(player: LineupPlayer) {
       />
 
       <div class="lineup-teams">
-        <article v-for="team in teams" :key="`${team.side}-${team.teamId}`" class="surface-section team-lineup">
+        <article v-for="team in teams" :key="`${team.side}-${team.teamId}`" class="team-lineup">
           <div class="team-lineup-head">
             <div>
               <span>{{ sideText(team.side) }}</span>
@@ -150,6 +150,8 @@ function playerPosition(player: LineupPlayer) {
 .lineups-section {
   display: grid;
   gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .lineups-head {
@@ -240,7 +242,9 @@ function playerPosition(player: LineupPlayer) {
   min-width: 0;
   display: grid;
   gap: 14px;
-  padding: 14px;
+  padding: 14px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
@@ -283,9 +287,10 @@ function playerPosition(player: LineupPlayer) {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 9px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--card-soft);
+  padding: 9px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 64%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 64%, transparent);
+  background: transparent;
 }
 
 .coach-row strong {

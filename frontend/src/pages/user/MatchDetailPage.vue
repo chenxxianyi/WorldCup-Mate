@@ -5,6 +5,7 @@ import MatchInsightCard from '@/components/ai/MatchInsightCard.vue'
 import PostMatchSummaryCard from '@/components/ai/PostMatchSummaryCard.vue'
 import MatchStatsCard from '@/components/common/MatchStatsCard.vue'
 import MatchLineups from '@/components/common/MatchLineups.vue'
+import PointerGlow from '@/components/common/PointerGlow.vue'
 import ReminderControl from '@/components/common/ReminderControl.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetMatchLineups } from '@/api/lineups'
@@ -193,6 +194,7 @@ watch(() => route.params.id, loadMatch)
 
 <template>
   <div v-if="match" class="match-detail-page">
+    <PointerGlow class="detail-pointer-glow" />
     <div class="detail-toolbar">
       <button class="back-action" type="button" title="返回" aria-label="返回上一页" @click="goBack">
         <span class="material-symbols-outlined">arrow_back</span>
@@ -203,7 +205,7 @@ watch(() => route.params.id, loadMatch)
       </div>
     </div>
 
-    <article class="card detail-hero">
+    <article class="detail-hero">
       <div class="match-top">
         <span class="tag gold">{{ match.group_name || '世界杯比赛' }}</span>
         <span
@@ -303,7 +305,7 @@ watch(() => route.params.id, loadMatch)
         <h2>所在小组积分</h2>
         <span>{{ match.group_name }}</span>
       </div>
-      <div class="surface-section table-card table-scroll">
+      <div class="table-card table-scroll">
         <table class="standing-table">
           <thead>
             <tr>
@@ -340,8 +342,15 @@ watch(() => route.params.id, loadMatch)
 
 <style scoped>
 .match-detail-page {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  gap: 16px;
+  gap: 24px;
+}
+
+.match-detail-page > :not(.detail-pointer-glow) {
+  position: relative;
+  z-index: 1;
 }
 
 .detail-toolbar {
@@ -407,7 +416,12 @@ watch(() => route.params.id, loadMatch)
 }
 
 .detail-hero {
-  padding: 18px;
+  padding: 22px;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 88%, transparent), transparent);
   overflow: visible;
 }
 
@@ -450,7 +464,7 @@ watch(() => route.params.id, loadMatch)
   place-items: center;
   min-width: 88px;
   min-height: 68px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   color: var(--primary);
   font-size: 24px;
   font-weight: 850;
@@ -460,13 +474,20 @@ watch(() => route.params.id, loadMatch)
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 0 18px;
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 74%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 74%, transparent);
 }
 
 .info-cell {
-  padding: 13px;
-  border-radius: var(--radius-lg);
-  background: var(--card-soft);
+  padding: 10px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 58%, transparent);
+  background: transparent;
+}
+
+.info-cell:nth-child(-n + 2) {
+  border-top: 0;
 }
 
 .info-cell span,
@@ -509,6 +530,8 @@ watch(() => route.params.id, loadMatch)
 .section {
   display: grid;
   gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .section-head h2 {
@@ -519,6 +542,8 @@ watch(() => route.params.id, loadMatch)
 
 .table-card {
   overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .table-scroll {
@@ -558,7 +583,7 @@ td:nth-child(n + 3) {
 th {
   color: var(--muted);
   font-weight: 750;
-  background: var(--card-soft);
+  background: transparent;
   white-space: nowrap;
   word-break: keep-all;
 }

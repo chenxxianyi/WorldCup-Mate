@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Countdown from '@/components/common/Countdown.vue'
 import MatchTicketRow from '@/components/common/MatchTicketRow.vue'
+import PointerGlow from '@/components/common/PointerGlow.vue'
 import TimelineDayGroup from '@/components/common/TimelineDayGroup.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetGroupStandings } from '@/api/standings'
@@ -50,6 +51,18 @@ const progress = ref<TournamentProgress>({
   live: 0,
   scheduled: 0,
   progress: 0,
+})
+
+const stageTotalMatches = computed(() =>
+  progress.value.total_matches ||
+  progress.value.completed + progress.value.live + progress.value.scheduled,
+)
+
+const stageStatusCopy = computed(() => {
+  if (progress.value.live > 0) return `${progress.value.live} 场比赛正在进行，关注的球队开赛会同步更新。`
+  if (progress.value.completed === 0) return '小组赛尚未开赛，首场比赛结束后这里会展示阶段走势。'
+  if (progress.value.scheduled > 0) return `还有 ${progress.value.scheduled} 场等待开球，赛程进度会持续推进。`
+  return '本阶段比赛已经完成，可以继续查看淘汰赛路径。'
 })
 
 const nextMatch = ref<Match | null>(null)
@@ -268,9 +281,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="dashboard-grid">
-    <div>
+    <PointerGlow class="home-pointer-glow" />
+    <div class="home-main">
       <!-- Countdown -->
-      <Countdown v-if="nextMatch" :targetTime="nextMatch.kickoff_time_utc">
+      <Countdown v-if="nextMatch" class="home-countdown" :targetTime="nextMatch.kickoff_time_utc">
         <span class="eyebrow"><i class="live-dot next-dot"></i> 下一场比赛</span>
         <div class="countdown-title">
           <div>
@@ -280,7 +294,7 @@ onBeforeUnmount(() => {
           <span v-if="nextMatch.is_featured" class="tag gold">推荐</span>
         </div>
       </Countdown>
-      <article v-else class="empty-state">暂无即将到来的比赛</article>
+      <article v-else class="empty-state home-countdown">暂无即将到来的比赛</article>
 
       <!-- Stage progress -->
       <section class="stage-strip">
@@ -295,6 +309,31 @@ onBeforeUnmount(() => {
         <div class="stage-meta">
           <span>已完成 {{ progress.completed }} 场</span>
           <span>剩余 {{ progress.scheduled }} 场</span>
+        </div>
+        <div class="stage-stats-grid" aria-label="赛事阶段统计">
+          <div class="stage-stat">
+            <span>总场次</span>
+            <strong>{{ stageTotalMatches }}</strong>
+          </div>
+          <div class="stage-stat">
+            <span>已完成</span>
+            <strong>{{ progress.completed }}</strong>
+          </div>
+          <div class="stage-stat">
+            <span>进行中</span>
+            <strong>{{ progress.live }}</strong>
+          </div>
+          <div class="stage-stat">
+            <span>未开始</span>
+            <strong>{{ progress.scheduled }}</strong>
+          </div>
+        </div>
+        <div class="stage-context">
+          <span class="material-symbols-outlined" aria-hidden="true">event_available</span>
+          <div>
+            <b>{{ progress.stage_name }}</b>
+            <p>{{ stageStatusCopy }}</p>
+          </div>
         </div>
       </section>
 
@@ -405,7 +444,7 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <section class="section timeline-section timeline-desktop">
+      <section class="section timeline-section timeline-desktop timeline-main">
         <div class="section-head">
           <h2>比赛时间线</h2>
           <span>近 1 周</span>
@@ -418,7 +457,6 @@ onBeforeUnmount(() => {
           :is-today="group.isToday"
           :is-yesterday="group.isYesterday"
           :is-tomorrow="group.isTomorrow"
-          compact
         />
         <div v-if="!timelineRaw.length" class="empty-state">暂无比赛数据</div>
       </section>
@@ -428,19 +466,30 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .dashboard-grid {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+  gap: 22px;
+}
+
+.dashboard-grid > :not(.home-pointer-glow) {
+  position: relative;
+  z-index: 1;
 }
 
 .desktop-side {
   display: grid;
-  gap: 16px;
+  gap: 24px;
+}
+
+.home-main {
+  min-width: 0;
 }
 
 .section {
-  margin-top: 18px;
+  margin-top: 26px;
 }
 
 .standings-section {
@@ -474,6 +523,8 @@ onBeforeUnmount(() => {
 .follow-section {
   display: grid;
   gap: 14px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
 }
 
 .follow-section .section-head {
@@ -483,6 +534,13 @@ onBeforeUnmount(() => {
 .follow-block {
   display: grid;
   gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 68%, transparent);
+}
+
+.follow-block:first-of-type {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .follow-subhead {
@@ -585,10 +643,10 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 9px;
   padding: 7px 11px;
-  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
   border-radius: 999px;
   color: var(--text);
-  background: color-mix(in srgb, var(--card) 48%, transparent);
+  background: transparent;
   cursor: pointer;
   scroll-snap-align: start;
   transition: border-color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out;
@@ -641,9 +699,12 @@ onBeforeUnmount(() => {
 
 .stage-strip {
   display: grid;
-  gap: 11px;
-  margin-top: 14px;
-  padding: 2px 2px 4px;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 18px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  background: transparent;
 }
 
 .stage-head {
@@ -677,6 +738,80 @@ onBeforeUnmount(() => {
   font-size: 11px;
 }
 
+.stage-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stage-stat {
+  min-width: 0;
+  min-height: 74px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-left: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  background: transparent;
+}
+
+.stage-stat:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.stage-stat span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-stat strong {
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.stage-context {
+  min-height: 86px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  background: transparent;
+}
+
+.stage-context .material-symbols-outlined {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 9%, transparent);
+  font-size: 20px;
+}
+
+.stage-context b {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.stage-context p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .timeline-desktop {
   display: none;
 }
@@ -705,11 +840,9 @@ tr:last-child td {
 
 .standings-panel {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
-  border-radius: var(--radius-md);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--card) 42%, transparent), transparent),
-    color-mix(in srgb, var(--card-soft) 58%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
+  background: transparent;
 }
 
 .standings-swipe-area {
@@ -901,10 +1034,10 @@ tr:last-child td {
   height: 28px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
   border-radius: 999px;
   color: var(--text);
-  background: var(--card);
+  background: transparent;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -931,6 +1064,24 @@ tr:last-child td {
   cursor: pointer;
 }
 
+@media (max-width: 520px) {
+  .stage-strip {
+    padding: 15px;
+  }
+
+  .stage-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stage-stat {
+    min-height: 68px;
+  }
+
+  .stage-context {
+    min-height: 0;
+  }
+}
+
 @media (min-width: 768px) {
   .followed-team-rail {
     flex-wrap: wrap;
@@ -940,12 +1091,168 @@ tr:last-child td {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    max-width: 1080px;
+    max-width: 920px;
     margin: 0 auto;
-    grid-template-columns: minmax(0, 720px) minmax(300px, 320px);
+    grid-template-columns: minmax(0, 580px) minmax(280px, 300px);
     align-items: start;
     justify-content: center;
-    gap: 20px;
+    gap: 28px;
+  }
+
+  .home-main {
+    display: contents;
+  }
+
+  .home-countdown {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .home-countdown {
+    padding: 18px;
+  }
+
+  .home-countdown :deep(.countdown-time) {
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .home-countdown :deep(.flip-stack) {
+    height: 92px;
+    border-radius: 12px;
+  }
+
+  .home-countdown :deep(.flip-value) {
+    font-size: 48px;
+  }
+
+  .home-countdown :deep(.digits-medium .flip-value) {
+    font-size: 40px;
+  }
+
+  .home-countdown :deep(.digits-tight .flip-value) {
+    font-size: 34px;
+  }
+
+  .stage-strip {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: stretch;
+    grid-template-rows: auto auto auto auto;
+    padding: 16px 0;
+  }
+
+  .stage-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  }
+
+  .stage-stat {
+    min-height: 64px;
+    padding: 12px 0;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--line) 64%, transparent);
+  }
+
+  .stage-stat:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  .stage-stat:nth-child(2n) {
+    padding-left: 18px;
+    border-left: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  }
+
+  .stage-context {
+    min-height: 0;
+    padding-top: 12px;
+  }
+
+  .timeline-mobile {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .desktop-side {
+    display: contents;
+  }
+
+  .standings-section {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .follow-section {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 0;
+    padding-top: 2px;
+  }
+
+  .follow-section .section-head {
+    align-items: flex-start;
+  }
+
+  .follow-section .section-head h2 {
+    font-size: 18px;
+  }
+
+  .followed-match-rail {
+    grid-auto-columns: 100%;
+  }
+
+  .followed-match-slide.active :deep(.match-ticket-row) {
+    padding-left: 10px;
+  }
+
+  .followed-match-slide :deep(.match-top) {
+    gap: 6px;
+  }
+
+  .followed-match-slide :deep(.tag) {
+    max-width: 148px;
+    padding-inline: 9px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .followed-match-slide :deep(.teams-line) {
+    gap: 8px;
+    margin: 12px 0 10px;
+  }
+
+  .followed-match-slide :deep(.team-side) {
+    min-height: 48px;
+    gap: 7px;
+  }
+
+  .followed-match-slide :deep(.team-flag-action) {
+    width: 32px;
+    height: 32px;
+  }
+
+  .followed-match-slide :deep(.team-name) {
+    font-size: 14px;
+  }
+
+  .followed-match-slide :deep(.score) {
+    min-width: 50px;
+    font-size: 24px;
+  }
+
+  .followed-match-slide :deep(.vs) {
+    min-width: 46px;
+    height: 34px;
+  }
+
+  .followed-match-slide :deep(.match-bottom) {
+    gap: 8px;
+  }
+
+  .followed-match-slide :deep(.where) {
+    font-size: 12px;
   }
 
   .timeline-mobile {
@@ -954,6 +1261,12 @@ tr:last-child td {
 
   .timeline-desktop {
     display: block;
+  }
+
+  .timeline-main {
+    grid-column: 1;
+    grid-row: 3;
+    margin-top: 18px;
   }
 
   .timeline-desktop .section-head {
@@ -967,9 +1280,9 @@ tr:last-child td {
 
 @media (min-width: 1200px) {
   .dashboard-grid {
-    max-width: 1120px;
-    grid-template-columns: minmax(0, 760px) minmax(300px, 320px);
-    gap: 24px;
+    max-width: 960px;
+    grid-template-columns: minmax(0, 620px) minmax(280px, 300px);
+    gap: 32px;
   }
 }
 </style>

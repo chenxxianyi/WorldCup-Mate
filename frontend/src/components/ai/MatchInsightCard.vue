@@ -20,7 +20,7 @@ async function copySummary() {
 </script>
 
 <template>
-  <article class="card ai-card">
+  <article class="ai-card">
     <div class="ai-head">
       <div>
         <span class="tag blue">AI 看点</span>
@@ -111,7 +111,10 @@ async function copySummary() {
 
 <style scoped>
 .ai-card {
-  padding: 16px;
+  display: grid;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
 }
 
 .ai-head {
@@ -154,7 +157,6 @@ async function copySummary() {
 .content {
   display: grid;
   gap: 14px;
-  margin-top: 16px;
 }
 
 .summary-row {
@@ -162,9 +164,10 @@ async function copySummary() {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 13px;
-  border-radius: var(--radius-lg);
-  background: var(--card-soft);
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: transparent;
 }
 
 .summary-row strong {
@@ -215,9 +218,8 @@ ul {
 }
 
 .note-grid div {
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
 }
 
 .note-grid span {
