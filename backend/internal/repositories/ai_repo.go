@@ -16,8 +16,17 @@ func SaveGeneratedContent(content *models.AIGeneratedContent) error {
 	if result.RowsAffected == 0 {
 		return database.DB.Create(content).Error
 	}
-	content.ID = existing.ID
-	return database.DB.Save(content).Error
+	return database.DB.Model(&existing).Updates(map[string]interface{}{
+		"user_id":          content.UserID,
+		"type":             content.Type,
+		"target_type":      content.TargetType,
+		"target_id":        content.TargetID,
+		"content_json":     content.ContentJSON,
+		"content_markdown": content.ContentMarkdown,
+		"provider":         content.Provider,
+		"model":            content.Model,
+		"cache_key":        content.CacheKey,
+	}).Error
 }
 
 func GetGeneratedContentByCacheKey(cacheKey string) (*models.AIGeneratedContent, error) {

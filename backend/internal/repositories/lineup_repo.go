@@ -71,14 +71,14 @@ func ListMatchesNeedingLineupSync(now time.Time, pregameWindow time.Duration) ([
 	if pregameWindow <= 0 {
 		pregameWindow = 90 * time.Minute
 	}
-	start := now.UTC().Add(-30 * time.Minute)
+	start := now.UTC().Add(-72 * time.Hour)
 	end := now.UTC().Add(pregameWindow)
 
 	var matches []models.Match
 	err := database.DB.
 		Preload("HomeTeam").
 		Preload("AwayTeam").
-		Where("status = ? OR (status != ? AND kickoff_time_utc >= ? AND kickoff_time_utc <= ?)", "live", "finished", start, end).
+		Where("status = ? OR kickoff_time_utc BETWEEN ? AND ?", "live", start, end).
 		Order("kickoff_time_utc ASC").
 		Find(&matches).Error
 	return matches, err

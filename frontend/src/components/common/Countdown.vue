@@ -8,6 +8,10 @@ const props = defineProps<{
   targetTime?: string
 }>()
 
+const emit = defineEmits<{
+  (e: 'complete'): void
+}>()
+
 type UnitKey = 'hours' | 'minutes' | 'seconds'
 
 interface TimePart {
@@ -100,7 +104,10 @@ function startCountdown() {
   timer = window.setInterval(() => {
     total = props.targetTime ? calcRemaining() : Math.max(0, total - 1)
     updateDisplay(total)
-    if (total === 0) clearCountdownTimer()
+    if (total === 0) {
+      clearCountdownTimer()
+      emit('complete')
+    }
   }, 1000)
 }
 

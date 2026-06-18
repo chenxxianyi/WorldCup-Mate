@@ -55,17 +55,7 @@ func GetTomorrowMatches() ([]models.Match, error) {
 }
 
 func GetUpcomingMatches() ([]models.Match, error) {
-	var matches []models.Match
-	all, _, err := repositories.ListMatches(repositories.MatchFilter{
-		Status:   "scheduled",
-		Page:     1,
-		PageSize: 10,
-	})
-	if err != nil {
-		return nil, err
-	}
-	matches = all
-	return matches, nil
+	return repositories.GetUpcomingMatches(10)
 }
 
 func GetLiveMatches() ([]models.Match, error) {

@@ -102,6 +102,13 @@ func RecalculateGroupStanding(groupID uint) error {
 	}
 
 	stats := make(map[uint]*models.GroupStanding)
+	teams, err := repositories.GetTeamsByGroupID(groupID)
+	if err != nil {
+		return err
+	}
+	for _, team := range teams {
+		stats[team.ID] = &models.GroupStanding{GroupID: groupID, TeamID: team.ID}
+	}
 
 	for _, m := range matches {
 		if m.HomeScore == nil || m.AwayScore == nil {
@@ -160,15 +167,23 @@ func RecalculateGroupStanding(groupID uint) error {
 		return standings[i].TeamID < standings[j].TeamID
 	})
 
+	groupComplete, err := isGroupComplete(groupID)
+	if err != nil {
+		return err
+	}
+
 	for i, s := range standings {
 		s.Rank = i + 1
-		switch i {
-		case 0, 1:
-			s.QualificationStatus = "qualified"
-		case 2:
-			s.QualificationStatus = "possible"
-		default:
-			s.QualificationStatus = "eliminated"
+		s.QualificationStatus = "possible"
+		if groupComplete {
+			switch i {
+			case 0, 1:
+				s.QualificationStatus = "qualified"
+			case 2:
+				s.QualificationStatus = "possible"
+			default:
+				s.QualificationStatus = "eliminated"
+			}
 		}
 		if err := repositories.UpsertStanding(s); err != nil {
 			return err
@@ -211,7 +226,10 @@ func RecalculateBestThird() error {
 	})
 
 	for i, s := range thirdPlaceTeams {
-		if i < 8 {
+		groupComplete, err := isGroupComplete(s.GroupID)
+		if err != nil || !groupComplete {
+			s.QualificationStatus = "possible"
+		} else if i < 8 {
 			s.QualificationStatus = "qualified"
 		} else {
 			s.QualificationStatus = "eliminated"
@@ -221,4 +239,24 @@ func RecalculateBestThird() error {
 	}
 
 	return nil
+}
+
+func isGroupComplete(groupID uint) (bool, error) {
+	var total int64
+	if err := database.DB.Model(&models.Match{}).
+		Where("group_id = ?", groupID).
+		Count(&total).Error; err != nil {
+		return false, err
+	}
+	if total == 0 {
+		return false, nil
+	}
+
+	var finished int64
+	if err := database.DB.Model(&models.Match{}).
+		Where("group_id = ? AND status = ? AND home_score IS NOT NULL AND away_score IS NOT NULL", groupID, "finished").
+		Count(&finished).Error; err != nil {
+		return false, err
+	}
+	return finished == total, nil
 }

@@ -5,7 +5,6 @@ import MatchInsightCard from '@/components/ai/MatchInsightCard.vue'
 import PostMatchSummaryCard from '@/components/ai/PostMatchSummaryCard.vue'
 import MatchStatsCard from '@/components/common/MatchStatsCard.vue'
 import MatchLineups from '@/components/common/MatchLineups.vue'
-import PointerGlow from '@/components/common/PointerGlow.vue'
 import ReminderControl from '@/components/common/ReminderControl.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetMatchLineups } from '@/api/lineups'
@@ -194,7 +193,6 @@ watch(() => route.params.id, loadMatch)
 
 <template>
   <div v-if="match" class="match-detail-page">
-    <PointerGlow class="detail-pointer-glow" />
     <div class="detail-toolbar">
       <button class="back-action" type="button" title="返回" aria-label="返回上一页" @click="goBack">
         <span class="material-symbols-outlined">arrow_back</span>
@@ -346,11 +344,6 @@ watch(() => route.params.id, loadMatch)
   isolation: isolate;
   display: grid;
   gap: 24px;
-}
-
-.match-detail-page > :not(.detail-pointer-glow) {
-  position: relative;
-  z-index: 1;
 }
 
 .detail-toolbar {

@@ -127,13 +127,16 @@ func (c *Client) FixtureLineups(ctx context.Context, fixtureID string) (*Fixture
 	return &data, nil
 }
 
-func (c *Client) SearchFixtures(ctx context.Context, date string, teamID string) (*FixtureSearchResponse, error) {
+func (c *Client) SearchFixtures(ctx context.Context, date string, season int, teamID string) (*FixtureSearchResponse, error) {
 	u, err := url.Parse(c.baseURL + "/fixtures")
 	if err != nil {
 		return nil, err
 	}
 	q := u.Query()
 	q.Set("date", date)
+	if season > 0 {
+		q.Set("season", strconv.Itoa(season))
+	}
 	if strings.TrimSpace(teamID) != "" {
 		q.Set("team", teamID)
 	}

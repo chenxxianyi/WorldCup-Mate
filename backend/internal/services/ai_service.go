@@ -557,6 +557,9 @@ Return JSON with summary, score_line, key_takeaways, qualification_impact, worth
 Rules:
 - Use ONLY the facts provided in Context below.
 - Do NOT invent goals, cards, injuries, shots, possession, or news that are not in the facts.
+- Do NOT claim a team has qualified, advanced, or been eliminated unless Context explicitly says so and the standings are final.
+- If standings are partial or event timeline is unavailable, say the qualification impact needs official/full-table confirmation.
+- If Context says the group is still in progress, describe only the provisional table and remaining chances. Do not say "提前出线", "淘汰", "出局", or "无缘晋级".
 - If only score, lineups, and standings are available, state that clearly.
 - Output in Chinese.
 Context:
@@ -581,14 +584,15 @@ Context:
 	if res.GeneratedAt.IsZero() {
 		res.GeneratedAt = time.Now().UTC()
 	}
-	if res.DataNote == "" {
-		res.DataNote = "当前摘要仅基于比分、阵容和积分信息生成。"
-	}
 	if res.SpoilerLevel == "" {
-		res.SpoilerLevel = "full"
+		res.SpoilerLevel = "high"
+	}
+	storedText := jsonText
+	if body, err := json.Marshal(res); err == nil {
+		storedText = string(body)
 	}
 
-	s.saveGenerated(userID, "post_match_summary", "match", match.ID, cacheKey, jsonText, raw, providerRes)
+	s.saveGenerated(userID, "post_match_summary", "match", match.ID, cacheKey, storedText, storedText, providerRes)
 	s.setCached(ctx, cacheKey, res, 2*time.Hour)
 	s.logUsage(userID, ip, "post_match_summary", "success", nil, providerRes, latency)
 	return &res, nil
@@ -672,6 +676,12 @@ func (s *AIService) buildPostMatchContext(match *models.Match) string {
 	// Add group standings
 	if match.GroupID != nil {
 		lines = append(lines, "Group standings:")
+		groupComplete, _ := isGroupComplete(*match.GroupID)
+		if groupComplete {
+			lines = append(lines, "  Stage state: group complete; qualification_status may be treated as final.")
+		} else {
+			lines = append(lines, "  Stage state: group still in progress; standings are provisional and no team should be described as qualified, advanced, eliminated, or out.")
+		}
 		standings, err := repositories.GetStandingsByGroupID(*match.GroupID)
 		if err == nil && len(standings) > 0 {
 			for _, s := range standings {
@@ -679,7 +689,11 @@ func (s *AIService) buildPostMatchContext(match *models.Match) string {
 				if teamName == "" {
 					teamName = s.Team.NameEn
 				}
-				lines = append(lines, fmt.Sprintf("  - %d. %s: %d pts, GD %d, status %s", s.Rank, teamName, s.Points, s.GoalDifference, s.QualificationStatus))
+				status := s.QualificationStatus
+				if !groupComplete {
+					status = "possible"
+				}
+				lines = append(lines, fmt.Sprintf("  - %d. %s: %d pts, GD %d, status %s", s.Rank, teamName, s.Points, s.GoalDifference, status))
 			}
 		} else {
 			lines = append(lines, "  No standings data yet")

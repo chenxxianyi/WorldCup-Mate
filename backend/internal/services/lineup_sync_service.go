@@ -605,7 +605,7 @@ func ensureAPIFootballMatchMapping(ctx context.Context, cfg LineupSyncConfig, ma
 	}
 
 	client := apifootball.NewClient(cfg.APIFootballBaseURL, cfg.APIFootballKey)
-	fixtures, err := client.SearchFixtures(ctx, match.KickoffTimeUTC.UTC().Format("2006-01-02"), homeMapping.ExternalTeamID)
+	fixtures, err := client.SearchFixtures(ctx, match.KickoffTimeUTC.UTC().Format("2006-01-02"), match.KickoffTimeUTC.UTC().Year(), homeMapping.ExternalTeamID)
 	if err != nil {
 		return nil, err
 	}

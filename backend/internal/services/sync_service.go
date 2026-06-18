@@ -150,7 +150,23 @@ func SyncMatches(ctx context.Context, cfg MatchSyncConfig, reason string) (*Matc
 }
 
 func GetSyncStates() ([]models.SyncState, error) {
-	return repositories.GetSyncStates()
+	states, err := repositories.GetSyncStates()
+	if err != nil {
+		return nil, err
+	}
+
+	activeResources := map[string]bool{
+		syncResourceMatches: true,
+		syncResourcePlayers: true,
+		syncResourceLineups: true,
+	}
+	filtered := make([]models.SyncState, 0, len(states))
+	for _, state := range states {
+		if activeResources[state.Resource] {
+			filtered = append(filtered, state)
+		}
+	}
+	return filtered, nil
 }
 
 func MarkInterruptedMatchSync() error {

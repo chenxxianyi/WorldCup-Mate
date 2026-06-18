@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Countdown from '@/components/common/Countdown.vue'
 import MatchTicketRow from '@/components/common/MatchTicketRow.vue'
-import PointerGlow from '@/components/common/PointerGlow.vue'
 import TimelineDayGroup from '@/components/common/TimelineDayGroup.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetGroupStandings } from '@/api/standings'
@@ -81,6 +80,21 @@ const nextMatchLocalTime = computed(() => {
   if (!nextMatch.value) return ''
   return nextMatch.value.local_kickoff_time || '时间待定'
 })
+
+function pickNearestUpcomingMatch(rawMatches: any[]) {
+  const now = Date.now()
+  return (rawMatches || [])
+    .map((m) => normalizeMatch(m))
+    .filter((m) => {
+      const kickoff = new Date(m.kickoff_time_utc).getTime()
+      return (
+        Number.isFinite(kickoff) &&
+        kickoff > now &&
+        (m.status === 'scheduled' || m.status === 'upcoming')
+      )
+    })
+    .sort((a, b) => new Date(a.kickoff_time_utc).getTime() - new Date(b.kickoff_time_utc).getTime())[0] || null
+}
 
 // ── Timeline grouping ──
 
@@ -216,7 +230,7 @@ async function loadGroupStandings() {
 async function loadNextMatch() {
   try {
     const res = await apiGetUpcomingMatches() as any[]
-    nextMatch.value = res?.length ? normalizeMatch(res[0]) : null
+    nextMatch.value = pickNearestUpcomingMatch(res)
   } catch {
     nextMatch.value = null
   }
@@ -281,10 +295,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="dashboard-grid">
-    <PointerGlow class="home-pointer-glow" />
     <div class="home-main">
       <!-- Countdown -->
-      <Countdown v-if="nextMatch" class="home-countdown" :targetTime="nextMatch.kickoff_time_utc">
+      <Countdown v-if="nextMatch" class="home-countdown" :targetTime="nextMatch.kickoff_time_utc" @complete="loadNextMatch">
         <span class="eyebrow"><i class="live-dot next-dot"></i> 下一场比赛</span>
         <div class="countdown-title">
           <div>
@@ -472,11 +485,6 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 22px;
-}
-
-.dashboard-grid > :not(.home-pointer-glow) {
-  position: relative;
-  z-index: 1;
 }
 
 .desktop-side {

@@ -243,10 +243,13 @@ function goTeam(teamId: number) {
 }
 
 .tl-teams {
+  width: clamp(280px, 72%, 400px);
+  max-width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(86px, 1fr) 24px minmax(86px, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  justify-self: center;
 }
 
 .tl-team {
@@ -303,9 +306,24 @@ function goTeam(teamId: number) {
 }
 
 .tl-vs {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
   color: var(--weak);
   font-size: 11px;
   font-weight: 700;
+}
+
+@media (max-width: 430px) {
+  .tl-teams {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .tl-vs {
+    min-width: 20px;
+  }
 }
 
 .tl-meta {

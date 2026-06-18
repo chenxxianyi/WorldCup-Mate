@@ -121,6 +121,20 @@ func GetRecommendedMatches() ([]models.Match, error) {
 	return matches, err
 }
 
+func GetUpcomingMatches(limit int) ([]models.Match, error) {
+	var matches []models.Match
+	if limit <= 0 {
+		limit = 10
+	}
+	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City").Preload("Group").
+		Where("status IN ?", []string{"scheduled", "upcoming"}).
+		Where("kickoff_time_utc > ?", time.Now().UTC()).
+		Order("kickoff_time_utc ASC").
+		Limit(limit).
+		Find(&matches).Error
+	return matches, err
+}
+
 func GetMatchesByTeamID(teamID uint) ([]models.Match, error) {
 	var matches []models.Match
 	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City").
