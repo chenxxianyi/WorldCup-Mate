@@ -69,7 +69,7 @@ function isActive(itemRoute: string) {
     place-items: center;
     border-radius: 17px;
     color: #fff;
-    font-weight: 850;
+    font-weight: 800;
     background: linear-gradient(145deg, var(--primary), var(--secondary));
   }
 

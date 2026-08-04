@@ -265,7 +265,7 @@ watch(() => auth.isLoggedIn, refreshUnread)
   outline: none;
   transition: transform 180ms ease-out, box-shadow 180ms ease-out;
   font-size: 14px;
-  font-weight: 850;
+  font-weight: 800;
   cursor: pointer;
 }
 

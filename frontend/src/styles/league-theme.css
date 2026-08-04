@@ -1,4 +1,7 @@
 :root {
+  --league-display-weight: 700;
+  --league-display-style: normal;
+  --league-display-tracking: 0.02em;
   color-scheme: light;
   --surface-page: #f7f2e8;
   --surface-card: rgba(255, 255, 255, 0.92);
@@ -51,6 +54,8 @@
 }
 
 [data-competition='pl'] {
+  --league-display-weight: 800;
+  --league-display-tracking: -0.01em;
   --competition-primary: #37003c;
   --competition-primary-rgb: 55, 0, 60;
   --competition-accent: #dfff45;
@@ -72,6 +77,8 @@
 }
 
 [data-competition='pd'] {
+  --league-display-weight: 700;
+  --league-display-tracking: 0.025em;
   --competition-primary: #ef3340;
   --competition-primary-rgb: 239, 51, 64;
   --competition-accent: #20cdbb;
@@ -93,6 +100,8 @@
 }
 
 [data-competition='bl1'] {
+  --league-display-weight: 900;
+  --league-display-tracking: -0.025em;
   --competition-primary: #d20515;
   --competition-primary-rgb: 210, 5, 21;
   --competition-accent: #ffffff;
@@ -114,6 +123,9 @@
 }
 
 [data-competition='sa'] {
+  --league-display-weight: 600;
+  --league-display-style: italic;
+  --league-display-tracking: 0.015em;
   --competition-primary: #0068b5;
   --competition-primary-rgb: 0, 104, 181;
   --competition-accent: #65d8ff;
@@ -135,6 +147,8 @@
 }
 
 [data-competition='fl1'] {
+  --league-display-weight: 700;
+  --league-display-tracking: 0.055em;
   --competition-primary: #16161a;
   --competition-primary-rgb: 22, 22, 26;
   --competition-accent: #e6fa32;
@@ -165,8 +179,8 @@ html {
   min-width: 320px;
   overflow-x: hidden;
   background: var(--surface-page);
-  font-family: Inter, 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, 'PingFang SC',
-    'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-family: var(--font-ui);
+  font-synthesis: none;
   font-variant-numeric: tabular-nums;
   scroll-behavior: smooth;
 }
@@ -349,14 +363,15 @@ svg {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 19px;
-  font-weight: 900;
-  letter-spacing: -0.035em;
+  font-family: var(--font-brand);
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .brand-copy small {
   color: var(--text-weak);
   font-size: 8px;
-  font-weight: 850;
+  font-weight: 800;
   letter-spacing: 0.13em;
 }
 
@@ -403,7 +418,8 @@ svg {
   color: var(--competition-accent);
   background: var(--competition-primary);
   font-size: 9px;
-  font-weight: 950;
+  font-family: var(--font-display);
+  font-weight: 900;
   letter-spacing: -0.04em;
 }
 
@@ -544,16 +560,20 @@ svg {
 .page-heading h1,
 .section-heading h2,
 .hero-copy h1,
-.detail-score,
 .competition-sheet h2 {
-  font-family: 'Barlow Condensed', 'Arial Narrow', 'PingFang SC', sans-serif;
+  font-family: var(--font-ui);
+}
+
+.detail-score {
+  font-family: var(--font-display);
 }
 
 .page-heading h1 {
   margin: 4px 0 0;
   font-size: clamp(30px, 4vw, 46px);
   line-height: 0.98;
-  letter-spacing: -0.05em;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 .page-heading p,
@@ -567,7 +587,9 @@ svg {
   margin: 0;
   color: var(--competition-primary);
   font-size: 10px;
-  font-weight: 950;
+  font-family: var(--font-display);
+  font-style: var(--league-display-style);
+  font-weight: var(--league-display-weight);
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -600,7 +622,8 @@ svg {
 .section-heading h2 {
   font-size: clamp(22px, 2.8vw, 30px);
   line-height: 1;
-  letter-spacing: -0.035em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .section-heading p,
@@ -619,7 +642,7 @@ svg {
   color: var(--competition-primary);
   background: transparent;
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 [data-theme='dark'] .text-link,
@@ -737,16 +760,18 @@ svg {
   color: var(--competition-primary);
   background: var(--competition-accent);
   font-size: 14px;
-  font-weight: 950;
-  letter-spacing: -0.05em;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.025em;
 }
 
 .hero-copy h1 {
   max-width: 720px;
   margin: 14px 0 10px;
   font-size: clamp(44px, 7vw, 82px);
+  font-weight: 800;
   line-height: 0.86;
-  letter-spacing: -0.065em;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 
@@ -768,7 +793,7 @@ svg {
   justify-content: space-between;
   color: rgba(255, 255, 255, 0.74);
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .progress-track {
@@ -826,7 +851,7 @@ svg {
   gap: 8px;
   color: rgba(255, 255, 255, 0.78);
   font-size: 10px;
-  font-weight: 850;
+  font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -845,7 +870,8 @@ svg {
 }
 
 .next-kickoff {
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-family: var(--font-display);
+  font-style: var(--league-display-style);
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -879,7 +905,9 @@ svg {
 }
 
 .versus-center strong {
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-family: var(--font-display);
+  font-style: var(--league-display-style);
+  font-weight: var(--league-display-weight);
   font-size: 30px;
   line-height: 1;
 }
@@ -905,7 +933,8 @@ svg {
     linear-gradient(145deg, color-mix(in srgb, var(--badge-a) 88%, #fff), var(--badge-a));
   box-shadow: inset 0 -8px 18px rgba(0, 0, 0, 0.18), 0 12px 28px rgba(0, 0, 0, 0.16);
   font-size: 11px;
-  font-weight: 950;
+  font-family: var(--font-display);
+  font-weight: 900;
   letter-spacing: -0.04em;
 }
 
@@ -946,7 +975,7 @@ svg {
   padding: 0 16px;
   border: 1px solid transparent;
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .primary-button {
@@ -1010,7 +1039,9 @@ svg {
 }
 
 .quick-card strong {
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-family: var(--font-display);
+  font-style: var(--league-display-style);
+  font-weight: var(--league-display-weight);
   font-size: 25px;
   letter-spacing: -0.04em;
 }
@@ -1074,7 +1105,7 @@ svg {
   transform: rotate(36deg);
   text-align: center;
   font-size: 8px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 0.09em;
 }
 
@@ -1090,7 +1121,7 @@ svg {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .label,
@@ -1161,7 +1192,8 @@ svg {
 .match-score {
   min-width: 58px;
   text-align: center;
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-family: var(--font-display);
+  font-style: var(--league-display-style);
   font-size: 27px;
   font-weight: 900;
   line-height: 1;
@@ -1249,12 +1281,12 @@ svg {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .standing-position {
   color: var(--text-weak);
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .standing-position.zone-top {
@@ -1366,7 +1398,9 @@ svg {
 }
 
 .day-marker strong {
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-family: var(--font-display);
+  font-style: var(--league-display-style);
+  font-weight: var(--league-display-weight);
   font-size: 26px;
   line-height: 1;
 }
@@ -1426,9 +1460,9 @@ svg {
   right: -5px;
   bottom: -18px;
   color: rgba(var(--competition-primary-rgb), 0.06);
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-family: var(--font-display);
   font-size: 72px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: -0.08em;
 }
 
@@ -1509,7 +1543,7 @@ svg {
   height: 38px;
   color: var(--text-weak);
   font-size: 9px;
-  font-weight: 850;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
@@ -1737,7 +1771,8 @@ svg {
   min-width: 120px;
   text-align: center;
   font-size: clamp(52px, 9vw, 86px);
-  font-weight: 950;
+  font-style: var(--league-display-style);
+  font-weight: 900;
   line-height: 0.8;
   letter-spacing: -0.07em;
 }
@@ -1766,7 +1801,7 @@ svg {
 .stat-row > span:first-child,
 .stat-row > span:last-child {
   width: 38px;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .stat-row > span:last-child {
@@ -1817,7 +1852,7 @@ svg {
 
 .timeline-minute {
   color: var(--text-weak);
-  font-weight: 850;
+  font-weight: 800;
   text-align: right;
 }
 
@@ -1855,10 +1890,11 @@ svg {
 }
 
 .team-hero-copy h1 {
-  font-family: 'Barlow Condensed', 'Arial Narrow', 'PingFang SC', sans-serif;
+  font-family: var(--font-ui);
   font-size: clamp(38px, 6vw, 68px);
+  font-weight: 800;
   line-height: 0.95;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.025em;
 }
 
 .team-hero-copy p {
@@ -1947,10 +1983,11 @@ svg {
 
 .login-visual h1 {
   margin: 0;
-  font-family: 'Barlow Condensed', 'Arial Narrow', 'PingFang SC', sans-serif;
+  font-family: var(--font-ui);
   font-size: clamp(38px, 6vw, 66px);
+  font-weight: 800;
   line-height: 0.92;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.025em;
 }
 
 .login-visual p {
@@ -2159,7 +2196,8 @@ svg {
   color: var(--preview-accent, var(--competition-accent));
   background: var(--preview-primary, var(--competition-primary));
   font-size: 10px;
-  font-weight: 950;
+  font-family: var(--font-display);
+  font-weight: 900;
 }
 
 .competition-option[data-preview='wc'] { --preview-primary: #8e2145; --preview-accent: #d8b44a; }
@@ -2186,7 +2224,7 @@ svg {
   pointer-events: none;
   transition: opacity var(--motion-normal), transform var(--motion-normal);
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .toast.show {

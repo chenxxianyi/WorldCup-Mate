@@ -18,6 +18,9 @@
 }
 
 :root {
+  --font-ui: 'Noto Sans SC Variable', 'Noto Sans SC', 'Source Han Sans CN', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Arial Narrow', var(--font-ui);
+  --font-brand: 'Barlow Condensed', var(--font-ui);
   color-scheme: light;
   --bg: #f5f5f7;
   --card: #ffffff;
@@ -84,9 +87,10 @@
 }
 
 html {
-  font-family: Inter, 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, 'PingFang SC',
-    'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-family: var(--font-ui);
+  font-synthesis: none;
   font-variant-numeric: tabular-nums;
+  text-rendering: optimizeLegibility;
 }
 
 body {

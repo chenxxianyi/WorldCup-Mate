@@ -82,7 +82,7 @@ onMounted(() => {
   color: var(--primary);
   background: transparent;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
   cursor: pointer;
 }
 

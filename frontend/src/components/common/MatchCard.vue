@@ -152,7 +152,7 @@ function goDetail() {
   border-radius: 14px 14px 0 0;
   color: #13543a;
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 800;
   background: color-mix(in srgb, var(--green-2) 14%, #fff);
   box-shadow: 0 -4px 12px rgba(0, 104, 71, 0.06);
 }
@@ -212,7 +212,7 @@ function goDetail() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 750;
+  font-weight: 700;
   font-size: 16px;
 }
 
@@ -225,7 +225,8 @@ function goDetail() {
 .score {
   min-width: 70px;
   text-align: center;
-  font-weight: 850;
+  font-family: var(--font-display);
+  font-weight: 800;
   font-size: 30px;
   line-height: 1;
 }

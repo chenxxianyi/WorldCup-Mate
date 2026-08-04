@@ -52,7 +52,7 @@ function goDetail() {
 .team-card h3 {
   margin: 11px 0 2px;
   font-size: 16px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .team-card p {

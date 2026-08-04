@@ -219,7 +219,7 @@ async function createReminders() {
   margin-bottom: 8px;
   color: var(--muted);
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .popover-title:not(:first-child) {
@@ -278,7 +278,7 @@ async function createReminders() {
   padding: 0 12px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
   cursor: pointer;
 }
 

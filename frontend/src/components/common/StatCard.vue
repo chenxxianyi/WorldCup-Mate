@@ -19,9 +19,10 @@ defineProps<{
 
 .stat-card strong {
   display: block;
+  font-family: var(--font-display);
   font-size: 25px;
   line-height: 1;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .stat-card span {

@@ -84,7 +84,7 @@ th, td {
 
 th {
   color: var(--muted);
-  font-weight: 750;
+  font-weight: 700;
   background: var(--card-soft);
 }
 

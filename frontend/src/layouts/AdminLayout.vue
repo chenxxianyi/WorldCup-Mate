@@ -78,7 +78,7 @@ function isActive(path: string) {
   place-items: center;
   border-radius: 12px;
   color: #fff;
-  font-weight: 850;
+  font-weight: 800;
   font-size: 14px;
   background: linear-gradient(145deg, var(--primary), var(--secondary));
 }

@@ -127,9 +127,10 @@ watch(() => props.targetTime, () => {
 
 .time-box strong {
   display: block;
+  font-family: var(--font-display);
   font-size: clamp(30px, 11vw, 44px);
   line-height: 1;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .time-box span {
