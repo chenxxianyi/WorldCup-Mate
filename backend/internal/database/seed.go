@@ -29,11 +29,11 @@ func Seed() {
 func seedCompetitions() {
 	competitions := []models.Competition{
 		{Code: "WC", Name: "世界杯", NameEn: "World Cup", Country: "World", Format: "cup", Season: 2026, Status: "active", SortOrder: 0},
-		{Code: "PL", Name: "英超", NameEn: "Premier League", Country: "England", Format: "league", Season: 2025, Status: "active", SortOrder: 1},
-		{Code: "PD", Name: "西甲", NameEn: "Primera Division", Country: "Spain", Format: "league", Season: 2025, Status: "active", SortOrder: 2},
-		{Code: "BL1", Name: "德甲", NameEn: "Bundesliga", Country: "Germany", Format: "league", Season: 2025, Status: "active", SortOrder: 3},
-		{Code: "SA", Name: "意甲", NameEn: "Serie A", Country: "Italy", Format: "league", Season: 2025, Status: "active", SortOrder: 4},
-		{Code: "FL1", Name: "法甲", NameEn: "Ligue 1", Country: "France", Format: "league", Season: 2025, Status: "active", SortOrder: 5},
+		{Code: "PL", Name: "英超", NameEn: "Premier League", Country: "England", Format: "league", Season: 2026, Status: "active", SortOrder: 1},
+		{Code: "PD", Name: "西甲", NameEn: "Primera Division", Country: "Spain", Format: "league", Season: 2026, Status: "active", SortOrder: 2},
+		{Code: "BL1", Name: "德甲", NameEn: "Bundesliga", Country: "Germany", Format: "league", Season: 2026, Status: "active", SortOrder: 3},
+		{Code: "SA", Name: "意甲", NameEn: "Serie A", Country: "Italy", Format: "league", Season: 2026, Status: "active", SortOrder: 4},
+		{Code: "FL1", Name: "法甲", NameEn: "Ligue 1", Country: "France", Format: "league", Season: 2026, Status: "active", SortOrder: 5},
 	}
 	for _, comp := range competitions {
 		var count int64

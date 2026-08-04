@@ -56,9 +56,11 @@ export const useFavoriteStore = defineStore('favorite', () => {
       } else {
         await apiAddFavoriteTeam(teamId)
       }
+      return true
     } catch {
       if (wasFollowed) followedTeamIds.value.push(teamId)
       else followedTeamIds.value = followedTeamIds.value.filter((id) => id !== teamId)
+      return false
     }
   }
 
@@ -75,9 +77,11 @@ export const useFavoriteStore = defineStore('favorite', () => {
       } else {
         await apiAddFavoriteMatch(matchId)
       }
+      return true
     } catch {
       if (wasFav) favoriteMatchIds.value.push(matchId)
       else favoriteMatchIds.value = favoriteMatchIds.value.filter((id) => id !== matchId)
+      return false
     }
   }
 

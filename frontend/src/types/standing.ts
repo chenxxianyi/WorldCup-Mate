@@ -4,7 +4,7 @@ export interface ApiStanding {
   group_id: number
   group: { id: number; name: string } | null
   team_id: number
-  team: { id: number; name: string; fifa_code: string; flag_url: string } | null
+  team: { id: number; name: string; fifa_code: string | null; external_code?: string | null; flag_url: string } | null
   played: number
   won: number
   drawn: number
@@ -20,6 +20,7 @@ export interface ApiStanding {
 /** Frontend normalized standing */
 export interface Standing {
   team_id: number
+  rank?: number
   team_name: string
   team_code: string
   flag: string
@@ -40,8 +41,9 @@ export function normalizeStanding(s: ApiStanding): Standing {
   else if (s.qualification_status === 'possible') status = '待定'
   return {
     team_id: s.team_id,
+    rank: s.rank,
     team_name: s.team?.name || '',
-    team_code: s.team?.fifa_code || '',
+    team_code: s.team?.fifa_code || s.team?.external_code || '',
     flag: s.team?.flag_url || '',
     played: s.played,
     won: s.won,
@@ -66,7 +68,7 @@ export interface ApiLeagueStanding {
   competition_id: number
   season: number
   team_id: number
-  team: { id: number; name: string; name_en: string; fifa_code: string | null; flag_url: string } | null
+  team: { id: number; name: string; name_en: string; fifa_code: string | null; external_code?: string | null; flag_url: string } | null
   type: 'total' | 'home' | 'away'
   position: number
   played: number
@@ -102,7 +104,7 @@ export function normalizeLeagueStanding(s: ApiLeagueStanding): LeagueStanding {
   return {
     team_id: s.team_id,
     team_name: s.team?.name || '',
-    team_code: s.team?.fifa_code || '',
+    team_code: s.team?.fifa_code || s.team?.external_code || '',
     flag: s.team?.flag_url || '',
     position: s.position,
     played: s.played,

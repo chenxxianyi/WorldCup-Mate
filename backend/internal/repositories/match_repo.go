@@ -10,19 +10,20 @@ import (
 )
 
 type MatchFilter struct {
-	Date           string
-	TeamID         uint
-	GroupID        uint
-	GroupName      string
-	Stage          string
-	CityID         uint
-	Status         string
-	Keyword        string
-	CompetitionID  uint // optional: 0 = no filter (legacy behavior)
-	Season         int  // optional: 0 = no filter
-	Matchday       int  // optional: 0 = no filter
-	Page           int
-	PageSize       int
+	Date          string
+	TeamID        uint
+	GroupID       uint
+	GroupName     string
+	Stage         string
+	CityID        uint
+	Status        string
+	Keyword       string
+	CompetitionID uint // optional: 0 = no filter (legacy behavior)
+	WorldCupOnly  bool // legacy World Cup matches have a NULL competition_id
+	Season        int  // optional: 0 = no filter
+	Matchday      int  // optional: 0 = no filter
+	Page          int
+	PageSize      int
 }
 
 func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
@@ -62,6 +63,8 @@ func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
 	}
 	if f.CompetitionID > 0 {
 		q = q.Where("competition_id = ?", f.CompetitionID)
+	} else if f.WorldCupOnly {
+		q = q.Where("competition_id IS NULL")
 	}
 	if f.Season > 0 {
 		q = q.Where("season = ?", f.Season)

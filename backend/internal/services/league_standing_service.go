@@ -66,10 +66,11 @@ func SyncLeagueStandings(ctx context.Context, code string, season int) error {
 		if standingType == "" {
 			standingType = "total"
 		}
+		standings := make([]*models.LeagueStanding, 0, len(group.Table))
 		for _, row := range group.Table {
-			team, err := findOrCreateClub(row.Team)
+			team, err := findOrCreateClub(row.Team, competition.Country)
 			if err != nil {
-				continue
+				return err
 			}
 			standing := &models.LeagueStanding{
 				CompetitionID:  competition.ID,
@@ -90,8 +91,18 @@ func SyncLeagueStandings(ctx context.Context, code string, season int) error {
 			if standingType == "total" {
 				standing.Zone = zoneForPosition(code, row.Position)
 			}
+			standings = append(standings, standing)
+		}
+
+		// The provider response is a full snapshot. Remove rows no longer in
+		// that snapshot first (promoted/relegated clubs and corrected identity
+		// mappings), otherwise stale rows remain visible in the standings API.
+		if err := repositories.DeleteLeagueStandings(competition.ID, season, standingType); err != nil {
+			return err
+		}
+		for _, standing := range standings {
 			if err := repositories.UpsertLeagueStanding(standing); err != nil {
-				continue
+				return err
 			}
 		}
 	}

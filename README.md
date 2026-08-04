@@ -137,7 +137,7 @@ APP_ENV=development
 APP_PORT=8080
 JWT_SECRET=please_change_me_to_a_long_random_string
 MYSQL_DSN=user:password@tcp(127.0.0.1:3306)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local
-REDIS_ADDR=127.0.0.1:6379
+REDIS_ADDR=127.0.0.1:5001
 REDIS_PASSWORD=
 REDIS_DB=0
 DATA_SYNC_ENABLED=false
@@ -207,7 +207,7 @@ docker compose up -d --build
 | 前端 Nginx | `3000:80` |
 | 后端 API | `8080:8080` |
 | MySQL | `3306:3306` |
-| Redis | `6379:6379` |
+| Redis | `5001:6379` |
 
 注意：当前 Docker 部署前需要先修正 `MYSQL_DSN` 与 MySQL 服务用户配置不一致的问题。
 

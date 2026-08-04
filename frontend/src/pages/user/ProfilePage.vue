@@ -1,551 +1,145 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import NotificationList from '@/components/common/NotificationList.vue'
-import StatCard from '@/components/common/StatCard.vue'
-import { useSettingStore } from '@/stores/useSettingStore'
-import { useFavoriteStore } from '@/stores/useFavoriteStore'
-import { useReminderStore } from '@/stores/useReminderStore'
-import { useTeamStore } from '@/stores/useTeamStore'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import ThemeIcon from '@/components/theme/ThemeIcon.vue'
+import ThemeMatchCard from '@/components/theme/ThemeMatchCard.vue'
+import { matchToThemeMatch } from '@/data/themeAdapters'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useCompetitionStore } from '@/stores/useCompetitionStore'
-import { apiGetCompetitionStandings } from '@/api/competitions'
-import { apiUpdateProfile } from '@/api/auth'
-import type { Team } from '@/types/team'
+import { useFavoriteStore } from '@/stores/useFavoriteStore'
+import { useLeagueThemeStore } from '@/stores/useLeagueThemeStore'
+import { useNotificationStore } from '@/stores/useNotificationStore'
+import { useReminderStore } from '@/stores/useReminderStore'
 
-const settings = useSettingStore()
-const fav = useFavoriteStore()
-const reminder = useReminderStore()
-const teamStore = useTeamStore()
+const route = useRoute()
+const router = useRouter()
+const theme = useLeagueThemeStore()
 const auth = useAuthStore()
-const comp = useCompetitionStore()
-
-// Notification email editing
-const editingEmail = ref(false)
-const notificationEmail = ref('')
-const emailSaving = ref(false)
-
-function startEditEmail() {
-  notificationEmail.value = auth.user?.notificationEmail || ''
-  editingEmail.value = true
-}
-
-function cancelEditEmail() {
-  editingEmail.value = false
-  notificationEmail.value = ''
-}
-
-async function saveEmail() {
-  emailSaving.value = true
-  try {
-    await apiUpdateProfile({ notification_email: notificationEmail.value })
-    if (auth.user) {
-      auth.user.notificationEmail = notificationEmail.value
-    }
-    editingEmail.value = false
-  } catch {
-    alert('保存失败')
-  } finally {
-    emailSaving.value = false
-  }
-}
-
-const followedTeams = computed(() =>
-  teamStore.teams.filter((t) => fav.isTeamFollowed(t.id)),
-)
-
-// teamId -> competition name, built from each league's official standings.
-// Teams not present in any league standings are national teams → 世界杯.
-const teamCompetitionMap = ref<Record<number, string>>({})
-const followedGroups = computed(() => {
-  const byName = new Map<string, Team[]>()
-  for (const t of followedTeams.value) {
-    const name = teamCompetitionMap.value[t.id] || '世界杯'
-    if (!byName.has(name)) byName.set(name, [])
-    byName.get(name)!.push(t)
-  }
-  return Array.from(byName.entries()).map(([name, teams]) => ({ name, teams }))
-})
-
-async function buildTeamCompetitionMap() {
-  await comp.fetchCompetitions()
-  const map: Record<number, string> = {}
-  const leagueCodes = comp.competitions.filter((c) => c.format === 'league').map((c) => c.code)
-  await Promise.all(
-    leagueCodes.map(async (code) => {
-      try {
-        const res = await apiGetCompetitionStandings(code, { type: 'total' }) as any[]
-        const name = comp.competitions.find((c) => c.code === code)?.name || code
-        for (const s of res || []) {
-          map[s.team_id] = name
-        }
-      } catch {
-        // ignore per-league failures
-      }
-    }),
-  )
-  teamCompetitionMap.value = map
-}
-
-// Avatar upload
-const fileInput = ref<HTMLInputElement>()
-const uploading = ref(false)
-const avatarTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-const maxAvatarSize = 5 * 1024 * 1024
-
-function triggerUpload() {
-  fileInput.value?.click()
-}
-
-async function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  if (!avatarTypes.includes(file.type)) {
-    alert('仅支持 JPG、PNG、GIF、WebP 图片')
-    input.value = ''
-    return
-  }
-  if (file.size > maxAvatarSize) {
-    alert('头像不能超过 5MB')
-    input.value = ''
-    return
-  }
-  uploading.value = true
-  try {
-    await auth.uploadAvatar(file)
-  } catch {
-    alert('头像上传失败')
-  } finally {
-    uploading.value = false
-    input.value = ''
-  }
-}
-
-// Change password
-const showPwdModal = ref(false)
-const oldPwd = ref('')
-const newPwd = ref('')
-const confirmPwd = ref('')
-const pwdLoading = ref(false)
-const pwdError = ref('')
-
-function openPwdModal() {
-  oldPwd.value = ''
-  newPwd.value = ''
-  confirmPwd.value = ''
-  pwdError.value = ''
-  showPwdModal.value = true
-}
-
-async function submitPassword() {
-  pwdError.value = ''
-  if (!oldPwd.value || !newPwd.value) {
-    pwdError.value = '请填写所有字段'
-    return
-  }
-  if (newPwd.value.length < 6) {
-    pwdError.value = '新密码至少 6 位'
-    return
-  }
-  if (newPwd.value !== confirmPwd.value) {
-    pwdError.value = '两次输入的密码不一致'
-    return
-  }
-  pwdLoading.value = true
-  try {
-    await auth.changePassword(oldPwd.value, newPwd.value)
-    showPwdModal.value = false
-    alert('密码修改成功')
-  } catch (err: any) {
-    pwdError.value = err?.response?.data?.message || '修改失败，请检查旧密码'
-  } finally {
-    pwdLoading.value = false
-  }
-}
+const favorites = useFavoriteStore()
+const reminders = useReminderStore()
+const notifications = useNotificationStore()
+const profileForm = reactive({ timezone: 'Asia/Shanghai', language: 'zh-CN', notification_email: '' })
+const oldPassword = ref('')
+const newPassword = ref('')
+const savingProfile = ref(false)
+const changingPassword = ref(false)
+const uploadingAvatar = ref(false)
+const recentFavorite = computed(() => favorites.favoriteMatches[0] ? matchToThemeMatch(favorites.favoriteMatches[0]) : null)
 
 onMounted(() => {
-  teamStore.fetchTeams({ page_size: 100 })
-  buildTeamCompetitionMap()
-  if (auth.isLoggedIn) {
-    fav.fetchFavoriteTeams()
-    fav.fetchFavoriteMatches()
-    reminder.fetchReminders()
-  }
+  if (auth.isLoggedIn) notifications.fetchNotifications()
 })
+
+watch(() => auth.user, (user) => {
+  if (!user) return
+  profileForm.timezone = user.timezone || 'Asia/Shanghai'
+  profileForm.language = user.language || 'zh-CN'
+  profileForm.notification_email = user.notificationEmail || user.email
+}, { immediate: true })
+
+function login() {
+  router.push({ path: '/login', query: { redirect: route.fullPath } })
+}
+
+function logout() {
+  auth.logout()
+  theme.showToast('已退出登录')
+  router.push('/')
+}
+
+async function saveProfile() {
+  savingProfile.value = true
+  try {
+    await auth.updateProfile(profileForm)
+    theme.showToast('个人设置已保存')
+  } catch (reason) {
+    theme.showToast(reason instanceof Error ? reason.message : '保存失败，请稍后重试')
+  } finally {
+    savingProfile.value = false
+  }
+}
+
+async function uploadAvatar(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  uploadingAvatar.value = true
+  try {
+    await auth.uploadAvatar(file)
+    theme.showToast('头像已更新')
+  } catch (reason) {
+    theme.showToast(reason instanceof Error ? reason.message : '头像上传失败')
+  } finally {
+    uploadingAvatar.value = false
+    input.value = ''
+  }
+}
+
+async function changePassword() {
+  changingPassword.value = true
+  try {
+    await auth.changePassword(oldPassword.value, newPassword.value)
+    oldPassword.value = ''
+    newPassword.value = ''
+    theme.showToast('密码修改成功')
+  } catch (reason) {
+    theme.showToast(reason instanceof Error ? reason.message : '密码修改失败')
+  } finally {
+    changingPassword.value = false
+  }
+}
 </script>
 
 <template>
-  <div>
-    <article class="card profile-card">
-      <div class="avatar-wrap" @click="triggerUpload">
-        <template v-if="auth.user?.avatar && auth.user.avatar.startsWith('/')">
-          <img class="avatar-img" :src="auth.user.avatar" alt="头像" />
-        </template>
-        <template v-else>
-          <div class="avatar-text">{{ auth.user?.avatar || 'U' }}</div>
-        </template>
-        <div class="avatar-overlay">
-          <span v-if="uploading" class="material-symbols-outlined spinning">progress_activity</span>
-          <span v-else class="material-symbols-outlined">photo_camera</span>
-        </div>
-      </div>
-      <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden @change="onFileChange" />
-      <div>
-        <h2>{{ auth.user?.nickname || auth.user?.username || '未登录' }}</h2>
-        <p>{{ settings.timezone }} · 已关注 {{ fav.followedTeamIds.length }} 支球队</p>
-      </div>
+  <div class="page-view">
+    <header class="page-heading">
+      <div><p class="eyebrow">MY MATCHDAY</p><h1>我的</h1></div>
+      <button v-if="auth.isLoggedIn" class="secondary-button" type="button" @click="logout">退出登录</button>
+      <button v-else class="primary-button" type="button" @click="login">登录账号</button>
+    </header>
+
+    <article v-if="!auth.isLoggedIn" class="login-required-card">
+      <span class="profile-avatar">M</span>
+      <div><p class="eyebrow">PERSONAL MATCHDAY</p><h2>登录后保存你的比赛世界</h2><p>跨设备同步关注球队、收藏比赛、开球提醒和站内通知。</p></div>
+      <button class="primary-button" type="button" @click="login">登录并继续 <ThemeIcon name="arrow" /></button>
     </article>
 
-    <section class="section">
-      <div class="stats-row">
-        <StatCard :value="fav.followedTeamIds.length" label="关注球队" />
-        <StatCard :value="fav.favoriteMatchIds.length" label="收藏比赛" />
-        <StatCard :value="reminder.count" label="比赛提醒" />
-      </div>
-    </section>
+    <div v-else class="profile-layout">
+      <div class="stack">
+        <article class="card profile-card">
+          <img v-if="auth.user?.avatar?.startsWith('/')" class="profile-avatar image" :src="auth.user.avatar" alt="用户头像" />
+          <span v-else class="profile-avatar">{{ auth.user?.avatar || auth.user?.username?.charAt(0).toUpperCase() || 'M' }}</span>
+          <h2>{{ auth.user?.nickname || auth.user?.username }}</h2><p>{{ auth.user?.email }}</p>
+          <label class="avatar-upload secondary-button">{{ uploadingAvatar ? '上传中…' : '更换头像' }}<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" :disabled="uploadingAvatar" @change="uploadAvatar" /></label>
+          <div class="profile-stats"><span class="profile-stat"><strong>{{ favorites.followedTeamIds.length }}</strong><span>关注球队</span></span><span class="profile-stat"><strong>{{ favorites.favoriteMatchIds.length }}</strong><span>收藏比赛</span></span><span class="profile-stat"><strong>{{ reminders.count }}</strong><span>比赛提醒</span></span></div>
+        </article>
 
-    <section class="section">
-      <div class="card settings-list">
-        <div class="setting-item">
-          <b>我的关注</b>
-          <div class="followed-groups">
-            <template v-if="followedGroups.length">
-              <div v-for="g in followedGroups" :key="g.name" class="followed-group">
-                <span class="followed-group-name">{{ g.name }}</span>
-                <span>{{ g.teams.map((t) => t.name).join('、') }}</span>
-              </div>
-            </template>
-            <span v-else>暂无关注球队</span>
-          </div>
-        </div>
-        <div class="setting-item"><b>我的提醒</b><span>{{ reminder.count }} 个待发送</span></div>
-        <div class="setting-item">
-          <b>默认提醒渠道</b>
-          <select class="channel-select" :value="settings.defaultReminderChannel" @change="settings.setDefaultReminderChannel(($event.target as HTMLSelectElement).value)">
-            <option value="site">站内通知</option>
-            <option value="email">邮件通知</option>
-          </select>
-        </div>
-        <div class="setting-item" v-if="!editingEmail">
-          <b>通知邮箱</b>
-          <span @click="startEditEmail" style="cursor:pointer">
-            {{ auth.user?.notificationEmail || auth.user?.email || '未设置' }} <span class="muted-arrow">›</span>
-          </span>
-        </div>
-        <div class="setting-item email-edit-row" v-else>
-          <div class="email-edit-form">
-            <input v-model="notificationEmail" type="email" placeholder="输入通知邮箱" class="email-input" />
-            <div class="email-edit-actions">
-              <button class="pill-btn" @click="cancelEditEmail">取消</button>
-              <button class="pill-btn primary" :disabled="emailSaving" @click="saveEmail">
-                {{ emailSaving ? '保存中...' : '保存' }}
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="setting-item"><b>时区</b><span>{{ settings.timezone }}</span></div>
-        <div class="setting-item">
-          <b>深色模式</b>
-          <button class="pill-btn" @click="settings.toggleTheme">切换</button>
-        </div>
-        <div class="setting-item"><b>语言</b><span>简体中文</span></div>
-        <div class="setting-item" @click="openPwdModal" style="cursor:pointer">
-          <b>修改密码</b><span class="muted-arrow">›</span>
-        </div>
+        <details class="card account-panel">
+          <summary>账号安全 <span>修改登录密码</span></summary>
+          <form class="account-form" @submit.prevent="changePassword">
+            <label class="field-label">当前密码<div class="field-control"><ThemeIcon name="lock" /><input v-model="oldPassword" type="password" autocomplete="current-password" required /></div></label>
+            <label class="field-label">新密码<div class="field-control"><ThemeIcon name="lock" /><input v-model="newPassword" type="password" autocomplete="new-password" minlength="6" required /></div></label>
+            <button class="primary-button full-button" type="submit" :disabled="changingPassword">{{ changingPassword ? '提交中…' : '修改密码' }}</button>
+          </form>
+        </details>
       </div>
-    </section>
 
-    <NotificationList />
+      <div class="stack">
+        <form class="card profile-settings-form" @submit.prevent="saveProfile">
+          <div class="setting-line"><span class="setting-label"><strong>当前赛事</strong><span>首页与数据范围</span></span><button class="setting-value text-button" type="button" @click="theme.competitionDialogOpen = true">{{ theme.current.name }} · {{ theme.current.season }}</button></div>
+          <label class="setting-line"><span class="setting-label"><strong>默认时区</strong><span>比赛时间自动换算</span></span><select v-model="profileForm.timezone" class="setting-select"><option value="Asia/Shanghai">北京时间</option><option value="Europe/London">伦敦时间</option><option value="Europe/Madrid">马德里时间</option><option value="America/New_York">纽约时间</option></select></label>
+          <label class="setting-line"><span class="setting-label"><strong>界面语言</strong><span>账号首选语言</span></span><select v-model="profileForm.language" class="setting-select"><option value="zh-CN">简体中文</option><option value="en-US">English</option></select></label>
+          <label class="setting-line setting-email"><span class="setting-label"><strong>通知邮箱</strong><span>邮件提醒接收地址</span></span><input v-model="profileForm.notification_email" class="setting-input" type="email" required /></label>
+          <div class="setting-line"><span class="setting-label"><strong>外观模式</strong><span>与赛事主题自由组合</span></span><button class="text-button" type="button" @click="theme.toggleTheme">{{ theme.settings.theme === 'dark' ? '深色' : '浅色' }}</button></div>
+          <button class="primary-button settings-submit" type="submit" :disabled="savingProfile">{{ savingProfile ? '保存中…' : '保存个人设置' }}</button>
+        </form>
 
-    <!-- Password Modal -->
-    <Teleport to="body">
-      <div v-if="showPwdModal" class="modal-mask" @click.self="showPwdModal = false">
-        <div class="modal-box">
-          <h3>修改密码</h3>
-          <div class="form-group">
-            <label>旧密码</label>
-            <input v-model="oldPwd" type="password" placeholder="请输入旧密码" />
-          </div>
-          <div class="form-group">
-            <label>新密码</label>
-            <input v-model="newPwd" type="password" placeholder="至少 6 位" />
-          </div>
-          <div class="form-group">
-            <label>确认新密码</label>
-            <input v-model="confirmPwd" type="password" placeholder="再次输入新密码" />
-          </div>
-          <p v-if="pwdError" class="form-error">{{ pwdError }}</p>
-          <div class="modal-actions">
-            <button class="pill-btn" @click="showPwdModal = false">取消</button>
-            <button class="pill-btn primary" :disabled="pwdLoading" @click="submitPassword">
-              {{ pwdLoading ? '提交中...' : '确认修改' }}
-            </button>
-          </div>
-        </div>
+        <section><div class="section-heading"><div><p class="eyebrow">SAVED</p><h2>最近收藏</h2></div><button class="text-link" type="button" @click="router.push('/schedule')">查看赛程</button></div><ThemeMatchCard v-if="recentFavorite" :match="recentFavorite" /><article v-else class="card empty-mini">还没有收藏比赛</article></section>
+
+        <section><div class="section-heading"><div><p class="eyebrow">NOTIFICATIONS</p><h2>最近通知</h2></div><button v-if="notifications.unreadCount" class="text-link" type="button" @click="notifications.markAllRead">全部已读</button></div>
+          <div v-if="notifications.notifications.length" class="card notification-list"><button v-for="item in notifications.notifications.slice(0, 5)" :key="item.id" class="notification-item" :class="{ unread: !item.is_read }" type="button" @click="notifications.markRead(item.id)"><i /><span><strong>{{ item.title }}</strong><small>{{ item.content }}</small></span><time>{{ new Date(item.created_at).toLocaleDateString('zh-CN') }}</time></button></div>
+          <article v-else class="card empty-mini">暂无通知</article>
+        </section>
       </div>
-    </Teleport>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.profile-card {
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-
-.avatar-wrap {
-  position: relative;
-  width: 54px;
-  height: 54px;
-  flex-shrink: 0;
-  cursor: pointer;
-  border-radius: 18px;
-  overflow: hidden;
-}
-
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.avatar-text {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 22px;
-  font-weight: 800;
-  background: linear-gradient(145deg, var(--primary), var(--secondary));
-}
-
-.avatar-overlay {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  font-size: 22px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.followed-groups {
-  display: grid;
-  gap: 6px;
-  text-align: right;
-  min-width: 0;
-}
-
-.followed-group {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.followed-group-name {
-  flex-shrink: 0;
-  padding: 2px 8px;
-  border-radius: 999px;
-  color: #fff;
-  background: var(--primary);
-  font-size: 11px;
-  font-weight: 750;
-}
-
-.avatar-wrap:hover .avatar-overlay {
-  opacity: 1;
-}
-
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.profile-card h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 750;
-}
-
-.profile-card p {
-  margin: 5px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.section {
-  margin-top: 18px;
-}
-
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.settings-list {
-  overflow: hidden;
-}
-
-.setting-item {
-  min-height: 58px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-}
-
-.setting-item:last-child {
-  border-bottom: 0;
-}
-
-.setting-item span {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.muted-arrow {
-  font-size: 20px;
-  color: var(--muted);
-}
-
-/* Modal */
-.modal-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-}
-
-.modal-box {
-  width: min(90vw, 380px);
-  padding: 24px;
-  border-radius: 20px;
-  background: var(--card);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-}
-
-.modal-box h3 {
-  margin: 0 0 18px;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  font-size: 14px;
-  background: var(--card-soft);
-  outline: none;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  border-color: var(--primary);
-}
-
-.form-error {
-  margin: 0 0 12px;
-  color: #dc3545;
-  font-size: 13px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.pill-btn {
-  padding: 8px 18px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--card);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.channel-select {
-  padding: 6px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card-soft);
-  font-size: 13px;
-  color: inherit;
-  outline: none;
-  cursor: pointer;
-}
-
-.email-edit-row {
-  flex-direction: column;
-  align-items: stretch;
-  padding: 12px 16px !important;
-}
-
-.email-edit-form {
-  width: 100%;
-}
-
-.email-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  font-size: 14px;
-  background: var(--card-soft);
-  outline: none;
-  box-sizing: border-box;
-  margin-bottom: 10px;
-}
-
-.email-input:focus {
-  border-color: var(--primary);
-}
-
-.email-edit-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.pill-btn.primary {
-  color: #fff;
-  background: var(--primary);
-  border-color: var(--primary);
-}
-
-.pill-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-</style>

@@ -1,349 +1,104 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { apiGetTeamMatches } from '@/api/teams'
-import { apiGetGroupStandings } from '@/api/standings'
 import { apiGetCompetitionStandings } from '@/api/competitions'
-import MatchCard from '@/components/common/MatchCard.vue'
-import StandingTable from '@/components/common/StandingTable.vue'
-import TeamFlag from '@/components/common/TeamFlag.vue'
+import { apiGetGroupStandings } from '@/api/standings'
+import { apiGetTeamMatches } from '@/api/teams'
+import TeamBadge from '@/components/theme/TeamBadge.vue'
+import ThemeIcon from '@/components/theme/ThemeIcon.vue'
+import ThemeMatchCard from '@/components/theme/ThemeMatchCard.vue'
+import { matchToThemeMatch, teamToThemeTeam } from '@/data/themeAdapters'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
+import { useLeagueThemeStore } from '@/stores/useLeagueThemeStore'
 import { useTeamStore } from '@/stores/useTeamStore'
-import { useCompetitionStore } from '@/stores/useCompetitionStore'
 import { normalizeMatch, type Match } from '@/types/match'
-import { normalizeStanding, normalizeLeagueStanding, type Standing, type LeagueStanding } from '@/types/standing'
+import { normalizeLeagueStanding, normalizeStanding, type LeagueStanding, type Standing } from '@/types/standing'
 import type { Team } from '@/types/team'
 
 const route = useRoute()
 const router = useRouter()
+const theme = useLeagueThemeStore()
 const auth = useAuthStore()
-const fav = useFavoriteStore()
+const favorites = useFavoriteStore()
 const teamStore = useTeamStore()
-const comp = useCompetitionStore()
-
 const team = ref<Team | null>(null)
 const matches = ref<Match[]>([])
-const standings = ref<Standing[]>([])
+const groupStanding = ref<Standing | null>(null)
 const leagueStanding = ref<LeagueStanding | null>(null)
 const loading = ref(false)
 const error = ref('')
 
-const sortedMatches = computed(() =>
-  [...matches.value].sort((a, b) => {
-    const ta = new Date(a.kickoff_time_utc).getTime()
-    const tb = new Date(b.kickoff_time_utc).getTime()
-    return ta - tb
-  }),
-)
+const displayTeam = computed(() => team.value ? teamToThemeTeam(team.value) : null)
+const sortedMatches = computed(() => [...matches.value].sort((a, b) => new Date(a.kickoff_time_utc).getTime() - new Date(b.kickoff_time_utc).getTime()))
+const nextMatch = computed(() => sortedMatches.value.find((item) => item.status !== 'finished') || sortedMatches.value[0] || null)
+const displayMatches = computed(() => sortedMatches.value.map(matchToThemeMatch))
+const position = computed(() => leagueStanding.value?.position || groupStanding.value?.rank || null)
+const points = computed(() => leagueStanding.value?.points ?? groupStanding.value?.points ?? null)
+const goalsFor = computed(() => leagueStanding.value?.goals_for ?? groupStanding.value?.goals_for ?? null)
 
-const nextMatch = computed(() => {
-  const now = Date.now()
-  return sortedMatches.value.find((match) => {
-    if (match.status === 'finished' || !match.kickoff_time_utc) return false
-    return new Date(match.kickoff_time_utc).getTime() >= now
-  }) || sortedMatches.value[0] || null
-})
-
-const teamStanding = computed(() =>
-  team.value ? standings.value.find((item) => item.team_id === team.value?.id) || null : null,
-)
-
-async function loadTeamDetail() {
-  await comp.fetchCompetitions()
+async function loadTeam() {
   const id = Number(route.params.id)
-  if (!id) {
-    error.value = '球队不存在'
-    return
-  }
-
+  if (!id) { error.value = '球队不存在'; return }
   loading.value = true
   error.value = ''
   team.value = null
   matches.value = []
-  standings.value = []
-
+  groupStanding.value = null
+  leagueStanding.value = null
   try {
     const detail = await teamStore.fetchTeamDetail(id)
-    if (!detail) {
-      error.value = '球队不存在'
-      return
-    }
-
+    if (!detail) throw new Error('球队不存在')
     team.value = detail
-
-    const matchRes = await apiGetTeamMatches(id) as any[]
-    matches.value = (matchRes || []).map(normalizeMatch)
-
-    if (comp.isLeague) {
-      try {
-        const res = await apiGetCompetitionStandings(comp.currentCode, { type: 'total' }) as any[]
-        const list = (res || []).map(normalizeLeagueStanding)
-        leagueStanding.value = list.find((s) => s.team_id === id) || null
-      } catch {
-        leagueStanding.value = null
-      }
-    } else if (detail.group_id) {
-      const standingRes = await apiGetGroupStandings(detail.group_id) as any[]
-      standings.value = (standingRes || []).map(normalizeStanding)
+    const matchRows = await apiGetTeamMatches(id) as any[]
+    matches.value = (matchRows || []).map(normalizeMatch)
+    if (theme.current.slug === 'wc' && detail.group_id) {
+      const rows = await apiGetGroupStandings(detail.group_id) as any[]
+      const standings = rows.map(normalizeStanding)
+      groupStanding.value = standings.find((item) => item.team_id === id) || null
+    } else {
+      const rows = await apiGetCompetitionStandings(theme.currentCode, { type: 'total' }) as any[]
+      leagueStanding.value = rows.map(normalizeLeagueStanding).find((item) => item.team_id === id) || null
     }
-
-    if (auth.isLoggedIn) {
-      await fav.fetchFavoriteTeams()
-    }
-  } catch {
-    error.value = '球队详情加载失败'
+    if (auth.isLoggedIn) await favorites.fetchFavoriteTeams()
+  } catch (reason) {
+    error.value = reason instanceof Error ? reason.message : '球队详情加载失败'
   } finally {
     loading.value = false
   }
 }
 
-function toggleFollow() {
+async function toggleFollow() {
   if (!team.value) return
   if (!auth.isLoggedIn) {
-    router.push('/login')
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
     return
   }
-  fav.toggleTeamFollow(team.value.id)
+  const was = favorites.isTeamFollowed(team.value.id)
+  const saved = await favorites.toggleTeamFollow(team.value.id)
+  theme.showToast(saved ? (was ? '已取消关注' : `已关注${team.value.name}`) : '关注操作失败，请稍后重试')
 }
 
-onMounted(loadTeamDetail)
-
-watch(() => route.params.id, loadTeamDetail)
-watch(() => comp.currentCode, loadTeamDetail)
+onMounted(loadTeam)
+watch(() => route.params.id, loadTeam)
+watch(() => theme.currentCode, () => router.push('/teams'))
 </script>
 
 <template>
-  <div class="team-detail">
-    <div v-if="loading" class="state-text">加载中...</div>
-    <div v-else-if="error" class="state-text">{{ error }}</div>
-
-    <template v-else-if="team">
-      <article class="card team-hero">
-        <button class="back-btn" title="返回" @click="router.back()">
-          <span class="material-symbols-outlined">arrow_back</span>
-        </button>
-
-        <div class="hero-main">
-          <TeamFlag :value="team.flag" :alt="team.name" :fallback="team.code" size="lg" />
-          <div class="team-copy">
-            <div class="hero-tags">
-              <template v-if="comp.isLeague">
-                <span class="tag blue">{{ comp.current?.name || '联赛' }}</span>
-                <span class="tag">{{ team.country || team.continent }}</span>
-              </template>
-              <template v-else>
-                <span class="tag blue">{{ team.group_name || '未分组' }}</span>
-                <span class="tag">{{ team.continent }}</span>
-              </template>
-            </div>
-            <h1>{{ team.name }}</h1>
-            <p>{{ team.name_en }} · {{ team.code }}</p>
-          </div>
+  <div class="page-view">
+    <div class="back-row"><button class="back-button" type="button" @click="router.push('/teams')"><ThemeIcon name="back" /> 返回球队</button></div>
+    <div v-if="loading" class="page-state"><span class="state-spinner" />正在加载球队详情</div>
+    <article v-else-if="error || !team || !displayTeam" class="card empty-compact"><span class="empty-art"><ThemeIcon name="shield" /></span><span class="empty-copy"><h3>无法显示球队</h3><p>{{ error || '球队数据不存在。' }}</p></span></article>
+    <template v-else>
+      <section class="team-hero"><div class="team-hero-content"><TeamBadge :team="displayTeam" size="large" /><div class="team-hero-copy"><p class="eyebrow" style="color: var(--competition-accent)">{{ theme.current.en }}</p><h1>{{ team.name }}</h1><p>{{ team.name_en }} · {{ team.code }}</p><div class="team-detail-meta"><span class="hero-meta-pill">当前排名 {{ position || '—' }}</span><span class="hero-meta-pill">主场 {{ team.venue || '待定' }}</span><span class="hero-meta-pill">{{ team.group_name || team.country || team.continent }}</span></div></div><button class="team-hero-follow" :class="{ active: favorites.isTeamFollowed(team.id) }" type="button" @click="toggleFollow"><ThemeIcon name="star" />{{ favorites.isTeamFollowed(team.id) ? '已关注' : '关注' }}</button></div></section>
+      <div class="detail-grid section">
+        <div class="stack">
+          <article class="card detail-panel"><h3>赛季表现</h3><div class="quick-grid" style="margin-top: 0"><span class="quick-card"><small class="muted">积分</small><strong>{{ points ?? '—' }}</strong></span><span class="quick-card"><small class="muted">进球</small><strong>{{ goalsFor ?? '—' }}</strong></span><span class="quick-card"><small class="muted">比赛</small><strong>{{ matches.length }}</strong></span></div></article>
+          <article class="card detail-panel"><h3>球队资料</h3><div class="info-list"><span><small>所在赛事</small><strong>{{ theme.current.name }}</strong></span><span><small>国家 / 地区</small><strong>{{ team.country || team.continent }}</strong></span><span><small>球队代码</small><strong>{{ team.code || '—' }}</strong></span><span><small>主场</small><strong>{{ team.venue || '待定' }}</strong></span></div></article>
         </div>
-
-        <div class="hero-actions">
-          <button
-            class="pill-btn"
-            :class="{ active: fav.isTeamFollowed(team.id) }"
-            @click="toggleFollow"
-          >
-            <span
-              class="material-symbols-outlined"
-              :style="fav.isTeamFollowed(team.id) ? 'font-variation-settings: \'FILL\' 1' : ''"
-            >star</span>
-            {{ fav.isTeamFollowed(team.id) ? '已关注' : '关注球队' }}
-          </button>
-          <button class="pill-btn primary" @click="router.push('/schedule')">
-            <span class="material-symbols-outlined">calendar_month</span>
-            查看赛程
-          </button>
-        </div>
-
-        <div class="stat-grid">
-          <div class="stat-cell">
-            <span>比赛</span>
-            <strong>{{ matches.length }}</strong>
-          </div>
-          <div class="stat-cell">
-            <span>{{ comp.isLeague ? '联赛排名' : '小组排名' }}</span>
-            <strong>{{ comp.isLeague ? (leagueStanding?.position || '-') : (teamStanding ? standings.indexOf(teamStanding) + 1 : '-') }}</strong>
-          </div>
-          <div class="stat-cell">
-            <span>积分</span>
-            <strong>{{ comp.isLeague ? (leagueStanding?.points ?? '-') : (teamStanding ? teamStanding.points : '-') }}</strong>
-          </div>
-        </div>
-      </article>
-
-      <section v-if="nextMatch" class="section">
-        <div class="section-head">
-          <h2>下一场比赛</h2>
-          <span>{{ nextMatch.local_kickoff_time || '时间待定' }}</span>
-        </div>
-        <MatchCard :match="nextMatch" featured />
-      </section>
-
-      <section class="section">
-        <div class="section-head">
-          <h2>球队赛程</h2>
-          <span>{{ matches.length }} 场比赛</span>
-        </div>
-        <div v-if="sortedMatches.length" class="match-list">
-          <MatchCard v-for="match in sortedMatches" :key="match.id" :match="match" />
-        </div>
-        <div v-else class="card empty-card">暂无球队赛程</div>
-      </section>
-
-      <section v-if="standings.length" class="section">
-        <div class="section-head">
-          <h2>所在小组积分</h2>
-          <span>{{ team.group_name }}</span>
-        </div>
-        <StandingTable :standings="standings" show-status />
-      </section>
+        <section><div class="section-heading"><div><p class="eyebrow">NEXT MATCH</p><h2>下一场比赛</h2></div></div><ThemeMatchCard v-if="nextMatch" :match="matchToThemeMatch(nextMatch)" /><article v-else class="card empty-mini">暂无球队赛程</article></section>
+      </div>
+      <section v-if="displayMatches.length > 1" class="section"><div class="section-heading"><div><p class="eyebrow">FIXTURES</p><h2>球队赛程</h2></div><span>{{ displayMatches.length }} 场</span></div><div class="match-list"><ThemeMatchCard v-for="match in displayMatches" :key="match.id" :match="match" /></div></section>
     </template>
   </div>
 </template>
-
-<style scoped>
-.team-detail {
-  display: grid;
-  gap: 18px;
-}
-
-.team-hero {
-  position: relative;
-  padding: 18px;
-}
-
-.back-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--muted);
-  background: var(--card);
-  cursor: pointer;
-}
-
-.back-btn .material-symbols-outlined {
-  font-size: 20px;
-}
-
-.hero-main {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-right: 42px;
-}
-
-.team-copy {
-  min-width: 0;
-}
-
-.hero-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.team-copy h1 {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: 24px;
-  line-height: 1.15;
-  font-weight: 850;
-}
-
-.team-copy p {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.hero-actions .material-symbols-outlined {
-  font-size: 18px;
-  vertical-align: -4px;
-}
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.stat-cell {
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--card-soft);
-}
-
-.stat-cell span {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.stat-cell strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 18px;
-  font-weight: 850;
-}
-
-.section {
-  display: grid;
-  gap: 12px;
-}
-
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.section-head h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 750;
-}
-
-.section-head span {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.match-list {
-  display: grid;
-  gap: 12px;
-}
-
-.empty-card,
-.state-text {
-  padding: 24px;
-  text-align: center;
-  color: var(--muted);
-}
-
-@media (max-width: 380px) {
-  .stat-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

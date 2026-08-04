@@ -30,6 +30,7 @@ export const useCompetitionStore = defineStore('competition', () => {
     // Clean up stale selections: if the stored code no longer resolves to a
     // known competition (and is not the WC default), fall back to WC.
     if (
+      loaded.value &&
       currentCode.value !== WC_CODE &&
       !competitions.value.some((c) => c.code === currentCode.value)
     ) {

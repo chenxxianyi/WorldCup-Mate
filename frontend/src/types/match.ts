@@ -23,8 +23,8 @@ export interface ApiMatch {
   matchday?: number | null
   home_team_id: number
   away_team_id: number
-  home_team: { id: number; name: string; name_en: string; fifa_code: string; flag_url: string }
-  away_team: { id: number; name: string; name_en: string; fifa_code: string; flag_url: string }
+  home_team: { id: number; name: string; name_en: string; fifa_code: string | null; external_code?: string | null; flag_url: string }
+  away_team: { id: number; name: string; name_en: string; fifa_code: string | null; external_code?: string | null; flag_url: string }
   home_score: number | null
   away_score: number | null
   status: MatchStatus
@@ -44,6 +44,7 @@ export interface Match {
   id: number
   match_number: number
   stage: Stage
+  group_id?: number | null
   group_name: string | null
   home_team_id: number
   away_team_id: number
@@ -96,13 +97,14 @@ export function normalizeMatch(m: ApiMatch): Match {
     id: m.id,
     match_number: m.match_no,
     stage: m.stage,
+    group_id: m.group_id ?? null,
     group_name: m.group?.name || null,
     home_team_id: m.home_team_id,
     away_team_id: m.away_team_id,
     home_team_name: m.home_team?.name || '',
     away_team_name: m.away_team?.name || '',
-    home_team_code: m.home_team?.fifa_code || '',
-    away_team_code: m.away_team?.fifa_code || '',
+    home_team_code: m.home_team?.fifa_code || m.home_team?.external_code || '',
+    away_team_code: m.away_team?.fifa_code || m.away_team?.external_code || '',
     home_flag: m.home_team?.flag_url || '',
     away_flag: m.away_team?.flag_url || '',
     home_score: m.home_score,

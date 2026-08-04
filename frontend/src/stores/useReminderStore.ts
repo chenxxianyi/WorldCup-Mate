@@ -56,15 +56,17 @@ export const useReminderStore = defineStore('reminder', () => {
 
   async function removeRemindersByMatch(matchId: number) {
     const existing = remindersForMatch(matchId)
-    if (!existing.length) return
+    if (!existing.length) return true
 
     reminders.value = reminders.value.filter((r) => r.match_id !== matchId)
     refreshMatchReminderIds()
     try {
       await Promise.all(existing.map((item) => apiDeleteReminder(item.id)))
+      return true
     } catch {
       reminders.value.push(...existing)
       refreshMatchReminderIds()
+      return false
     }
   }
 
@@ -78,15 +80,17 @@ export const useReminderStore = defineStore('reminder', () => {
 
   async function toggleReminder(matchId: number, minutesBefore = 30, channel = 'site') {
     if (hasReminder(matchId)) {
-      await removeRemindersByMatch(matchId)
-      return
+      return removeRemindersByMatch(matchId)
     }
 
     try {
       const res = await apiCreateReminder({ matchId, remindBeforeMinutes: minutesBefore, channel }) as any
       reminders.value.push(normalizeReminder(res, channel))
       refreshMatchReminderIds()
-    } catch {}
+      return true
+    } catch {
+      return false
+    }
   }
 
   return {

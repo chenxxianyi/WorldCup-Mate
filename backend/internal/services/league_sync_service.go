@@ -210,11 +210,11 @@ func upsertLeagueMatch(competition *models.Competition, season int, externalMatc
 		return "skipped", errors.New("missing external match id")
 	}
 
-	homeTeam, err := findOrCreateClub(externalMatch.HomeTeam)
+	homeTeam, err := findOrCreateClub(externalMatch.HomeTeam, competition.Country)
 	if err != nil {
 		return "skipped", err
 	}
-	awayTeam, err := findOrCreateClub(externalMatch.AwayTeam)
+	awayTeam, err := findOrCreateClub(externalMatch.AwayTeam, competition.Country)
 	if err != nil {
 		return "skipped", err
 	}
@@ -292,13 +292,15 @@ func upsertLeagueMatch(competition *models.Competition, season int, externalMatc
 	return "updated", nil
 }
 
-// findOrCreateClub upserts a club team. Clubs have no FIFA code (NULL), use
-// external_code (provider tla) as the unique key and team_type = club.
-func findOrCreateClub(team footballdata.Team) (*models.Team, error) {
+// findOrCreateClub upserts a club by the provider's immutable team ID.
+// TLA values are display codes only: they are not globally unique (for
+// example Barcelona and Bayern can both use FCB).
+func findOrCreateClub(team footballdata.Team, country string) (*models.Team, error) {
 	code := strings.ToUpper(strings.TrimSpace(team.TLA))
 	if code == "" {
 		code = fmt.Sprintf("TBD%d", team.ID)
 	}
+	externalID := strconv.FormatInt(team.ID, 10)
 	name := strings.TrimSpace(team.ShortName)
 	if name == "" {
 		name = strings.TrimSpace(team.Name)
@@ -306,28 +308,47 @@ func findOrCreateClub(team footballdata.Team) (*models.Team, error) {
 	if name == "" {
 		name = "TBD"
 	}
+	name = localizeFootballDataClub(externalID, name)
+	normalizedCountry := strings.TrimSpace(country)
 
 	var existing models.Team
-	result := database.DB.Where("external_code = ?", code).Limit(1).Find(&existing)
+	result := database.DB.Where("external_provider = ? AND external_id = ?", leagueSyncProvider, externalID).Limit(1).Find(&existing)
 	if result.Error != nil {
 		return nil, result.Error
+	}
+	// One-time migration path for clubs imported before provider IDs were
+	// stored. Country scopes the legacy TLA lookup and prevents collisions.
+	if result.RowsAffected == 0 {
+		result = database.DB.Where("external_code = ? AND country = ?", code, normalizedCountry).Limit(1).Find(&existing)
+		if result.Error != nil {
+			return nil, result.Error
+		}
 	}
 	if result.RowsAffected > 0 {
 		existing.Name = name
 		existing.NameEn = team.Name
 		existing.TeamType = "club"
-		if existing.FlagURL == "" && team.Crest != "" {
+		existing.Country = normalizedCountry
+		existing.ExternalProvider = leagueSyncProvider
+		existing.ExternalID = &externalID
+		existing.ExternalCode = &code
+		// Provider crest URLs are authoritative. Always refresh them so a club
+		// that once collided by TLA does not retain another club's badge.
+		if team.Crest != "" {
 			existing.FlagURL = team.Crest
 		}
 		return &existing, database.DB.Save(&existing).Error
 	}
 
 	created := models.Team{
-		Name:         name,
-		NameEn:       team.Name,
-		ExternalCode: &code,
-		TeamType:     "club",
-		FlagURL:      team.Crest,
+		Name:             name,
+		NameEn:           team.Name,
+		ExternalCode:     &code,
+		ExternalProvider: leagueSyncProvider,
+		ExternalID:       &externalID,
+		TeamType:         "club",
+		FlagURL:          team.Crest,
+		Country:          normalizedCountry,
 	}
 	if err := repositories.CreateTeam(&created); err != nil {
 		return nil, err

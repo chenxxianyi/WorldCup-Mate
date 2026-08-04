@@ -8,17 +8,17 @@ const request = axios.create({
 })
 
 request.interceptors.request.use((config) => {
-  const token = localStorage.getItem('wm-token')
+  const token = localStorage.getItem('wm-token') || sessionStorage.getItem('wm-token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  // Multi-competition: attach competitionId only when a non-World-Cup
-  // competition is active and the caller did not pass an explicit
-  // competitionId (admin pages take precedence). World Cup (default)
-  // sends no param, keeping legacy behavior byte-identical. Backend
-  // binds form:"competitionId".
-  const compCode = localStorage.getItem('wm-competition')
-  if (compCode && compCode !== 'WC' && !config.params?.competitionId) {
+  // Multi-competition: league calls use competitionId. Legacy World Cup
+  // matches have a NULL competition_id, so match-list calls explicitly use
+  // worldCup=true to prevent synced league fixtures leaking into that view.
+  const compCode = localStorage.getItem('wm-competition') || 'WC'
+  if (compCode === 'WC' && config.url?.startsWith('/matches') && !config.params?.competitionId) {
+    config.params = { ...(config.params || {}), worldCup: true }
+  } else if (compCode !== 'WC' && !config.params?.competitionId) {
     const compId = Number(localStorage.getItem('wm-competition-id'))
     if (Number.isFinite(compId) && compId > 0) {
       config.params = { ...(config.params || {}), competitionId: compId }

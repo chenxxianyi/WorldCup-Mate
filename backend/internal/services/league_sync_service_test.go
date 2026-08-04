@@ -56,3 +56,20 @@ func TestConfigureLeagueSyncParsing(t *testing.T) {
 		t.Error("empty targets must disable league sync")
 	}
 }
+
+func TestLocalizeFootballDataClubUsesProviderIdentity(t *testing.T) {
+	cases := []struct {
+		id, fallback, want string
+	}{
+		{"81", "Barça", "巴塞罗那"},
+		{"5", "Bayern", "拜仁慕尼黑"},
+		{"402", "Brentford", "布伦特福德"},
+		{"512", "Brest", "布雷斯特"},
+		{"999999", "Unknown FC", "Unknown FC"},
+	}
+	for _, tc := range cases {
+		if got := localizeFootballDataClub(tc.id, tc.fallback); got != tc.want {
+			t.Errorf("localizeFootballDataClub(%q, %q) = %q, want %q", tc.id, tc.fallback, got, tc.want)
+		}
+	}
+}

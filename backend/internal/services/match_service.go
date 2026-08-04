@@ -8,19 +8,20 @@ import (
 )
 
 type MatchQuery struct {
-	Date           string `form:"date"`
-	TeamID         uint   `form:"teamId"`
-	GroupID        uint   `form:"groupId"`
-	GroupName      string `form:"groupName"`
-	Stage          string `form:"stage"`
-	CityID         uint   `form:"cityId"`
-	Status         string `form:"status"`
-	Keyword        string `form:"keyword"`
-	CompetitionID  uint   `form:"competitionId"` // optional: 0 = legacy behavior
-	Season         int    `form:"season"`
-	Matchday       int    `form:"matchday"`
-	Page           int
-	PageSize       int
+	Date          string `form:"date"`
+	TeamID        uint   `form:"teamId"`
+	GroupID       uint   `form:"groupId"`
+	GroupName     string `form:"groupName"`
+	Stage         string `form:"stage"`
+	CityID        uint   `form:"cityId"`
+	Status        string `form:"status"`
+	Keyword       string `form:"keyword"`
+	CompetitionID uint   `form:"competitionId"` // optional: 0 = legacy behavior
+	WorldCupOnly  bool   `form:"worldCup"`      // World Cup records use a NULL competition_id for backwards compatibility
+	Season        int    `form:"season"`
+	Matchday      int    `form:"matchday"`
+	Page          int
+	PageSize      int
 }
 
 func ListMatches(q MatchQuery) ([]models.Match, int64, error) {
@@ -34,6 +35,7 @@ func ListMatches(q MatchQuery) ([]models.Match, int64, error) {
 		Status:        q.Status,
 		Keyword:       q.Keyword,
 		CompetitionID: q.CompetitionID,
+		WorldCupOnly:  q.WorldCupOnly,
 		Season:        q.Season,
 		Matchday:      q.Matchday,
 		Page:          q.Page,

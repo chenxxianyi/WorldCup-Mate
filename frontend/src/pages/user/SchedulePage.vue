@@ -1,552 +1,93 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import SearchInput from '@/components/common/SearchInput.vue'
-import ChipFilter from '@/components/common/ChipFilter.vue'
-import MatchCard from '@/components/common/MatchCard.vue'
-import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 import { apiListMatches } from '@/api/matches'
+import ThemeIcon from '@/components/theme/ThemeIcon.vue'
+import ThemeMatchCard from '@/components/theme/ThemeMatchCard.vue'
+import { localDateLabel, matchToThemeMatch, type ThemeMatch } from '@/data/themeAdapters'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
-import { useCompetitionStore } from '@/stores/useCompetitionStore'
-import { normalizeMatch, type Match } from '@/types/match'
-
-const INITIAL_DAYS = 3
-const DAYS_PER_LOAD = 2
-const PAGE_SIZE = 8
-const LOAD_MORE_MIN_MS = 760
-
-const FILTER_ALL = '全部'
-const FILTER_TODAY = '今日'
-const FILTER_TOMORROW = '明日'
-const FILTER_SCHEDULED = '未开始'
-const FILTER_KNOCKOUT = '淘汰赛'
-const FILTER_FOLLOWED = '只看关注'
+import { useLeagueThemeStore } from '@/stores/useLeagueThemeStore'
+import { normalizeMatch } from '@/types/match'
 
 const router = useRouter()
+const theme = useLeagueThemeStore()
 const auth = useAuthStore()
-const fav = useFavoriteStore()
-const comp = useCompetitionStore()
-
-const search = ref('')
-const activeFilter = ref(FILTER_ALL)
-const activeMatchday = ref(0) // league mode: 0 = all rounds
-const matches = ref<Match[]>([])
+const favorites = useFavoriteStore()
+const filter = ref('全部')
+const matches = ref<ThemeMatch[]>([])
 const loading = ref(false)
-const loadingMore = ref(false)
-const errorMessage = ref('')
-const page = ref(1)
-const total = ref(0)
-const reachedEnd = ref(false)
-const visibleDateLimit = ref(INITIAL_DAYS)
-const loadMoreTarget = ref<HTMLElement | null>(null)
-const showBackTop = ref(false)
-const loadHintVisible = ref(false)
-
-let observer: IntersectionObserver | null = null
-let requestToken = 0
-let searchTimer: number | undefined
-
-const filterOptions = computed(() => {
-  if (comp.isLeague) {
-    return [FILTER_ALL, FILTER_TODAY, FILTER_TOMORROW, FILTER_SCHEDULED, FILTER_FOLLOWED]
-  }
-  return [
-    FILTER_ALL,
-    FILTER_TODAY,
-    FILTER_TOMORROW,
-    FILTER_SCHEDULED,
-    FILTER_KNOCKOUT,
-    FILTER_FOLLOWED,
-    'Group A',
-    'Group B',
-    'Group C',
-    'Group D',
-    'Group E',
-    'Group F',
-    'Group G',
-    'Group H',
-    'Group I',
-    'Group J',
-    'Group K',
-    'Group L',
-  ]
+const error = ref('')
+const filters = computed(() => theme.current.slug === 'wc' ? ['全部', '小组赛', '淘汰赛', '收藏'] : ['全部', '第 11 轮', '第 12 轮', '直播', '收藏'])
+const groupedMatches = computed(() => {
+  const groups = new Map<string, ThemeMatch[]>()
+  matches.value.forEach((match) => groups.set(match.kickoffKey, [...(groups.get(match.kickoffKey) || []), match]))
+  return [...groups.entries()].map(([key, items]) => ({ key, label: localDateLabel(key), matches: items }))
 })
 
-const followedOnly = computed(() => activeFilter.value === FILTER_FOLLOWED)
-
-const clientFilteredMatches = computed(() => {
-  if (!followedOnly.value) return matches.value
-  const followedIds = new Set(fav.followedTeamIds)
-  return matches.value.filter(
-    (match) => followedIds.has(match.home_team_id) || followedIds.has(match.away_team_id),
-  )
-})
-
-const loadedDateKeys = computed(() => {
-  const keys: string[] = []
-  for (const match of clientFilteredMatches.value) {
-    const key = matchDateKey(match)
-    if (!keys.includes(key)) keys.push(key)
-  }
-  return keys
-})
-
-const visibleMatches = computed(() => {
-  const allowedKeys = new Set(loadedDateKeys.value.slice(0, visibleDateLimit.value))
-  return clientFilteredMatches.value.filter((match) => allowedKeys.has(matchDateKey(match)))
-})
-
-const groupedByDate = computed(() => {
-  const groups: Array<{ key: string; title: string; matches: Match[] }> = []
-  for (const match of visibleMatches.value) {
-    const key = matchDateKey(match)
-    let group = groups.find((item) => item.key === key)
-    if (!group) {
-      group = { key, title: dateTitle(key), matches: [] }
-      groups.push(group)
-    }
-    group.matches.push(match)
-  }
-  return groups
-})
-
-const hasBufferedDays = computed(() => loadedDateKeys.value.length > visibleDateLimit.value)
-const hasMore = computed(() => {
-  if (followedOnly.value && !auth.isLoggedIn) return false
-  if (followedOnly.value && auth.isLoggedIn && fav.followedTeamIds.length === 0) return false
-  return hasBufferedDays.value || !reachedEnd.value
-})
-
-const emptyText = computed(() => {
-  if (followedOnly.value && !auth.isLoggedIn) return '登录后可以查看关注球队的赛程'
-  if (followedOnly.value && fav.followedTeamIds.length === 0) return '还没有关注球队'
-  return '暂无符合条件的比赛'
-})
-
-const loadText = computed(() => {
-  if (loadingMore.value) return '加载中...'
-  if (hasMore.value) {
-    return loadHintVisible.value ? '继续下滑，加载更多赛程' : '下滑查看更多赛程'
-  }
-  return clientFilteredMatches.value.length ? '已加载全部赛程' : ''
-})
-
-function dayParam(offset = 0) {
-  const d = new Date()
-  d.setDate(d.getDate() + offset)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function wait(ms: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms))
-}
-
-function requestParams() {
-  const params: Record<string, any> = {
-    page: page.value,
-    page_size: PAGE_SIZE,
-  }
-
-  if (comp.isLeague) {
-    if (activeMatchday.value > 0) params.matchday = activeMatchday.value
-  } else if (activeFilter.value === FILTER_TODAY) {
-    params.date = dayParam()
-  } else if (activeFilter.value === FILTER_TOMORROW) {
-    params.date = dayParam(1)
-  } else if (activeFilter.value.startsWith('Group')) {
-    params.groupName = activeFilter.value
-  } else if (activeFilter.value === FILTER_KNOCKOUT) {
-    params.stage = 'knockout'
-  } else if (activeFilter.value === FILTER_SCHEDULED) {
-    params.status = 'scheduled'
-  }
-
-  const keyword = search.value.trim()
-  if (keyword) params.keyword = keyword
+function queryForFilter() {
+  const params: Record<string, unknown> = { page: 1, page_size: 100 }
+  if (filter.value === '小组赛') params.stage = 'group'
+  if (filter.value === '淘汰赛') params.stage = 'knockout'
+  if (filter.value === '直播') params.status = 'live'
+  const round = filter.value.match(/第\s*(\d+)\s*轮/)
+  if (round) params.matchday = Number(round[1])
   return params
 }
 
-function matchDateKey(match: Match) {
-  return (match.local_kickoff_time || '').split(' ')[0] || '其他日期'
-}
-
-function dateTitle(key: string) {
-  const [month, day] = key.split('-')
-  if (!month || !day) return key
-  return `${Number(month)}月${Number(day)}日`
-}
-
-async function prepareFollowedFilter() {
-  if (!followedOnly.value) return true
-  if (!auth.isLoggedIn) {
-    reachedEnd.value = true
-    return false
-  }
-  await fav.fetchFavoriteTeams()
-  if (fav.followedTeamIds.length === 0) {
-    reachedEnd.value = true
-    return false
-  }
-  return true
-}
-
-async function fetchNextPage(token: number) {
-  const res = (await apiListMatches(requestParams())) as any
-  if (token !== requestToken) return false
-
-  const list = (res.list || res || []).map(normalizeMatch)
-  const knownIds = new Set(matches.value.map((match) => match.id))
-  matches.value.push(...list.filter((match: Match) => !knownIds.has(match.id)))
-
-  total.value = Number(res.total || matches.value.length)
-  const currentPage = Number(res.page || page.value)
-  const pageSize = Number(res.page_size || PAGE_SIZE)
-  page.value = currentPage + 1
-  reachedEnd.value = matches.value.length >= total.value || list.length < pageSize
-  return list.length > 0
-}
-
-async function fillInitialWindow(token: number) {
-  while (
-    token === requestToken &&
-    loadedDateKeys.value.length < INITIAL_DAYS &&
-    !reachedEnd.value
-  ) {
-    const gotRows = await fetchNextPage(token)
-    if (!gotRows) break
-  }
-}
-
-async function resetAndLoad() {
-  await comp.fetchCompetitions()
-  const token = ++requestToken
+async function loadMatches() {
   loading.value = true
-  loadingMore.value = false
-  errorMessage.value = ''
-  page.value = 1
-  total.value = 0
-  reachedEnd.value = false
-  visibleDateLimit.value = INITIAL_DAYS
-  loadHintVisible.value = false
-  matches.value = []
-
+  error.value = ''
   try {
-    const canLoad = await prepareFollowedFilter()
-    if (canLoad) await fillInitialWindow(token)
-  } catch (err: any) {
-    if (token === requestToken) errorMessage.value = err?.message || '赛程加载失败'
+    if (filter.value === '收藏' && !auth.isLoggedIn) {
+      matches.value = []
+      return
+    }
+    if (filter.value === '收藏') await favorites.fetchFavoriteMatches()
+    const params = queryForFilter()
+    const response = await apiListMatches(params) as any
+    let rawRows = response.list || response || []
+    const total = Number(response.total ?? rawRows.length)
+    if (rawRows.length && rawRows.length < total) {
+      const pageSize = Number(response.page_size || params.page_size || 100)
+      const pageCount = Math.ceil(total / pageSize)
+      const remaining = await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) =>
+        apiListMatches({ ...params, page: index + 2, page_size: pageSize }) as Promise<any>,
+      ))
+      rawRows = rawRows.concat(...remaining.map((page) => page.list || page || []))
+    }
+    let rows = rawRows.map(normalizeMatch)
+    if (filter.value === '收藏') rows = rows.filter((match: any) => favorites.isMatchFavorite(match.id))
+    matches.value = rows.map(matchToThemeMatch)
+  } catch (reason) {
+    matches.value = []
+    error.value = reason instanceof Error ? reason.message : '赛程加载失败'
   } finally {
-    if (token === requestToken) {
-      loading.value = false
-      await nextTick()
-      observeLoadMoreTarget()
-    }
+    loading.value = false
   }
 }
 
-async function loadMore() {
-  if (loading.value || loadingMore.value || !hasMore.value) return
-  loadHintVisible.value = false
-
-  const token = requestToken
-  const nextDateLimit = visibleDateLimit.value + DAYS_PER_LOAD
-  loadingMore.value = true
-  errorMessage.value = ''
-
-  try {
-    const minimumLoading = wait(LOAD_MORE_MIN_MS)
-
-    while (
-      token === requestToken &&
-      loadedDateKeys.value.length < nextDateLimit &&
-      !reachedEnd.value
-    ) {
-      const gotRows = await fetchNextPage(token)
-      if (!gotRows) break
-    }
-
-    await minimumLoading
-    if (token === requestToken) {
-      visibleDateLimit.value = nextDateLimit
-    }
-  } catch (err: any) {
-    if (token === requestToken) errorMessage.value = err?.message || '加载更多失败'
-  } finally {
-    if (token === requestToken) {
-      loadingMore.value = false
-      await nextTick()
-      observeLoadMoreTarget()
-    }
-  }
+async function selectFilter(value: string) {
+  filter.value = value
+  await loadMatches()
 }
 
-function observeLoadMoreTarget() {
-  if (!observer || !loadMoreTarget.value) return
-  observer.disconnect()
-  observer.observe(loadMoreTarget.value)
-}
-
-function updateBackTopVisibility() {
-  showBackTop.value = window.scrollY > 420
-}
-
-function maybeLoadAfterHint() {
-  if (!loadMoreTarget.value || loading.value || loadingMore.value || !hasMore.value) return
-
-  const rect = loadMoreTarget.value.getBoundingClientRect()
-  if (rect.top > window.innerHeight - 24) return
-
-  if (!loadHintVisible.value) {
-    loadHintVisible.value = true
-    return
-  }
-
-  if (rect.top <= window.innerHeight - 112) {
-    loadMore()
-  }
-}
-
-function onWindowScroll() {
-  updateBackTopVisibility()
-  maybeLoadAfterHint()
-}
-
-function backToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function goToTeams() {
-  router.push('/teams')
-}
-
-function goToLogin() {
-  router.push('/login')
-}
-
-onMounted(async () => {
-  observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry?.isIntersecting) maybeLoadAfterHint()
-    },
-    { rootMargin: '0px 0px 80px' },
-  )
-  window.addEventListener('scroll', onWindowScroll, { passive: true })
-  updateBackTopVisibility()
-  await resetAndLoad()
-})
-
-onBeforeUnmount(() => {
-  observer?.disconnect()
-  window.removeEventListener('scroll', onWindowScroll)
-  if (searchTimer) window.clearTimeout(searchTimer)
-})
-
-watch(activeFilter, resetAndLoad)
-watch(activeMatchday, resetAndLoad)
-watch(
-  () => comp.currentCode,
-  () => {
-    activeFilter.value = FILTER_ALL
-    activeMatchday.value = 0
-    resetAndLoad()
-  },
-)
-watch(search, () => {
-  if (searchTimer) window.clearTimeout(searchTimer)
-  searchTimer = window.setTimeout(resetAndLoad, 320)
-})
+onMounted(loadMatches)
+watch(() => theme.currentCode, () => { filter.value = '全部'; loadMatches() })
 </script>
 
 <template>
-  <div>
-    <div class="section-head">
-      <div>
-        <h2>全部赛程</h2>
-        <span>{{ comp.isLeague ? '按轮次筛选，下滑继续加载' : '默认展示最近三天，下滑继续加载' }}</span>
-      </div>
-      <SyncStatusBadge />
-    </div>
+  <div class="page-view">
+    <header class="page-heading"><div><p class="eyebrow">{{ theme.current.en }}</p><h1>赛程中心</h1></div><p class="muted">当地时间 · 自动转换为你的时区</p></header>
+    <section class="card filter-card"><div class="filter-row"><button v-for="item in filters" :key="item" class="chip" :class="{ active: item === filter }" type="button" @click="selectFilter(item)">{{ item }}</button></div></section>
 
-    <SearchInput v-model="search" placeholder="搜索球队 / 城市 / 球场" />
-
-    <div class="section">
-      <ChipFilter v-model="activeFilter" :options="filterOptions" />
-      <select
-        v-if="comp.isLeague"
-        v-model.number="activeMatchday"
-        class="matchday-select"
-        aria-label="选择轮次"
-        title="选择轮次"
-      >
-        <option :value="0">全部轮次</option>
-        <option v-for="n in 38" :key="n" :value="n">第 {{ n }} 轮</option>
-      </select>
-    </div>
-
-    <div v-if="loading" class="state-text">赛程加载中...</div>
-    <div v-else-if="errorMessage" class="state-text error">{{ errorMessage }}</div>
-    <div v-else-if="!groupedByDate.length" class="state-text">
-      <span>{{ emptyText }}</span>
-      <button v-if="followedOnly && !auth.isLoggedIn" class="inline-action" @click="goToLogin">去登录</button>
-      <button v-else-if="followedOnly" class="inline-action" @click="goToTeams">去关注球队</button>
-    </div>
-
-    <template v-for="group in groupedByDate" :key="group.key">
-      <div class="date-group">{{ group.title }}</div>
-      <div class="stack">
-        <MatchCard v-for="m in group.matches" :key="m.id" :match="m" />
-      </div>
+    <div v-if="loading" class="page-state"><span class="state-spinner" />正在加载赛程</div>
+    <template v-else-if="groupedMatches.length">
+      <section v-for="group in groupedMatches" :key="group.key" class="schedule-day">
+        <div class="day-marker"><span>{{ group.label.weekday }}</span><strong>{{ group.label.day }}</strong><span>{{ group.label.month }}</span></div>
+        <div class="match-list"><ThemeMatchCard v-for="match in group.matches" :key="match.id" :match="match" /></div>
+      </section>
     </template>
-
-    <div ref="loadMoreTarget" class="load-more" :class="{ active: hasMore && !loading }">
-      {{ loadText }}
-    </div>
-
-    <Transition name="back-top">
-      <button
-        v-if="showBackTop"
-        class="back-top-btn"
-        type="button"
-        aria-label="返回顶部"
-        title="返回顶部"
-        @click="backToTop"
-      >
-        <span class="material-symbols-outlined">keyboard_arrow_up</span>
-      </button>
-    </Transition>
+    <article v-else class="card empty-compact schedule-empty"><span class="empty-art"><ThemeIcon :name="filter === '收藏' ? 'star' : 'calendar'" /></span><span class="empty-copy"><h3>{{ filter === '收藏' && !auth.isLoggedIn ? '登录后查看收藏赛程' : '暂无符合条件的比赛' }}</h3><p>{{ error || '可以切换筛选条件或等待后台同步比赛。' }}</p></span><button v-if="filter === '收藏' && !auth.isLoggedIn" class="primary-button" type="button" @click="router.push({ path: '/login', query: { redirect: '/schedule' } })">登录</button></article>
   </div>
 </template>
-
-<style scoped>
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.section-head h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.section-head span {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.section {
-  margin-top: 18px;
-}
-
-.matchday-select {
-  appearance: none;
-  -webkit-appearance: none;
-  min-width: 140px;
-  height: 38px;
-  margin-top: 12px;
-  padding: 0 34px 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--text);
-  background: var(--card);
-  font-size: 13px;
-  font-weight: 750;
-  outline: none;
-  cursor: pointer;
-}
-
-.date-group {
-  margin: 18px 0 10px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.stack {
-  display: grid;
-  gap: 12px;
-}
-
-.state-text,
-.load-more {
-  min-height: 44px;
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.state-text {
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.state-text.error {
-  color: var(--primary);
-}
-
-.inline-action {
-  min-height: 34px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 999px;
-  color: #fff;
-  background: var(--primary);
-  font-size: 13px;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.load-more {
-  margin: 16px auto 88px;
-  opacity: 0.72;
-  transition: opacity 0.18s ease;
-}
-
-.load-more.active {
-  opacity: 1;
-}
-
-.back-top-btn {
-  position: fixed;
-  right: max(18px, calc((100vw - 1280px) / 2 + 18px));
-  bottom: calc(var(--nav-h) + 22px);
-  z-index: 40;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
-  border-radius: 50%;
-  color: #fff;
-  background: var(--primary);
-  box-shadow: 0 14px 30px color-mix(in srgb, var(--primary) 28%, transparent);
-}
-
-.back-top-btn .material-symbols-outlined {
-  font-size: 28px;
-  line-height: 1;
-}
-
-.back-top-enter-active,
-.back-top-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.back-top-enter-from,
-.back-top-leave-to {
-  opacity: 0;
-  transform: translateY(10px) scale(0.94);
-}
-
-@media (min-width: 768px) {
-  .back-top-btn {
-    bottom: 28px;
-  }
-}
-</style>

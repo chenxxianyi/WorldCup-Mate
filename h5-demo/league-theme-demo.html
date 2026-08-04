@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark" data-competition="wc">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="WorldCup Mate 六赛事动态主题纯 H5 交互原型"
+    />
+    <title>WorldCup Mate · 联赛主题 UI Demo</title>
+    <link rel="stylesheet" href="./league-theme-demo.css" />
+    <script src="./league-theme-demo.js" defer></script>
+  </head>
+  <body>
+    <svg class="svg-sprite" aria-hidden="true">
+      <symbol id="i-ball" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="m12 7 3 2.2-1.2 3.5h-3.6L9 9.2 12 7Zm-7.4 4 3.3 1.1 1.2 3.6-2.1 2.6M17 18.3l-2.1-2.6 1.2-3.6 3.3-1.1M9.1 15.7h5.8M7.9 12.1 9 9.2M16.1 12.1 15 9.2" />
+      </symbol>
+      <symbol id="i-home" viewBox="0 0 24 24">
+        <path d="m3 11 9-7 9 7" /><path d="M5.5 9.5V20h13V9.5M9 20v-6h6v6" />
+      </symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 3v4M17 3v4M3 10h18M7 14h2M12 14h2M17 14h.1M7 18h2M12 18h2" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M12 3 20 6v5c0 5.3-3.3 8.3-8 10-4.7-1.7-8-4.7-8-10V6l8-3Z" /><path d="m9 12 2 2 4-5" />
+      </symbol>
+      <symbol id="i-table" viewBox="0 0 24 24">
+        <path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2ZM3 9h18M9 4v16M15 4v16" />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" /><path d="M4.5 21c.8-4.2 3.3-6 7.5-6s6.7 1.8 7.5 6" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+      </symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24">
+        <path d="M20 15.6A8.5 8.5 0 0 1 8.4 4 8.5 8.5 0 1 0 20 15.6Z" />
+      </symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24">
+        <path d="m7 10 5 5 5-5" />
+      </symbol>
+      <symbol id="i-back" viewBox="0 0 24 24">
+        <path d="m15 18-6-6 6-6" />
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" />
+      </symbol>
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M5 12h14M14 7l5 5-5 5" />
+      </symbol>
+      <symbol id="i-trophy" viewBox="0 0 24 24">
+        <path d="M8 4h8v4c0 4-1.7 6-4 6s-4-2-4-6V4ZM9 20h6M12 14v6M8 6H4c0 4 1.4 6 5 6M16 6h4c0 4-1.4 6-5 6" />
+      </symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" />
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L19 6" />
+      </symbol>
+    </svg>
+
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <div class="ambient" aria-hidden="true"></div>
+
+    <header class="topbar" id="topbar">
+      <div class="topbar-inner">
+        <button class="brand" type="button" data-route="home" aria-label="返回首页">
+          <span class="brand-mark"><svg><use href="#i-ball"></use></svg></span>
+          <span class="brand-copy">
+            <strong>WorldCup Mate</strong>
+            <small>ONE APP · SIX MATCHDAY WORLDS</small>
+          </span>
+        </button>
+
+        <nav class="desktop-leagues" id="desktop-leagues" aria-label="赛事切换"></nav>
+
+        <div class="top-actions">
+          <button class="icon-button" id="theme-toggle" type="button" aria-label="切换明暗模式"></button>
+          <button class="avatar-button" type="button" data-route="profile" aria-label="打开个人中心">M</button>
+        </div>
+
+        <button
+          class="mobile-competition-trigger"
+          id="mobile-competition-trigger"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="competition-dialog"
+        ></button>
+      </div>
+    </header>
+
+    <div class="app-frame">
+      <aside class="desktop-rail" id="desktop-rail" aria-label="主要导航"></aside>
+      <main id="main-content" class="page-stage" tabindex="-1"></main>
+    </div>
+
+    <nav class="bottom-nav" id="bottom-nav" aria-label="主要导航"></nav>
+
+    <div class="dialog-layer" id="competition-dialog" hidden>
+      <button class="dialog-backdrop" type="button" data-close-dialog aria-label="关闭赛事选择"></button>
+      <section class="competition-sheet" role="dialog" aria-modal="true" aria-labelledby="competition-title">
+        <div class="sheet-grabber" aria-hidden="true"></div>
+        <div class="sheet-heading">
+          <div>
+            <p class="eyebrow">CHOOSE YOUR WORLD</p>
+            <h2 id="competition-title">切换赛事</h2>
+          </div>
+          <button class="text-button" type="button" data-close-dialog>完成</button>
+        </div>
+        <div class="competition-grid" id="competition-grid"></div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>
