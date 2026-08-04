@@ -2,12 +2,15 @@
 import { onMounted, ref } from 'vue'
 import { apiAdminSyncMatches } from '@/api/admin'
 import { apiGetSyncStatus } from '@/api/sync'
+import { apiListCompetitions } from '@/api/competitions'
 import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 
 const states = ref<any[]>([])
 const syncing = ref(false)
 const result = ref<any | null>(null)
 const error = ref('')
+const competitions = ref<any[]>([])
+const selectedCode = ref('')
 
 async function loadStates() {
   try {
@@ -22,7 +25,9 @@ async function syncMatches() {
   result.value = null
   error.value = ''
   try {
-    result.value = await apiAdminSyncMatches()
+    result.value = selectedCode.value
+      ? await apiAdminSyncMatches({ code: selectedCode.value })
+      : await apiAdminSyncMatches()
     await loadStates()
   } catch (err: any) {
     error.value = err?.message || '同步失败'
@@ -38,7 +43,18 @@ function timeText(value: string) {
   return date.toLocaleString('zh-CN')
 }
 
-onMounted(loadStates)
+async function loadCompetitions() {
+  try {
+    competitions.value = await apiListCompetitions()
+  } catch {
+    competitions.value = []
+  }
+}
+
+onMounted(() => {
+  loadStates()
+  loadCompetitions()
+})
 </script>
 
 <template>
@@ -48,9 +64,15 @@ onMounted(loadStates)
         <h2>同步管理</h2>
         <span>赛事数据同步状态和手动同步</span>
       </div>
-      <button class="pill-btn primary" :disabled="syncing" @click="syncMatches">
-        {{ syncing ? '同步中...' : '手动同步比赛' }}
-      </button>
+      <div class="tools">
+        <select v-model="selectedCode" class="admin-select" aria-label="选择赛事">
+          <option value="">世界杯（WC）</option>
+          <option v-for="c in competitions" :key="c.code" :value="c.code">{{ c.name }}</option>
+        </select>
+        <button class="pill-btn primary" :disabled="syncing" @click="syncMatches">
+          {{ syncing ? '同步中...' : '手动同步' }}
+        </button>
+      </div>
     </div>
 
     <SyncStatusBadge mode="card" />
@@ -99,9 +121,31 @@ onMounted(loadStates)
   gap: 12px;
 }
 
+.admin-head,
+.tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tools {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .admin-head h2 {
   margin: 0;
   font-size: 20px;
+}
+
+.admin-select {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--card);
 }
 
 .admin-head span {

@@ -1,39 +1,60 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import ChipFilter from '@/components/common/ChipFilter.vue'
 import TeamCard from '@/components/common/TeamCard.vue'
 import { useTeamStore } from '@/stores/useTeamStore'
+import { useCompetitionStore } from '@/stores/useCompetitionStore'
 
 const teamStore = useTeamStore()
+const comp = useCompetitionStore()
 const search = ref('')
 const activeFilter = ref('全部')
 
-const filterOptions = [
-  '全部',
-  '亚洲',
-  '欧洲',
-  '南美洲',
-  '北美洲',
-  '非洲',
-  '大洋洲',
-  'Group A',
-  'Group B',
-  'Group C',
-  'Group D',
-  'Group E',
-  'Group F',
-  'Group G',
-  'Group H',
-  'Group I',
-  'Group J',
-  'Group K',
-  'Group L',
-]
-
-onMounted(() => {
-  teamStore.fetchTeams({ page_size: 100 })
+const filterOptions = computed(() => {
+  if (comp.isLeague) return ['全部']
+  return [
+    '全部',
+    '亚洲',
+    '欧洲',
+    '南美洲',
+    '北美洲',
+    '非洲',
+    '大洋洲',
+    'Group A',
+    'Group B',
+    'Group C',
+    'Group D',
+    'Group E',
+    'Group F',
+    'Group G',
+    'Group H',
+    'Group I',
+    'Group J',
+    'Group K',
+    'Group L',
+  ]
 })
+
+async function loadTeams() {
+  if (comp.isLeague) {
+    teamStore.fetchTeams({ page_size: 100, teamType: 'club' })
+  } else {
+    teamStore.fetchTeams({ page_size: 100 })
+  }
+}
+
+onMounted(async () => {
+  await comp.fetchCompetitions()
+  loadTeams()
+})
+watch(
+  () => comp.currentCode,
+  () => {
+    activeFilter.value = '全部'
+    loadTeams()
+  },
+)
 
 function isPlaceholderTeam(team: (typeof teamStore.teams)[number]) {
   const code = team.code.toUpperCase()
@@ -70,7 +91,7 @@ const filteredTeams = computed(() => {
     <div class="section-head">
       <div>
         <h2>参赛球队</h2>
-        <span>48 支球队 · 按大洲与小组筛选</span>
+        <span>{{ comp.isLeague ? '俱乐部球队' : '48 支球队 · 按大洲与小组筛选' }}</span>
       </div>
     </div>
     <SearchInput v-model="search" placeholder="搜索球队" />

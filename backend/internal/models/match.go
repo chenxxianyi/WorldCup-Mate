@@ -16,6 +16,9 @@ type Match struct {
 	GroupID          *uint          `gorm:"index" json:"group_id"`
 	Group            *Group         `gorm:"foreignKey:GroupID" json:"group,omitempty"`
 	Stage            string         `gorm:"size:30;default:group;index" json:"stage"`
+	CompetitionID    *uint          `gorm:"index" json:"competition_id"` // nullable: NULL = World Cup / legacy data
+	Season           *int           `gorm:"index" json:"season"`         // starting year, e.g. 2025 for 2025-26 season
+	Matchday         *int           `gorm:"index" json:"matchday"`       // league round, league competitions only
 	StadiumID        uint           `gorm:"index" json:"stadium_id"`
 	Stadium          Stadium        `gorm:"foreignKey:StadiumID" json:"stadium,omitempty"`
 	CityID           uint           `gorm:"index" json:"city_id"`

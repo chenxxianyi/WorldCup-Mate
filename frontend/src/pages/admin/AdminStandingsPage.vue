@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { apiAdminListStandings, apiAdminRecalculateStandings } from '@/api/admin'
+import { computed, onMounted, ref, watch } from 'vue'
+import { apiAdminListStandings, apiAdminRecalculateStandings, apiAdminRecalculateLeagueStanding } from '@/api/admin'
+import { apiListCompetitions, apiGetCompetitionStandings } from '@/api/competitions'
 
 const standings = ref<any[]>([])
 const groupName = ref('')
 const loading = ref(false)
 const recalculating = ref(false)
+
+// League mode: switch between group tables (World Cup) and league tables.
+const mode = ref<'group' | 'league'>('group')
+const leagueCode = ref('')
+const leagueStandings = ref<any[]>([])
+const competitions = ref<any[]>([])
+const leagueLoading = ref(false)
 
 const filteredStandings = computed(() => {
   if (!groupName.value) return standings.value
@@ -36,7 +44,51 @@ async function recalculate() {
   }
 }
 
-onMounted(loadStandings)
+async function loadLeagueStandings() {
+  if (!leagueCode.value) {
+    leagueStandings.value = []
+    return
+  }
+  leagueLoading.value = true
+  try {
+    const res = await apiGetCompetitionStandings(leagueCode.value, { type: 'total' }) as any[]
+    leagueStandings.value = res || []
+  } catch {
+    leagueStandings.value = []
+  } finally {
+    leagueLoading.value = false
+  }
+}
+
+async function recalculateLeague() {
+  if (!leagueCode.value) return
+  const competition = competitions.value.find((c) => c.code === leagueCode.value)
+  if (!competition) return
+  recalculating.value = true
+  try {
+    await apiAdminRecalculateLeagueStanding({ competition_id: competition.id })
+    await loadLeagueStandings()
+  } finally {
+    recalculating.value = false
+  }
+}
+
+async function loadCompetitions() {
+  try {
+    competitions.value = await apiListCompetitions()
+  } catch {
+    competitions.value = []
+  }
+}
+
+onMounted(() => {
+  loadStandings()
+  loadCompetitions()
+})
+watch(mode, () => {
+  if (mode.value === 'league') loadLeagueStandings()
+})
+watch(leagueCode, loadLeagueStandings)
 </script>
 
 <template>
@@ -44,44 +96,88 @@ onMounted(loadStandings)
     <div class="admin-head">
       <div>
         <h2>积分榜管理</h2>
-        <span>{{ filteredStandings.length }} 条记录</span>
+        <span>{{ mode === 'group' ? filteredStandings.length + ' 条记录' : leagueStandings.length + ' 条记录' }}</span>
       </div>
       <div class="tools">
-        <select v-model="groupName" class="admin-select">
+        <select v-model="mode" class="admin-select" aria-label="积分榜类型">
+          <option value="group">小组积分榜（世界杯）</option>
+          <option value="league">联赛积分榜</option>
+        </select>
+        <select v-if="mode === 'group'" v-model="groupName" class="admin-select">
           <option value="">全部小组</option>
           <option v-for="name in groupOptions" :key="name" :value="name">{{ name }}</option>
         </select>
-        <button class="pill-btn primary" :disabled="recalculating" @click="recalculate">
+        <template v-else>
+          <select v-model="leagueCode" class="admin-select" aria-label="选择联赛">
+            <option value="">选择联赛</option>
+            <option v-for="c in competitions" :key="c.code" :value="c.code">{{ c.name }}</option>
+          </select>
+          <button class="pill-btn primary" :disabled="recalculating || !leagueCode" @click="recalculateLeague">
+            {{ recalculating ? '重算中...' : '重算联赛积分' }}
+          </button>
+        </template>
+        <button v-if="mode === 'group'" class="pill-btn primary" :disabled="recalculating" @click="recalculate">
           {{ recalculating ? '重算中...' : '重算积分' }}
         </button>
       </div>
     </div>
 
-    <div class="card table-card table-scroll">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>小组</th><th>球队</th><th>场次</th><th>胜</th><th>平</th><th>负</th><th>净胜球</th><th>积分</th><th>状态</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in filteredStandings" :key="item.id">
-            <td>{{ item.group?.name || '-' }}</td>
-            <td><b>{{ item.team?.name || '-' }}</b></td>
-            <td>{{ item.played }}</td>
-            <td>{{ item.won }}</td>
-            <td>{{ item.drawn }}</td>
-            <td>{{ item.lost }}</td>
-            <td>{{ item.goal_difference }}</td>
-            <td><b>{{ item.points }}</b></td>
-            <td>{{ item.qualification_status || '-' }}</td>
-          </tr>
-          <tr v-if="!loading && !filteredStandings.length">
-            <td colspan="9" class="empty-row">暂无积分数据</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <template v-if="mode === 'group'">
+      <div class="card table-card table-scroll">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>小组</th><th>球队</th><th>场次</th><th>胜</th><th>平</th><th>负</th><th>净胜球</th><th>积分</th><th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in filteredStandings" :key="item.id">
+              <td>{{ item.group?.name || '-' }}</td>
+              <td><b>{{ item.team?.name || '-' }}</b></td>
+              <td>{{ item.played }}</td>
+              <td>{{ item.won }}</td>
+              <td>{{ item.drawn }}</td>
+              <td>{{ item.lost }}</td>
+              <td>{{ item.goal_difference }}</td>
+              <td><b>{{ item.points }}</b></td>
+              <td>{{ item.qualification_status || '-' }}</td>
+            </tr>
+            <tr v-if="!loading && !filteredStandings.length">
+              <td colspan="9" class="empty-row">暂无积分数据</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="card table-card table-scroll">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>排名</th><th>球队</th><th>类型</th><th>场次</th><th>胜</th><th>平</th><th>负</th><th>净胜球</th><th>积分</th><th>分区</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in leagueStandings" :key="item.id">
+              <td>{{ item.position }}</td>
+              <td><b>{{ item.team?.name || '-' }}</b></td>
+              <td>{{ item.type }}</td>
+              <td>{{ item.played }}</td>
+              <td>{{ item.won }}</td>
+              <td>{{ item.drawn }}</td>
+              <td>{{ item.lost }}</td>
+              <td>{{ item.goal_difference }}</td>
+              <td><b>{{ item.points }}</b></td>
+              <td>{{ item.zone || '-' }}</td>
+            </tr>
+            <tr v-if="!leagueLoading && !leagueStandings.length">
+              <td colspan="10" class="empty-row">请选择联赛查看积分榜</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
   </div>
 </template>
 

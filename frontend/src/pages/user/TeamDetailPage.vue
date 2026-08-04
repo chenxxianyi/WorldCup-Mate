@@ -3,14 +3,16 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiGetTeamMatches } from '@/api/teams'
 import { apiGetGroupStandings } from '@/api/standings'
+import { apiGetCompetitionStandings } from '@/api/competitions'
 import MatchCard from '@/components/common/MatchCard.vue'
 import StandingTable from '@/components/common/StandingTable.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useTeamStore } from '@/stores/useTeamStore'
+import { useCompetitionStore } from '@/stores/useCompetitionStore'
 import { normalizeMatch, type Match } from '@/types/match'
-import { normalizeStanding, type Standing } from '@/types/standing'
+import { normalizeStanding, normalizeLeagueStanding, type Standing, type LeagueStanding } from '@/types/standing'
 import type { Team } from '@/types/team'
 
 const route = useRoute()
@@ -18,10 +20,12 @@ const router = useRouter()
 const auth = useAuthStore()
 const fav = useFavoriteStore()
 const teamStore = useTeamStore()
+const comp = useCompetitionStore()
 
 const team = ref<Team | null>(null)
 const matches = ref<Match[]>([])
 const standings = ref<Standing[]>([])
+const leagueStanding = ref<LeagueStanding | null>(null)
 const loading = ref(false)
 const error = ref('')
 
@@ -46,6 +50,7 @@ const teamStanding = computed(() =>
 )
 
 async function loadTeamDetail() {
+  await comp.fetchCompetitions()
   const id = Number(route.params.id)
   if (!id) {
     error.value = '球队不存在'
@@ -70,7 +75,15 @@ async function loadTeamDetail() {
     const matchRes = await apiGetTeamMatches(id) as any[]
     matches.value = (matchRes || []).map(normalizeMatch)
 
-    if (detail.group_id) {
+    if (comp.isLeague) {
+      try {
+        const res = await apiGetCompetitionStandings(comp.currentCode, { type: 'total' }) as any[]
+        const list = (res || []).map(normalizeLeagueStanding)
+        leagueStanding.value = list.find((s) => s.team_id === id) || null
+      } catch {
+        leagueStanding.value = null
+      }
+    } else if (detail.group_id) {
       const standingRes = await apiGetGroupStandings(detail.group_id) as any[]
       standings.value = (standingRes || []).map(normalizeStanding)
     }
@@ -97,6 +110,7 @@ function toggleFollow() {
 onMounted(loadTeamDetail)
 
 watch(() => route.params.id, loadTeamDetail)
+watch(() => comp.currentCode, loadTeamDetail)
 </script>
 
 <template>
@@ -114,8 +128,14 @@ watch(() => route.params.id, loadTeamDetail)
           <TeamFlag :value="team.flag" :alt="team.name" :fallback="team.code" size="lg" />
           <div class="team-copy">
             <div class="hero-tags">
-              <span class="tag blue">{{ team.group_name || '未分组' }}</span>
-              <span class="tag">{{ team.continent }}</span>
+              <template v-if="comp.isLeague">
+                <span class="tag blue">{{ comp.current?.name || '联赛' }}</span>
+                <span class="tag">{{ team.country || team.continent }}</span>
+              </template>
+              <template v-else>
+                <span class="tag blue">{{ team.group_name || '未分组' }}</span>
+                <span class="tag">{{ team.continent }}</span>
+              </template>
             </div>
             <h1>{{ team.name }}</h1>
             <p>{{ team.name_en }} · {{ team.code }}</p>
@@ -146,12 +166,12 @@ watch(() => route.params.id, loadTeamDetail)
             <strong>{{ matches.length }}</strong>
           </div>
           <div class="stat-cell">
-            <span>小组排名</span>
-            <strong>{{ teamStanding ? standings.indexOf(teamStanding) + 1 : '-' }}</strong>
+            <span>{{ comp.isLeague ? '联赛排名' : '小组排名' }}</span>
+            <strong>{{ comp.isLeague ? (leagueStanding?.position || '-') : (teamStanding ? standings.indexOf(teamStanding) + 1 : '-') }}</strong>
           </div>
           <div class="stat-cell">
             <span>积分</span>
-            <strong>{{ teamStanding ? teamStanding.points : '-' }}</strong>
+            <strong>{{ comp.isLeague ? (leagueStanding?.points ?? '-') : (teamStanding ? teamStanding.points : '-') }}</strong>
           </div>
         </div>
       </article>

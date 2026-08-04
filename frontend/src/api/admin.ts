@@ -16,6 +16,10 @@ export function apiAdminRecalculateStandings() {
   return request.post('/admin/standings/recalculate') as Promise<any>
 }
 
-export function apiAdminSyncMatches() {
-  return request.post('/admin/sync/matches') as Promise<any>
+export function apiAdminSyncMatches(params?: Record<string, any>) {
+  return request.post('/admin/sync/matches', null, { params }) as Promise<any>
+}
+
+export function apiAdminRecalculateLeagueStanding(data: Record<string, any>) {
+  return request.post('/admin/standings/league/recalculate', data) as Promise<any>
 }

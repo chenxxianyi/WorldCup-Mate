@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { apiAdminListTeams } from '@/api/admin'
 
 const search = ref('')
+const teamType = ref('')
 const teams = ref<any[]>([])
 const loading = ref(false)
 
@@ -19,7 +20,9 @@ const filteredTeams = computed(() => {
 async function loadTeams() {
   loading.value = true
   try {
-    const res = await apiAdminListTeams({ page: 1, page_size: 100 }) as any
+    const params: Record<string, any> = { page: 1, page_size: 100 }
+    if (teamType.value) params.teamType = teamType.value
+    const res = await apiAdminListTeams(params) as any
     teams.value = res.list || res || []
   } finally {
     loading.value = false
@@ -27,6 +30,7 @@ async function loadTeams() {
 }
 
 onMounted(loadTeams)
+watch(teamType, loadTeams)
 watch(search, () => {})
 </script>
 
@@ -37,7 +41,14 @@ watch(search, () => {})
         <h2>球队管理</h2>
         <span>{{ filteredTeams.length }} 支球队</span>
       </div>
-      <input v-model="search" class="admin-search" placeholder="搜索球队 / 小组 / 大洲" />
+      <div class="tools">
+        <select v-model="teamType" class="admin-select" aria-label="球队类型">
+          <option value="">全部类型</option>
+          <option value="national">国家队</option>
+          <option value="club">俱乐部</option>
+        </select>
+        <input v-model="search" class="admin-search" placeholder="搜索球队 / 小组 / 大洲" />
+      </div>
     </div>
 
     <div class="card table-card table-scroll">
@@ -75,6 +86,14 @@ watch(search, () => {})
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .admin-head h2 {

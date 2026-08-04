@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"worldcup-mate/internal/services"
@@ -141,6 +142,21 @@ func GetSyncStatus(c *gin.Context) {
 }
 
 func AdminSyncMatches(c *gin.Context) {
+	// League sync: ?code=PL&season=2025 triggers a single league; otherwise
+	// the legacy World Cup sync path runs unchanged.
+	if code := strings.ToUpper(c.Query("code")); code != "" && code != "WC" {
+		season, _ := strconv.Atoi(c.Query("season"))
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Minute)
+		defer cancel()
+		result, err := services.SyncLeague(ctx, code, season, "manual")
+		if err != nil {
+			utils.Error(c, 500, err.Error())
+			return
+		}
+		utils.Success(c, result)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 

@@ -33,6 +33,12 @@ func main() {
 		IdleInterval:        time.Duration(cfg.DataSyncIdleIntervalMinutes) * time.Minute,
 		FullInterval:        time.Duration(cfg.DataSyncFullIntervalHours) * time.Hour,
 	})
+	services.ConfigureLeagueSync(
+		cfg.SyncCompetitions,
+		time.Duration(cfg.LeagueSyncIntervalMinutes)*time.Minute,
+		cfg.FootballDataBaseURL,
+		cfg.FootballDataAPIKey,
+	)
 
 	database.InitMySQL(cfg.MySQLDSN)
 	database.InitRedis(cfg.RedisAddr, cfg.RedisPass, cfg.RedisDB)
@@ -51,6 +57,8 @@ func main() {
 		&models.GroupStanding{},
 		&models.Notification{},
 		&models.SyncState{},
+		&models.Competition{},
+		&models.LeagueStanding{},
 	)
 	if err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
@@ -85,6 +93,7 @@ func main() {
 	// Start background workers only after the HTTP port is available.
 	jobs.StartReminderScanner()
 	jobs.StartMatchSyncer()
+	jobs.StartLeagueSyncer()
 
 	log.Printf("Server starting on %s", addr)
 	if err := r.RunListener(listener); err != nil {

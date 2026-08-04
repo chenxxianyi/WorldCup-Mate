@@ -1,20 +1,36 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useNotificationStore } from '@/stores/useNotificationStore'
 import { useSettingStore } from '@/stores/useSettingStore'
+import { useCompetitionStore } from '@/stores/useCompetitionStore'
+import { seasonLabel } from '@/types/competition'
 
 const settings = useSettingStore()
 const auth = useAuthStore()
 const notification = useNotificationStore()
+const comp = useCompetitionStore()
 const router = useRouter()
+
+const brandSub = computed(() => {
+  if (comp.isWorldCup) return '2026 世界杯赛程助手'
+  return comp.current ? `${comp.current.name} 赛程助手` : '足球赛事助手'
+})
+
+const versionBadge = computed(() => {
+  if (comp.isWorldCup) return '美加墨'
+  return comp.current ? seasonLabel(comp.current.season) : ''
+})
 
 function refreshUnread() {
   if (auth.isLoggedIn) notification.fetchUnreadCount()
 }
 
-onMounted(refreshUnread)
+onMounted(() => {
+  refreshUnread()
+  comp.fetchCompetitions()
+})
 watch(() => auth.isLoggedIn, refreshUnread)
 </script>
 
@@ -30,8 +46,21 @@ watch(() => auth.isLoggedIn, refreshUnread)
       </div>
       <div>
         <h1 class="brand-title">WorldCup Mate</h1>
-        <p class="brand-sub">2026 世界杯赛程助手 <span class="version-badge">美加墨</span></p>
+        <p class="brand-sub">{{ brandSub }} <span v-if="versionBadge" class="version-badge">{{ versionBadge }}</span></p>
       </div>
+    </div>
+
+    <div class="comp-switch">
+      <select
+        v-model="comp.currentCode"
+        class="comp-select"
+        aria-label="切换赛事"
+        title="切换赛事"
+        @change="comp.setCurrent(comp.currentCode)"
+      >
+        <option v-for="c in comp.competitions" :key="c.code" :value="c.code">{{ c.name }}</option>
+      </select>
+      <span class="material-symbols-outlined comp-caret" aria-hidden="true">expand_more</span>
     </div>
 
     <div class="top-actions">
@@ -173,6 +202,44 @@ watch(() => auth.isLoggedIn, refreshUnread)
   font-weight: 900;
 }
 
+.comp-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.comp-select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 132px;
+  height: 40px;
+  padding: 0 34px 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 14px;
+  color: #111;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 18px rgba(30, 30, 40, 0.12);
+  font-size: 14px;
+  font-weight: 800;
+  outline: none;
+  cursor: pointer;
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.comp-select:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.09);
+}
+
+.comp-caret {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 18px;
+}
+
 .top-actions {
   display: flex;
   gap: 8px;
@@ -311,12 +378,28 @@ watch(() => auth.isLoggedIn, refreshUnread)
   border-color: rgba(255, 255, 255, 0.08);
 }
 
+[data-theme='dark'] .comp-select {
+  color: var(--text);
+  background: rgba(17, 17, 17, 0.82);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 @media (max-width: 720px) {
   .topbar {
     align-items: center;
     flex-direction: row;
+    flex-wrap: wrap;
     padding: 10px 10px 10px 12px;
     border-radius: 22px;
+  }
+
+  .comp-switch {
+    order: 3;
+    width: 100%;
+  }
+
+  .comp-select {
+    width: 100%;
   }
 
   .brand {

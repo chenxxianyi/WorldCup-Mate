@@ -10,16 +10,19 @@ import (
 )
 
 type MatchFilter struct {
-	Date      string
-	TeamID    uint
-	GroupID   uint
-	GroupName string
-	Stage     string
-	CityID    uint
-	Status    string
-	Keyword   string
-	Page      int
-	PageSize  int
+	Date           string
+	TeamID         uint
+	GroupID        uint
+	GroupName      string
+	Stage          string
+	CityID         uint
+	Status         string
+	Keyword        string
+	CompetitionID  uint // optional: 0 = no filter (legacy behavior)
+	Season         int  // optional: 0 = no filter
+	Matchday       int  // optional: 0 = no filter
+	Page           int
+	PageSize       int
 }
 
 func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
@@ -56,6 +59,15 @@ func ListMatches(f MatchFilter) ([]models.Match, int64, error) {
 	}
 	if f.Status != "" {
 		q = q.Where("status = ?", f.Status)
+	}
+	if f.CompetitionID > 0 {
+		q = q.Where("competition_id = ?", f.CompetitionID)
+	}
+	if f.Season > 0 {
+		q = q.Where("season = ?", f.Season)
+	}
+	if f.Matchday > 0 {
+		q = q.Where("matchday = ?", f.Matchday)
 	}
 	if f.Keyword != "" {
 		keyword := "%" + f.Keyword + "%"

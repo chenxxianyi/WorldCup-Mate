@@ -5,19 +5,23 @@ import Countdown from '@/components/common/Countdown.vue'
 import MatchCard from '@/components/common/MatchCard.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 import { apiGetGroupStandings } from '@/api/standings'
-import { apiGetTournamentProgress, apiGetUpcomingMatches, apiListMatches } from '@/api/matches'
+import { apiGetCompetitionStandings } from '@/api/competitions'
+import { apiGetTodayMatches, apiGetTournamentProgress, apiGetUpcomingMatches, apiListMatches } from '@/api/matches'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useCompetitionStore } from '@/stores/useCompetitionStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useMatchStore } from '@/stores/useMatchStore'
 import { useTeamStore } from '@/stores/useTeamStore'
 import { normalizeMatch, type Match } from '@/types/match'
-import { normalizeStanding, type Standing } from '@/types/standing'
+import { normalizeStanding, normalizeLeagueStanding, type Standing, type LeagueStanding } from '@/types/standing'
+import { seasonLabel } from '@/types/competition'
 
 const router = useRouter()
 const matchStore = useMatchStore()
 const teamStore = useTeamStore()
 const fav = useFavoriteStore()
 const auth = useAuthStore()
+const comp = useCompetitionStore()
 
 const groups = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E', 'Group F', 'Group G', 'Group H', 'Group I', 'Group J', 'Group K', 'Group L']
 const activeGroupIndex = ref(0)
@@ -48,6 +52,101 @@ const progress = ref<TournamentProgress>({
   scheduled: 0,
   progress: 0,
 })
+
+// League-mode home data (World Cup mode keeps the legacy flow untouched).
+const leagueTop = ref<LeagueStanding[]>([])
+const leagueStats = ref({ total: 0, finished: 0 })
+
+// Cross-competition "today's highlights": /matches/today is not bound to
+// MatchQuery, so the interceptor's competitionId param is ignored by the
+// backend — this endpoint naturally returns matches of every competition.
+const focusMatches = ref<Match[]>([])
+
+async function loadFocusMatches() {
+  try {
+    const res = await apiGetTodayMatches() as any[]
+    const list = (res || []).map(normalizeMatch)
+    const focused = list.filter((m) => m.is_featured || m.importance_level >= 2)
+    const pool = focused.length ? focused : list
+    const sorted = [...pool].sort(
+      (a, b) => new Date(a.kickoff_time_utc).getTime() - new Date(b.kickoff_time_utc).getTime(),
+    )
+    focusMatches.value = sorted.slice(0, 6)
+  } catch {
+    focusMatches.value = []
+  }
+}
+
+function todayParam() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+async function loadLeagueNextMatch() {
+  try {
+    const res = await apiListMatches({ status: 'scheduled', page: 1, page_size: 1 }) as any
+    const list = (res.list || res || []).map(normalizeMatch)
+    nextMatch.value = list[0] || null
+  } catch {
+    nextMatch.value = null
+  }
+}
+
+async function loadLeagueTodayMatches() {
+  try {
+    const res = await apiListMatches({ date: todayParam(), page: 1, page_size: 50 }) as any
+    matchStore.todayMatches = (res.list || res || []).map(normalizeMatch)
+  } catch {
+    matchStore.todayMatches = []
+  }
+}
+
+async function loadLeagueRecommended() {
+  try {
+    const res = await apiListMatches({ page: 1, page_size: 3 }) as any
+    matchStore.recommendedMatches = (res.list || res || []).map(normalizeMatch)
+  } catch {
+    matchStore.recommendedMatches = []
+  }
+}
+
+async function loadLeagueTop() {
+  if (!comp.current) return
+  try {
+    const res = await apiGetCompetitionStandings(comp.currentCode, { type: 'total' }) as any[]
+    leagueTop.value = (res || []).slice(0, 5).map(normalizeLeagueStanding)
+  } catch {
+    leagueTop.value = []
+  }
+}
+
+async function loadLeagueStats() {
+  try {
+    const finishedRes = await apiListMatches({ status: 'finished', page: 1, page_size: 1 }) as any
+    leagueStats.value.finished = Number(finishedRes.total || 0)
+    const allRes = await apiListMatches({ page: 1, page_size: 1 }) as any
+    leagueStats.value.total = Number(allRes.total || 0)
+  } catch {
+    leagueStats.value.total = 0
+    leagueStats.value.finished = 0
+  }
+}
+
+async function loadLeagueHomeData() {
+  matchStore.todayMatches = []
+  matchStore.recommendedMatches = []
+  teamStore.fetchTeams({ page_size: 100, teamType: 'club' })
+  loadLeagueNextMatch()
+  loadLeagueTodayMatches()
+  loadLeagueRecommended()
+  loadLeagueTop()
+  loadLeagueStats()
+
+  if (auth.isLoggedIn) {
+    await fav.fetchFavoriteTeams()
+    await loadFollowedSchedule()
+  }
+}
 
 const nextMatch = ref<Match | null>(null)
 const followedSchedule = ref<Match[]>([])
@@ -155,6 +254,12 @@ async function loadFollowedSchedule() {
 }
 
 async function loadHomeData() {
+  loadFocusMatches() // cross-competition highlights, both modes
+  await comp.fetchCompetitions()
+  if (comp.isLeague) {
+    await loadLeagueHomeData()
+    return
+  }
   matchStore.fetchTodayMatches()
   matchStore.fetchRecommendedMatches()
   teamStore.fetchTeams({ page_size: 100 })
@@ -173,6 +278,13 @@ async function loadHomeData() {
 }
 
 watch(activeGroupIndex, loadGroupStandings)
+watch(
+  () => comp.currentCode,
+  () => {
+    activeGroupIndex.value = 0
+    loadHomeData()
+  },
+)
 
 onMounted(loadHomeData)
 </script>
@@ -193,18 +305,36 @@ onMounted(loadHomeData)
       <article v-else class="card empty-card">暂无即将到来的比赛</article>
 
       <article class="card stage-card">
-        <div class="stage-head">
-          <span>{{ progress.stage_name }}</span>
-          <span v-if="progress.live > 0" style="color: var(--hot)">进行中 {{ progress.progress.toFixed(1) }}%</span>
-          <span v-else style="color: var(--primary)">{{ progress.progress.toFixed(1) }}%</span>
-        </div>
-        <div class="stage-track">
-          <div class="stage-progress" :style="{ width: progress.progress + '%' }"></div>
-        </div>
-        <div class="stage-meta">
-          <span>已完成 {{ progress.completed }} 场</span>
-          <span>剩余 {{ progress.scheduled }} 场</span>
-        </div>
+        <template v-if="comp.isLeague">
+          <div class="stage-head">
+            <span>{{ comp.current?.name || '联赛' }} · {{ seasonLabel(comp.current?.season || 0) }}</span>
+            <span v-if="leagueStats.total > 0" style="color: var(--primary)">{{ leagueStats.total > 0 ? ((leagueStats.finished / leagueStats.total) * 100).toFixed(1) : '0.0' }}%</span>
+          </div>
+          <div class="stage-track">
+            <div
+              class="stage-progress"
+              :style="{ width: leagueStats.total > 0 ? (leagueStats.finished / leagueStats.total) * 100 + '%' : '0%' }"
+            ></div>
+          </div>
+          <div class="stage-meta">
+            <span>已完成 {{ leagueStats.finished }} 场</span>
+            <span>共 {{ leagueStats.total }} 场</span>
+          </div>
+        </template>
+        <template v-else>
+          <div class="stage-head">
+            <span>{{ progress.stage_name }}</span>
+            <span v-if="progress.live > 0" style="color: var(--hot)">进行中 {{ progress.progress.toFixed(1) }}%</span>
+            <span v-else style="color: var(--primary)">{{ progress.progress.toFixed(1) }}%</span>
+          </div>
+          <div class="stage-track">
+            <div class="stage-progress" :style="{ width: progress.progress + '%' }"></div>
+          </div>
+          <div class="stage-meta">
+            <span>已完成 {{ progress.completed }} 场</span>
+            <span>剩余 {{ progress.scheduled }} 场</span>
+          </div>
+        </template>
       </article>
 
       <section class="section">
@@ -238,6 +368,16 @@ onMounted(loadHomeData)
               <b>{{ match.local_kickoff_time.split(' ')[1] || 'TBD' }}</b>
             </button>
           </div>
+        </div>
+      </section>
+
+      <section v-if="focusMatches.length" class="section">
+        <div class="section-head">
+          <h2>今日焦点</h2>
+          <span>跨赛事精选</span>
+        </div>
+        <div class="match-strip">
+          <MatchCard v-for="m in focusMatches" :key="`focus-${m.id}`" :match="m" featured />
         </div>
       </section>
 
@@ -287,13 +427,33 @@ onMounted(loadHomeData)
       <section class="section">
         <div class="section-head">
           <h2>积分速览</h2>
-          <div class="group-nav">
+          <div v-if="!comp.isLeague" class="group-nav">
             <button class="nav-btn" :disabled="activeGroupIndex === 0" @click="swipeGroup('right')">‹</button>
             <span class="group-label" @click="swipeGroup('left')">{{ activeGroupName }}</span>
             <button class="nav-btn" :disabled="activeGroupIndex === groups.length - 1" @click="swipeGroup('left')">›</button>
           </div>
+          <span v-else class="muted-count">前 5 名</span>
         </div>
+
+        <template v-if="comp.isLeague">
+          <div class="card table-card">
+            <table class="standing-table" style="min-width: 0">
+              <tbody>
+                <tr v-for="s in leagueTop" :key="s.team_id">
+                  <td>{{ s.position }}</td>
+                  <td class="team-cell">
+                    <TeamFlag :value="s.flag" :alt="s.team_name" :fallback="s.team_code" size="sm" />
+                    <span>{{ s.team_name }}</span>
+                  </td>
+                  <td><b>{{ s.points }}</b></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
         <div
+          v-else
           class="card table-card standings-swipe-area"
           @pointerdown="startGroupSwipe"
           @pointerup="finishGroupSwipe"
@@ -608,6 +768,11 @@ tr:last-child td {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.muted-count {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 @media (min-width: 768px) {

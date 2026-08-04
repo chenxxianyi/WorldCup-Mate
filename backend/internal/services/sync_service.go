@@ -303,7 +303,7 @@ func findOrCreateTeam(team footballdata.Team, matchGroupID *uint) (*models.Team,
 			existing.Continent = localizedContinent
 		}
 		if matchGroupID != nil {
-			existing.GroupID = *matchGroupID
+			existing.GroupID = matchGroupID
 		}
 		return &existing, database.DB.Save(&existing).Error
 	}
@@ -314,10 +314,10 @@ func findOrCreateTeam(team footballdata.Team, matchGroupID *uint) (*models.Team,
 	}
 
 	created := models.Team{
-		GroupID:   groupID,
+		GroupID:   &groupID,
 		Name:      localizedName,
 		NameEn:    nameEn,
-		FIFACode:  code,
+		FIFACode:  &code,
 		FlagURL:   team.Crest,
 		Continent: localizedContinent,
 	}

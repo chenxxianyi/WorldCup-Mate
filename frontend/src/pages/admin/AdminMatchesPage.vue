@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { apiAdminListMatches } from '@/api/admin'
+import { apiListCompetitions } from '@/api/competitions'
 import { normalizeMatch, type Match } from '@/types/match'
 
 const search = ref('')
 const status = ref('')
+const competitionId = ref<number | null>(null)
+const competitions = ref<any[]>([])
 const matches = ref<Match[]>([])
 const loading = ref(false)
 
@@ -28,14 +31,28 @@ const filteredMatches = computed(() => {
 async function loadMatches() {
   loading.value = true
   try {
-    const res = await apiAdminListMatches({ page: 1, page_size: 100 }) as any
+    const params: Record<string, any> = { page: 1, page_size: 100 }
+    if (competitionId.value) params.competitionId = competitionId.value
+    const res = await apiAdminListMatches(params) as any
     matches.value = (res.list || res || []).map(normalizeMatch)
   } finally {
     loading.value = false
   }
 }
 
-onMounted(loadMatches)
+async function loadCompetitions() {
+  try {
+    competitions.value = await apiListCompetitions()
+  } catch {
+    competitions.value = []
+  }
+}
+
+onMounted(() => {
+  loadMatches()
+  loadCompetitions()
+})
+watch(competitionId, loadMatches)
 </script>
 
 <template>
@@ -47,6 +64,13 @@ onMounted(loadMatches)
       </div>
       <div class="tools">
         <input v-model="search" class="admin-search" placeholder="搜索球队 / 城市 / 球场" />
+        <select v-model="competitionId" class="admin-select" aria-label="选择赛事">
+          <option :value="null">全部赛事</option>
+          <!-- Legacy World Cup matches have NULL competition_id and are
+               included in "全部赛事"; cup competitions (WC) can't be
+               filtered by id, so only leagues are listed here. -->
+          <option v-for="c in competitions.filter((x) => x.format === 'league')" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
         <select v-model="status" class="admin-select">
           <option value="">全部状态</option>
           <option value="scheduled">未开始</option>

@@ -15,12 +15,33 @@ import (
 )
 
 func Seed() {
+	seedCompetitions()
 	seedAdmin()
 	seedGroups()
 	seedCities()
 	seedStadiums()
 	seedTeams()
 	seedMatches()
+}
+
+// seedCompetitions adds competition metadata (World Cup + top-5 leagues).
+// It only inserts new rows and never touches existing data.
+func seedCompetitions() {
+	competitions := []models.Competition{
+		{Code: "WC", Name: "世界杯", NameEn: "World Cup", Country: "World", Format: "cup", Season: 2026, Status: "active", SortOrder: 0},
+		{Code: "PL", Name: "英超", NameEn: "Premier League", Country: "England", Format: "league", Season: 2025, Status: "active", SortOrder: 1},
+		{Code: "PD", Name: "西甲", NameEn: "Primera Division", Country: "Spain", Format: "league", Season: 2025, Status: "active", SortOrder: 2},
+		{Code: "BL1", Name: "德甲", NameEn: "Bundesliga", Country: "Germany", Format: "league", Season: 2025, Status: "active", SortOrder: 3},
+		{Code: "SA", Name: "意甲", NameEn: "Serie A", Country: "Italy", Format: "league", Season: 2025, Status: "active", SortOrder: 4},
+		{Code: "FL1", Name: "法甲", NameEn: "Ligue 1", Country: "France", Format: "league", Season: 2025, Status: "active", SortOrder: 5},
+	}
+	for _, comp := range competitions {
+		var count int64
+		DB.Model(&models.Competition{}).Where("code = ?", comp.Code).Count(&count)
+		if count == 0 {
+			DB.Create(&comp)
+		}
+	}
 }
 
 func EnsureNoDefaultAdminPassword(appEnv string) error {
@@ -160,9 +181,15 @@ func seedTeams() {
 		if count == 0 {
 			var group models.Group
 			DB.Where("name = ?", t.Group).First(&group)
+			var codePtr *string
+			if t.Code != "" {
+				code := t.Code
+				codePtr = &code
+			}
+			groupID := group.ID
 			DB.Create(&models.Team{
-				Name: t.Name, NameEn: t.NameEn, FIFACode: t.Code,
-				FlagURL: t.Flag, Continent: t.Continent, GroupID: group.ID,
+				Name: t.Name, NameEn: t.NameEn, FIFACode: codePtr,
+				FlagURL: t.Flag, Continent: t.Continent, GroupID: &groupID,
 			})
 		}
 	}

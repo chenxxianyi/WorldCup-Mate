@@ -52,7 +52,7 @@ function rowClass(status: string) {
   <div v-if="match">
     <article class="card detail-hero">
       <div class="match-top">
-        <span class="tag gold">焦点大战 · {{ match.group_name }}</span>
+        <span class="tag gold">{{ match.group_name || (match.matchday ? `第 ${match.matchday} 轮` : '焦点大战') }}</span>
         <span v-if="match.status === 'live'" class="tag live">
           <i class="live-dot" style="background: #fff"></i> {{ match.minute }}' LIVE
         </span>
@@ -103,7 +103,7 @@ function rowClass(status: string) {
       </div>
     </article>
 
-    <section class="section">
+    <section v-if="groupStandings.length" class="section">
       <div class="section-head">
         <h2>所在小组积分</h2>
         <span>{{ match.group_name }}</span>

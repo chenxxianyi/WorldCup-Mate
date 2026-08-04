@@ -68,6 +68,10 @@ func Setup() *gin.Engine {
 	api.GET("/stadiums/:id", handlers.GetStadiumDetail)
 	api.GET("/sync/status", handlers.GetSyncStatus)
 
+	// Competitions (public)
+	api.GET("/competitions", handlers.ListCompetitions)
+	api.GET("/competitions/:code/standings", handlers.GetCompetitionStandings)
+
 	// Authenticated routes
 	authRequired := api.Group("")
 	authRequired.Use(middleware.JWTAuth())
@@ -118,6 +122,10 @@ func Setup() *gin.Engine {
 		{
 			adminAuth.GET("/dashboard", handlers.AdminDashboard)
 
+			adminAuth.GET("/competitions", handlers.AdminListCompetitions)
+			adminAuth.POST("/competitions", handlers.AdminCreateCompetition)
+			adminAuth.PUT("/competitions/:id", handlers.AdminUpdateCompetition)
+
 			adminAuth.GET("/teams", handlers.AdminListTeams)
 			adminAuth.POST("/teams", handlers.AdminCreateTeam)
 			adminAuth.PUT("/teams/:id", handlers.AdminUpdateTeam)
@@ -148,6 +156,7 @@ func Setup() *gin.Engine {
 
 			adminAuth.GET("/standings", handlers.AdminListStandings)
 			adminAuth.POST("/standings/recalculate", handlers.AdminRecalculateStandings)
+			adminAuth.POST("/standings/league/recalculate", handlers.AdminRecalculateLeagueStanding)
 			adminAuth.PUT("/standings/:id", handlers.AdminUpdateStanding)
 
 			adminAuth.GET("/users", handlers.AdminListUsers)

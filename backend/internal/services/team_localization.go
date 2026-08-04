@@ -411,7 +411,11 @@ func UpdateAllTeamNames() error {
 	for _, team := range teams {
 		updated := false
 		// Try by FIFA code first
-		if item, ok := localizedTeams[team.FIFACode]; ok {
+		fifaCode := ""
+		if team.FIFACode != nil {
+			fifaCode = *team.FIFACode
+		}
+		if item, ok := localizedTeams[fifaCode]; ok {
 			if team.Name != item.Name || team.Continent != item.Continent {
 				team.Name = item.Name
 				team.Continent = item.Continent

@@ -13,8 +13,9 @@ const props = defineProps<{
 const router = useRouter()
 const fav = useFavoriteStore()
 
-function stageLabel(stage: Match['stage']) {
-  const labels: Record<Match['stage'], string> = {
+function stageLabel(stage: Match['stage'], matchday?: number | null) {
+  if (stage === 'regular_season') return matchday ? `第 ${matchday} 轮` : '联赛'
+  const labels: Record<string, string> = {
     group: '小组赛',
     group_stage: '小组赛',
     round_of_32: '32 强赛',
@@ -28,7 +29,7 @@ function stageLabel(stage: Match['stage']) {
 }
 
 function stageTagText(match: Match) {
-  const label = stageLabel(match.stage)
+  const label = stageLabel(match.stage, match.matchday)
   if (match.group_name) return `${label} · ${match.group_name}`
   return label
 }

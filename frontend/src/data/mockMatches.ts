@@ -24,6 +24,8 @@ export const mockMatches: Match[] = [
     importance_level: 3,
     is_featured: true,
     minute: null,
+    matchday: null,
+    competition_id: null,
   },
   {
     id: 2,
@@ -48,6 +50,8 @@ export const mockMatches: Match[] = [
     importance_level: 3,
     is_featured: true,
     minute: 68,
+    matchday: null,
+    competition_id: null,
   },
   {
     id: 3,
@@ -72,6 +76,8 @@ export const mockMatches: Match[] = [
     importance_level: 3,
     is_featured: true,
     minute: null,
+    matchday: null,
+    competition_id: null,
   },
   {
     id: 4,
@@ -96,6 +102,8 @@ export const mockMatches: Match[] = [
     importance_level: 1,
     is_featured: false,
     minute: null,
+    matchday: null,
+    competition_id: null,
   },
   {
     id: 5,
@@ -120,6 +128,8 @@ export const mockMatches: Match[] = [
     importance_level: 1,
     is_featured: false,
     minute: null,
+    matchday: null,
+    competition_id: null,
   },
   {
     id: 6,
@@ -144,5 +154,7 @@ export const mockMatches: Match[] = [
     importance_level: 2,
     is_featured: false,
     minute: null,
+    matchday: null,
+    competition_id: null,
   },
 ]

@@ -9,6 +9,7 @@ export type Stage =
   | 'semi_final'
   | 'third_place'
   | 'final'
+  | 'regular_season'
 
 /** Backend raw match object */
 export interface ApiMatch {
@@ -17,6 +18,9 @@ export interface ApiMatch {
   stage: Stage
   group_id: number | null
   group: { id: number; name: string } | null
+  competition_id?: number | null
+  season?: number | null
+  matchday?: number | null
   home_team_id: number
   away_team_id: number
   home_team: { id: number; name: string; name_en: string; fifa_code: string; flag_url: string }
@@ -59,6 +63,8 @@ export interface Match {
   importance_level: number
   is_featured: boolean
   minute: number | null
+  matchday: number | null
+  competition_id: number | null
 }
 
 /** Convert UTC time string to Beijing time (UTC+8), format: "MM-DD HH:mm" */
@@ -109,5 +115,7 @@ export function normalizeMatch(m: ApiMatch): Match {
     importance_level: m.importance_level,
     is_featured: m.importance_level >= 2,
     minute: null,
+    matchday: m.matchday ?? null,
+    competition_id: m.competition_id ?? null,
   }
 }

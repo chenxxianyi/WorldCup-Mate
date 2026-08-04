@@ -35,14 +35,16 @@ func AdminDashboard(c *gin.Context) {
 }
 
 func AdminListTeams(c *gin.Context) {
-	page := utils.GetPage(c)
-	pageSize := utils.GetPageSize(c)
-	teams, total, err := services.ListTeams(services.TeamQuery{Page: page, PageSize: pageSize})
+	var q services.TeamQuery
+	c.ShouldBindQuery(&q) // optional teamType/country
+	q.Page = utils.GetPage(c)
+	q.PageSize = utils.GetPageSize(c)
+	teams, total, err := services.ListTeams(q)
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
 	}
-	utils.Paginated(c, teams, total, page, pageSize)
+	utils.Paginated(c, teams, total, q.Page, q.PageSize)
 }
 
 func AdminCreateTeam(c *gin.Context) {
@@ -85,7 +87,12 @@ func AdminUpdateTeam(c *gin.Context) {
 		t.Name = v
 	}
 	if v, ok := input["group_id"].(float64); ok {
-		t.GroupID = uint(v)
+		if v > 0 {
+			gid := uint(v)
+			t.GroupID = &gid
+		} else {
+			t.GroupID = nil
+		}
 	}
 	services.UpdateTeam(t)
 	utils.Success(c, t)
@@ -98,6 +105,34 @@ func AdminDeleteTeam(c *gin.Context) {
 		return
 	}
 	utils.Success(c, gin.H{"deleted": true})
+}
+
+// AdminRecalculateLeagueStanding rebuilds the TOTAL league table from
+// finished matches. Body: { competition_id (required), season (optional,
+// defaults to the competition's current season) }.
+func AdminRecalculateLeagueStanding(c *gin.Context) {
+	var input struct {
+		CompetitionID uint `json:"competition_id" binding:"required"`
+		Season        int  `json:"season"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.Error(c, 400, err.Error())
+		return
+	}
+	if input.Season <= 0 {
+		if competition, err := repositories.GetCompetitionByID(input.CompetitionID); err == nil {
+			input.Season = competition.Season
+		}
+	}
+	if input.Season <= 0 {
+		utils.Error(c, 400, "season is required")
+		return
+	}
+	if err := services.RecalculateLeagueStanding(input.CompetitionID, input.Season); err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+	utils.Success(c, gin.H{"recalculated": true, "competition_id": input.CompetitionID, "season": input.Season})
 }
 
 func AdminListGroups(c *gin.Context) {
@@ -192,14 +227,16 @@ func AdminDeleteStadium(c *gin.Context) {
 }
 
 func AdminListMatches(c *gin.Context) {
-	page := utils.GetPage(c)
-	pageSize := utils.GetPageSize(c)
-	matches, total, err := services.ListMatches(services.MatchQuery{Page: page, PageSize: pageSize})
+	var q services.MatchQuery
+	c.ShouldBindQuery(&q) // optional competitionId/season/matchday
+	q.Page = utils.GetPage(c)
+	q.PageSize = utils.GetPageSize(c)
+	matches, total, err := services.ListMatches(q)
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
 	}
-	utils.Paginated(c, matches, total, page, pageSize)
+	utils.Paginated(c, matches, total, q.Page, q.PageSize)
 }
 
 func AdminCreateMatch(c *gin.Context) {

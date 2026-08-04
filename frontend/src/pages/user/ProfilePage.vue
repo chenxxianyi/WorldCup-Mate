@@ -7,13 +7,17 @@ import { useFavoriteStore } from '@/stores/useFavoriteStore'
 import { useReminderStore } from '@/stores/useReminderStore'
 import { useTeamStore } from '@/stores/useTeamStore'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useCompetitionStore } from '@/stores/useCompetitionStore'
+import { apiGetCompetitionStandings } from '@/api/competitions'
 import { apiUpdateProfile } from '@/api/auth'
+import type { Team } from '@/types/team'
 
 const settings = useSettingStore()
 const fav = useFavoriteStore()
 const reminder = useReminderStore()
 const teamStore = useTeamStore()
 const auth = useAuthStore()
+const comp = useCompetitionStore()
 
 // Notification email editing
 const editingEmail = ref(false)
@@ -45,12 +49,42 @@ async function saveEmail() {
   }
 }
 
-const followedTeamNames = computed(() =>
-  teamStore.teams
-    .filter((t) => fav.isTeamFollowed(t.id))
-    .map((t) => t.name)
-    .join('、')
+const followedTeams = computed(() =>
+  teamStore.teams.filter((t) => fav.isTeamFollowed(t.id)),
 )
+
+// teamId -> competition name, built from each league's official standings.
+// Teams not present in any league standings are national teams → 世界杯.
+const teamCompetitionMap = ref<Record<number, string>>({})
+const followedGroups = computed(() => {
+  const byName = new Map<string, Team[]>()
+  for (const t of followedTeams.value) {
+    const name = teamCompetitionMap.value[t.id] || '世界杯'
+    if (!byName.has(name)) byName.set(name, [])
+    byName.get(name)!.push(t)
+  }
+  return Array.from(byName.entries()).map(([name, teams]) => ({ name, teams }))
+})
+
+async function buildTeamCompetitionMap() {
+  await comp.fetchCompetitions()
+  const map: Record<number, string> = {}
+  const leagueCodes = comp.competitions.filter((c) => c.format === 'league').map((c) => c.code)
+  await Promise.all(
+    leagueCodes.map(async (code) => {
+      try {
+        const res = await apiGetCompetitionStandings(code, { type: 'total' }) as any[]
+        const name = comp.competitions.find((c) => c.code === code)?.name || code
+        for (const s of res || []) {
+          map[s.team_id] = name
+        }
+      } catch {
+        // ignore per-league failures
+      }
+    }),
+  )
+  teamCompetitionMap.value = map
+}
 
 // Avatar upload
 const fileInput = ref<HTMLInputElement>()
@@ -130,7 +164,8 @@ async function submitPassword() {
 }
 
 onMounted(() => {
-  teamStore.fetchTeams()
+  teamStore.fetchTeams({ page_size: 100 })
+  buildTeamCompetitionMap()
   if (auth.isLoggedIn) {
     fav.fetchFavoriteTeams()
     fav.fetchFavoriteMatches()
@@ -171,7 +206,18 @@ onMounted(() => {
 
     <section class="section">
       <div class="card settings-list">
-        <div class="setting-item"><b>我的关注</b><span>{{ followedTeamNames }}</span></div>
+        <div class="setting-item">
+          <b>我的关注</b>
+          <div class="followed-groups">
+            <template v-if="followedGroups.length">
+              <div v-for="g in followedGroups" :key="g.name" class="followed-group">
+                <span class="followed-group-name">{{ g.name }}</span>
+                <span>{{ g.teams.map((t) => t.name).join('、') }}</span>
+              </div>
+            </template>
+            <span v-else>暂无关注球队</span>
+          </div>
+        </div>
         <div class="setting-item"><b>我的提醒</b><span>{{ reminder.count }} 个待发送</span></div>
         <div class="setting-item">
           <b>默认提醒渠道</b>
@@ -287,6 +333,31 @@ onMounted(() => {
   font-size: 22px;
   opacity: 0;
   transition: opacity 0.2s;
+}
+
+.followed-groups {
+  display: grid;
+  gap: 6px;
+  text-align: right;
+  min-width: 0;
+}
+
+.followed-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.followed-group-name {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--primary);
+  font-size: 11px;
+  font-weight: 750;
 }
 
 .avatar-wrap:hover .avatar-overlay {

@@ -39,10 +39,16 @@ services:
       APP_ENV: production
       APP_PORT: 8080
       JWT_SECRET: change_this_in_production
-      MYSQL_DSN: xxladmin:XXLadmin_2021!@tcp(mysql:3306)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local
+      MYSQL_DSN: root:password@tcp(mysql:3306)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ""
       REDIS_DB: "0"
+      # League sync (top-5 leagues). Format: CODE:SEASON,COMMA_SEPARATED.
+      # Leave empty to keep World Cup-only behavior.
+      # Example: PL:2025,PD:2025,BL1:2025,SA:2025,FL1:2025
+      SYNC_COMPETITIONS: ""
+      LEAGUE_SYNC_INTERVAL_MINUTES: "30"
+      FOOTBALL_DATA_API_KEY: ""
     depends_on:
       mysql:
         condition: service_healthy

@@ -8,6 +8,7 @@ import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
 import { apiListMatches } from '@/api/matches'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
+import { useCompetitionStore } from '@/stores/useCompetitionStore'
 import { normalizeMatch, type Match } from '@/types/match'
 
 const INITIAL_DAYS = 3
@@ -25,9 +26,11 @@ const FILTER_FOLLOWED = '只看关注'
 const router = useRouter()
 const auth = useAuthStore()
 const fav = useFavoriteStore()
+const comp = useCompetitionStore()
 
 const search = ref('')
 const activeFilter = ref(FILTER_ALL)
+const activeMatchday = ref(0) // league mode: 0 = all rounds
 const matches = ref<Match[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
@@ -44,26 +47,31 @@ let observer: IntersectionObserver | null = null
 let requestToken = 0
 let searchTimer: number | undefined
 
-const filterOptions = [
-  FILTER_ALL,
-  FILTER_TODAY,
-  FILTER_TOMORROW,
-  FILTER_SCHEDULED,
-  FILTER_KNOCKOUT,
-  FILTER_FOLLOWED,
-  'Group A',
-  'Group B',
-  'Group C',
-  'Group D',
-  'Group E',
-  'Group F',
-  'Group G',
-  'Group H',
-  'Group I',
-  'Group J',
-  'Group K',
-  'Group L',
-]
+const filterOptions = computed(() => {
+  if (comp.isLeague) {
+    return [FILTER_ALL, FILTER_TODAY, FILTER_TOMORROW, FILTER_SCHEDULED, FILTER_FOLLOWED]
+  }
+  return [
+    FILTER_ALL,
+    FILTER_TODAY,
+    FILTER_TOMORROW,
+    FILTER_SCHEDULED,
+    FILTER_KNOCKOUT,
+    FILTER_FOLLOWED,
+    'Group A',
+    'Group B',
+    'Group C',
+    'Group D',
+    'Group E',
+    'Group F',
+    'Group G',
+    'Group H',
+    'Group I',
+    'Group J',
+    'Group K',
+    'Group L',
+  ]
+})
 
 const followedOnly = computed(() => activeFilter.value === FILTER_FOLLOWED)
 
@@ -140,7 +148,9 @@ function requestParams() {
     page_size: PAGE_SIZE,
   }
 
-  if (activeFilter.value === FILTER_TODAY) {
+  if (comp.isLeague) {
+    if (activeMatchday.value > 0) params.matchday = activeMatchday.value
+  } else if (activeFilter.value === FILTER_TODAY) {
     params.date = dayParam()
   } else if (activeFilter.value === FILTER_TOMORROW) {
     params.date = dayParam(1)
@@ -209,6 +219,7 @@ async function fillInitialWindow(token: number) {
 }
 
 async function resetAndLoad() {
+  await comp.fetchCompetitions()
   const token = ++requestToken
   loading.value = true
   loadingMore.value = false
@@ -332,6 +343,15 @@ onBeforeUnmount(() => {
 })
 
 watch(activeFilter, resetAndLoad)
+watch(activeMatchday, resetAndLoad)
+watch(
+  () => comp.currentCode,
+  () => {
+    activeFilter.value = FILTER_ALL
+    activeMatchday.value = 0
+    resetAndLoad()
+  },
+)
 watch(search, () => {
   if (searchTimer) window.clearTimeout(searchTimer)
   searchTimer = window.setTimeout(resetAndLoad, 320)
@@ -343,7 +363,7 @@ watch(search, () => {
     <div class="section-head">
       <div>
         <h2>全部赛程</h2>
-        <span>默认展示最近三天，下滑继续加载</span>
+        <span>{{ comp.isLeague ? '按轮次筛选，下滑继续加载' : '默认展示最近三天，下滑继续加载' }}</span>
       </div>
       <SyncStatusBadge />
     </div>
@@ -352,6 +372,16 @@ watch(search, () => {
 
     <div class="section">
       <ChipFilter v-model="activeFilter" :options="filterOptions" />
+      <select
+        v-if="comp.isLeague"
+        v-model.number="activeMatchday"
+        class="matchday-select"
+        aria-label="选择轮次"
+        title="选择轮次"
+      >
+        <option :value="0">全部轮次</option>
+        <option v-for="n in 38" :key="n" :value="n">第 {{ n }} 轮</option>
+      </select>
     </div>
 
     <div v-if="loading" class="state-text">赛程加载中...</div>
@@ -410,6 +440,23 @@ watch(search, () => {
 
 .section {
   margin-top: 18px;
+}
+
+.matchday-select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 140px;
+  height: 38px;
+  margin-top: 12px;
+  padding: 0 34px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  background: var(--card);
+  font-size: 13px;
+  font-weight: 750;
+  outline: none;
+  cursor: pointer;
 }
 
 .date-group {

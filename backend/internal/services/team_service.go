@@ -9,11 +9,24 @@ type TeamQuery struct {
 	Continent string `form:"continent"`
 	GroupID   uint   `form:"groupId"`
 	Keyword   string `form:"keyword"`
+	TeamType  string `form:"teamType"` // optional: national | club
+	Country   string `form:"country"`  // optional
 	Page      int
 	PageSize  int
 }
 
 func ListTeams(q TeamQuery) ([]models.Team, int64, error) {
+	if q.TeamType != "" || q.Country != "" {
+		return repositories.ListTeamsFiltered(repositories.TeamFilter{
+			Continent: q.Continent,
+			Keyword:   q.Keyword,
+			GroupID:   q.GroupID,
+			TeamType:  q.TeamType,
+			Country:   q.Country,
+			Page:      q.Page,
+			PageSize:  q.PageSize,
+		})
+	}
 	return repositories.ListTeams(q.Continent, q.Keyword, q.GroupID, q.Page, q.PageSize)
 }
 

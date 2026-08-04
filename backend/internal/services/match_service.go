@@ -8,30 +8,36 @@ import (
 )
 
 type MatchQuery struct {
-	Date      string `form:"date"`
-	TeamID    uint   `form:"teamId"`
-	GroupID   uint   `form:"groupId"`
-	GroupName string `form:"groupName"`
-	Stage     string `form:"stage"`
-	CityID    uint   `form:"cityId"`
-	Status    string `form:"status"`
-	Keyword   string `form:"keyword"`
-	Page      int
-	PageSize  int
+	Date           string `form:"date"`
+	TeamID         uint   `form:"teamId"`
+	GroupID        uint   `form:"groupId"`
+	GroupName      string `form:"groupName"`
+	Stage          string `form:"stage"`
+	CityID         uint   `form:"cityId"`
+	Status         string `form:"status"`
+	Keyword        string `form:"keyword"`
+	CompetitionID  uint   `form:"competitionId"` // optional: 0 = legacy behavior
+	Season         int    `form:"season"`
+	Matchday       int    `form:"matchday"`
+	Page           int
+	PageSize       int
 }
 
 func ListMatches(q MatchQuery) ([]models.Match, int64, error) {
 	return repositories.ListMatches(repositories.MatchFilter{
-		Date:      q.Date,
-		TeamID:    q.TeamID,
-		GroupID:   q.GroupID,
-		GroupName: q.GroupName,
-		Stage:     q.Stage,
-		CityID:    q.CityID,
-		Status:    q.Status,
-		Keyword:   q.Keyword,
-		Page:      q.Page,
-		PageSize:  q.PageSize,
+		Date:          q.Date,
+		TeamID:        q.TeamID,
+		GroupID:       q.GroupID,
+		GroupName:     q.GroupName,
+		Stage:         q.Stage,
+		CityID:        q.CityID,
+		Status:        q.Status,
+		Keyword:       q.Keyword,
+		CompetitionID: q.CompetitionID,
+		Season:        q.Season,
+		Matchday:      q.Matchday,
+		Page:          q.Page,
+		PageSize:      q.PageSize,
 	})
 }
 
