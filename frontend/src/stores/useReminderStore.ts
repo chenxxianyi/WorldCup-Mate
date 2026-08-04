@@ -7,6 +7,7 @@ import {
   apiListReminders,
 } from '@/api/reminders'
 import { normalizeMatch, type Match } from '@/types/match'
+import type { ApiReminder } from '@/types/reminder'
 
 export interface ReminderItem {
   id: number
@@ -16,7 +17,7 @@ export interface ReminderItem {
   match: Match | null
 }
 
-function normalizeReminder(r: any, fallbackChannel = 'site'): ReminderItem {
+function normalizeReminder(r: ApiReminder, fallbackChannel = 'site'): ReminderItem {
   return {
     id: r.id,
     match_id: r.match_id,
@@ -37,8 +38,8 @@ export const useReminderStore = defineStore('reminder', () => {
 
   async function fetchReminders() {
     try {
-      const res = await apiListReminders() as any[]
-      reminders.value = res.map((r: any) => normalizeReminder(r))
+      const res = await apiListReminders()
+      reminders.value = res.map((r) => normalizeReminder(r))
       refreshMatchReminderIds()
     } catch {
       reminders.value = []
@@ -71,8 +72,8 @@ export const useReminderStore = defineStore('reminder', () => {
   }
 
   async function createReminderBatch(matchId: number, minutes: number[], channel = 'site') {
-    const res = await apiCreateReminderBatch({ match_id: matchId, minutes, channel }) as any[]
-    const created = res.map((r: any) => normalizeReminder(r, channel))
+    const res = await apiCreateReminderBatch({ match_id: matchId, minutes, channel })
+    const created = res.map((r) => normalizeReminder(r, channel))
     reminders.value.push(...created)
     refreshMatchReminderIds()
     return created
@@ -84,7 +85,7 @@ export const useReminderStore = defineStore('reminder', () => {
     }
 
     try {
-      const res = await apiCreateReminder({ matchId, remindBeforeMinutes: minutesBefore, channel }) as any
+      const res = await apiCreateReminder({ matchId, remindBeforeMinutes: minutesBefore, channel })
       reminders.value.push(normalizeReminder(res, channel))
       refreshMatchReminderIds()
       return true

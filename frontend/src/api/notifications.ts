@@ -1,7 +1,9 @@
 import request from './request'
+import type { ApiNotification } from '@/types/notification'
+import type { PaginatedData } from '@/types/common'
 
 export function apiListNotifications(params?: Record<string, any>) {
-  return request.get('/notifications', { params }) as Promise<any>
+  return request.get('/notifications', { params }) as Promise<PaginatedData<ApiNotification>>
 }
 
 export function apiGetUnreadNotificationCount() {
@@ -9,9 +11,9 @@ export function apiGetUnreadNotificationCount() {
 }
 
 export function apiMarkNotificationRead(id: number) {
-  return request.put(`/notifications/${id}/read`) as Promise<any>
+  return request.put(`/notifications/${id}/read`) as Promise<{ read: boolean }>
 }
 
 export function apiMarkAllNotificationsRead() {
-  return request.put('/notifications/read-all') as Promise<any>
+  return request.put('/notifications/read-all') as Promise<{ read_all: boolean }>
 }

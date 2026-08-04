@@ -50,14 +50,14 @@ async function loadTeam() {
     const detail = await teamStore.fetchTeamDetail(id)
     if (!detail) throw new Error('球队不存在')
     team.value = detail
-    const matchRows = await apiGetTeamMatches(id) as any[]
+    const matchRows = await apiGetTeamMatches(id)
     matches.value = (matchRows || []).map(normalizeMatch)
     if (theme.current.slug === 'wc' && detail.group_id) {
-      const rows = await apiGetGroupStandings(detail.group_id) as any[]
+      const rows = await apiGetGroupStandings(detail.group_id)
       const standings = rows.map(normalizeStanding)
       groupStanding.value = standings.find((item) => item.team_id === id) || null
     } else {
-      const rows = await apiGetCompetitionStandings(theme.currentCode, { type: 'total' }) as any[]
+      const rows = await apiGetCompetitionStandings(theme.currentCode, { type: 'total' })
       leagueStanding.value = rows.map(normalizeLeagueStanding).find((item) => item.team_id === id) || null
     }
     if (auth.isLoggedIn) await favorites.fetchFavoriteTeams()

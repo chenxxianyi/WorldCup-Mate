@@ -11,12 +11,14 @@ func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
-		log.Printf("[%s] %s %s %d %v",
+		requestID, _ := c.Get("request_id")
+		log.Printf("[%s] %s %s %d %v request_id=%v",
 			c.Request.Method,
 			c.Request.URL.Path,
 			c.ClientIP(),
 			c.Writer.Status(),
 			time.Since(start),
+			requestID,
 		)
 	}
 }

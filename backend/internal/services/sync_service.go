@@ -249,6 +249,13 @@ func upsertFootballDataMatch(externalMatch footballdata.Match) (string, *uint, e
 			LastSyncedAt:     &now,
 		}
 		if err := repositories.CreateMatch(&match); err != nil {
+			// REL-04: another sync run inserted the same external match
+			// concurrently — fall back to the existing row.
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				if _, e := repositories.GetMatchByExternal(syncProviderFootballData, externalID); e == nil {
+					return "skipped", finishedGroupID(status, groupID), nil
+				}
+			}
 			return "skipped", groupID, err
 		}
 		return "created", finishedGroupID(status, groupID), nil

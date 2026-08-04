@@ -62,6 +62,12 @@ async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  // Client-side guard (server enforces the same limit, SEC-06).
+  if (file.size > 5 * 1024 * 1024) {
+    theme.showToast('文件大小不能超过 5MB')
+    input.value = ''
+    return
+  }
   uploadingAvatar.value = true
   try {
     await auth.uploadAvatar(file)
@@ -75,6 +81,12 @@ async function uploadAvatar(event: Event) {
 }
 
 async function changePassword() {
+  // SEC-03: client-side hint; the server-side policy is authoritative.
+  const pwd = newPassword.value
+  if (pwd.length < 8 || !/[A-Za-z]/.test(pwd) || !/[0-9]/.test(pwd)) {
+    theme.showToast('密码至少 8 位，且需同时包含字母和数字')
+    return
+  }
   changingPassword.value = true
   try {
     await auth.changePassword(oldPassword.value, newPassword.value)
@@ -117,7 +129,7 @@ async function changePassword() {
           <summary>账号安全 <span>修改登录密码</span></summary>
           <form class="account-form" @submit.prevent="changePassword">
             <label class="field-label">当前密码<div class="field-control"><ThemeIcon name="lock" /><input v-model="oldPassword" type="password" autocomplete="current-password" required /></div></label>
-            <label class="field-label">新密码<div class="field-control"><ThemeIcon name="lock" /><input v-model="newPassword" type="password" autocomplete="new-password" minlength="6" required /></div></label>
+            <label class="field-label">新密码<div class="field-control"><ThemeIcon name="lock" /><input v-model="newPassword" type="password" autocomplete="new-password" minlength="8" required /></div><small class="field-hint">至少 8 位，需包含字母和数字</small></label>
             <button class="primary-button full-button" type="submit" :disabled="changingPassword">{{ changingPassword ? '提交中…' : '修改密码' }}</button>
           </form>
         </details>

@@ -17,11 +17,54 @@ import (
 func Seed() {
 	seedCompetitions()
 	seedAdmin()
+	seedTestUsers()
 	seedGroups()
 	seedCities()
 	seedStadiums()
 	seedTeams()
 	seedMatches()
+}
+
+// seedTestUsers creates stable permission-test accounts (BASE-02):
+// two normal users (demo1/demo2) with a few notifications each, so that
+// cross-user scenarios (e.g. marking another user's notification read)
+// can be reproduced deterministically. Idempotent; skipped in production.
+func seedTestUsers() {
+	if os.Getenv("APP_ENV") == "production" {
+		return
+	}
+	type testUser struct {
+		email    string
+		nickname string
+	}
+	users := []testUser{
+		{email: "demo1@worldcup.local", nickname: "Demo1"},
+		{email: "demo2@worldcup.local", nickname: "Demo2"},
+	}
+	for _, u := range users {
+		var count int64
+		DB.Model(&models.User{}).Where("email = ?", u.email).Count(&count)
+		if count > 0 {
+			continue
+		}
+		hash, _ := utils.HashPassword("Demo123456")
+		user := models.User{
+			Username:     u.nickname,
+			Email:        u.email,
+			PasswordHash: hash,
+			Role:         "user",
+			Timezone:     "Asia/Shanghai",
+			Language:     "zh-CN",
+		}
+		if err := DB.Create(&user).Error; err != nil {
+			log.Printf("seed test user failed: %v", err)
+			continue
+		}
+		// Two notifications per user: one unread, one read.
+		DB.Create(&models.Notification{UserID: user.ID, Title: "欢迎使用 WorldCup Mate", Content: "测试账号通知（未读）", Type: "reminder", IsRead: false})
+		DB.Create(&models.Notification{UserID: user.ID, Title: "已读通知", Content: "测试账号通知（已读）", Type: "reminder", IsRead: true})
+		log.Printf("seed test user created: %s / Demo123456", u.email)
+	}
 }
 
 // seedCompetitions adds competition metadata (World Cup + top-5 leagues).

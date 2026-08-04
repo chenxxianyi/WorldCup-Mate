@@ -9,6 +9,7 @@ export const mockUser: User = {
   timezone: 'Asia/Shanghai',
   language: 'zh-CN',
   notificationEmail: 'leochen@example.com',
+  role: 'user',
   followed_teams: [5, 11],
   favorite_matches: [1, 2, 3],
 }

@@ -1,12 +1,18 @@
 package utils
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var jwtSecret []byte
+
+const (
+	accessTokenTTL = 30 * time.Minute // SEC-04: short-lived access token
+	tokenIssuer    = "worldcup-mate"
+)
 
 func SetJWTSecret(secret string) {
 	jwtSecret = []byte(secret)
@@ -19,12 +25,16 @@ type Claims struct {
 }
 
 func GenerateToken(userID uint, role string) (string, error) {
+	now := time.Now()
 	claims := Claims{
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    tokenIssuer,
+			Subject:   strconv.FormatUint(uint64(userID), 10),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(accessTokenTTL)),
+			NotBefore: jwt.NewNumericDate(now),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -34,7 +44,7 @@ func GenerateToken(userID uint, role string) (string, error) {
 func ParseToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
-	})
+	}, jwt.WithIssuer(tokenIssuer), jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 	if err != nil {
 		return nil, err
 	}

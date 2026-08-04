@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { apiAdminListTeams } from '@/api/admin'
+import type { ApiTeam } from '@/types/team'
 
 const search = ref('')
 const teamType = ref('')
-const teams = ref<any[]>([])
+const teams = ref<ApiTeam[]>([])
 const loading = ref(false)
 
 const filteredTeams = computed(() => {
@@ -22,8 +23,8 @@ async function loadTeams() {
   try {
     const params: Record<string, any> = { page: 1, page_size: 100 }
     if (teamType.value) params.teamType = teamType.value
-    const res = await apiAdminListTeams(params) as any
-    teams.value = res.list || res || []
+    const res = await apiAdminListTeams(params)
+    teams.value = res.list
   } finally {
     loading.value = false
   }

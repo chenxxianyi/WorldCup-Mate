@@ -2,27 +2,37 @@ package services
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 
+	"worldcup-mate/internal/database"
 	"worldcup-mate/internal/models"
 	"worldcup-mate/internal/repositories"
+	"worldcup-mate/internal/utils"
+
+	"gorm.io/gorm"
 )
 
 type DashboardData struct {
-	TotalMatches  int64 `json:"total_matches"`
-	TotalGroups   int64 `json:"total_groups"`
-	TotalTeams    int64 `json:"total_teams"`
-	TotalReminders int64 `json:"total_reminders"`
+	TotalMatches      int64 `json:"total_matches"`
+	TotalGroups       int64 `json:"total_groups"`
+	TotalTeams        int64 `json:"total_teams"`
+	TotalUsers        int64 `json:"total_users"`
+	TotalCompetitions int64 `json:"total_competitions"`
+	TotalReminders    int64 `json:"total_reminders"`
 }
 
 func GetDashboard() DashboardData {
 	return DashboardData{
-		TotalMatches:  repositories.CountMatches(),
-		TotalGroups:   repositories.CountGroups(),
-		TotalTeams:    CountTeams(),
-		TotalReminders: 0,
+		TotalMatches:      repositories.CountMatches(),
+		TotalGroups:       repositories.CountGroups(),
+		TotalTeams:        CountTeams(),
+		TotalUsers:        repositories.CountUsers(),
+		TotalCompetitions: repositories.CountCompetitions(),
+		TotalReminders:    repositories.CountAllReminders(),
 	}
 }
 
@@ -42,9 +52,17 @@ func UpdateMatchScore(matchID uint, input ScoreInput) (*models.Match, error) {
 		match.WinnerTeamID = &match.HomeTeamID
 	} else if input.AwayScore > input.HomeScore {
 		match.WinnerTeamID = &match.AwayTeamID
+	} else {
+		match.WinnerTeamID = nil
 	}
 	if err := repositories.UpdateMatch(match); err != nil {
 		return nil, err
+	}
+	// Score correction on a finished group match must keep standings in sync.
+	if match.Status == "finished" && match.Stage == "group" && match.GroupID != nil {
+		if err := RecalculateGroupStanding(*match.GroupID); err != nil {
+			return nil, err
+		}
 	}
 	return match, nil
 }
@@ -53,21 +71,70 @@ type StatusInput struct {
 	Status string `json:"status" binding:"required"`
 }
 
+// matchStatusTransitions defines the legal state machine (ADM-05):
+//   scheduled -> live | finished | postponed | cancelled
+//   live      -> finished | postponed
+//   postponed -> scheduled | live
+//   cancelled / finished -> (terminal)
+var matchStatusTransitions = map[string][]string{
+	"scheduled": {"live", "finished", "postponed", "cancelled"},
+	"live":      {"finished", "postponed"},
+	"postponed": {"scheduled", "live"},
+	"cancelled": {},
+	"finished":  {},
+}
+
+func canTransition(from, to string) bool {
+	allowed, ok := matchStatusTransitions[from]
+	if !ok {
+		return false
+	}
+	for _, s := range allowed {
+		if s == to {
+			return true
+		}
+	}
+	return false
+}
+
 func UpdateMatchStatus(matchID uint, input StatusInput) (*models.Match, error) {
 	match, err := repositories.GetMatchByID(matchID)
 	if err != nil {
-		return nil, fmt.Errorf("match not found")
+		return nil, err // includes gorm.ErrRecordNotFound
 	}
-	match.Status = input.Status
-	if err := repositories.UpdateMatch(match); err != nil {
+	if !canTransition(match.Status, input.Status) {
+		return nil, utils.ErrInvalidStatusTransition
+	}
+	if input.Status == "finished" && (match.HomeScore == nil || match.AwayScore == nil) {
+		return nil, errors.New("cannot finish a match without a score")
+	}
+
+	// Persist status atomically; standings recalculation runs afterwards and
+	// its failure is logged (keeps the status change from being rolled back
+	// by a non-critical recalculation issue).
+	if err := database.DB.Transaction(func(tx *gorm.DB) error {
+		return tx.Model(match).Update("status", input.Status).Error
+	}); err != nil {
 		return nil, err
 	}
+	match.Status = input.Status
 
 	if match.Status == "finished" && match.Stage == "group" && match.GroupID != nil {
-		_ = RecalculateGroupStanding(*match.GroupID)
+		if err := RecalculateGroupStanding(*match.GroupID); err != nil {
+			return nil, err
+		}
+		if match.Stage == "group" {
+			if err := RecalculateBestThird(); err != nil {
+				return nil, err
+			}
+		}
 	}
-
 	return match, nil
+}
+
+// UpdateMatch persists an already-mutated match (admin edit).
+func UpdateMatch(match *models.Match) error {
+	return repositories.UpdateMatch(match)
 }
 
 type MatchInput struct {
@@ -81,9 +148,20 @@ type MatchInput struct {
 	KickoffTimeUTC  string `json:"kickoff_time_utc"`
 	ImportanceLevel int    `json:"importance_level"`
 	RecommendTag    string `json:"recommend_tag"`
+	CompetitionID   *uint  `json:"competition_id"`
+	Season          *int   `json:"season"`
+	Matchday        *int   `json:"matchday"`
 }
 
 func CreateMatch(input MatchInput) (*models.Match, error) {
+	var kickoff time.Time
+	if input.KickoffTimeUTC != "" {
+		parsed, err := time.Parse(time.RFC3339, input.KickoffTimeUTC)
+		if err != nil {
+			return nil, utils.ErrInvalidTime
+		}
+		kickoff = parsed.UTC()
+	}
 	match := &models.Match{
 		MatchNo:         input.MatchNo,
 		HomeTeamID:      input.HomeTeamID,
@@ -92,8 +170,12 @@ func CreateMatch(input MatchInput) (*models.Match, error) {
 		Stage:           input.Stage,
 		StadiumID:       input.StadiumID,
 		CityID:          input.CityID,
+		KickoffTimeUTC:  kickoff,
 		ImportanceLevel: input.ImportanceLevel,
 		RecommendTag:    input.RecommendTag,
+		CompetitionID:   input.CompetitionID,
+		Season:          input.Season,
+		Matchday:        input.Matchday,
 		Status:          "scheduled",
 	}
 	if err := repositories.CreateMatch(match); err != nil {

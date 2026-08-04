@@ -1,12 +1,39 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import StatCard from '@/components/common/StatCard.vue'
 import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
+import { apiAdminDashboard } from '@/api/admin'
 import { useMatchStore } from '@/stores/useMatchStore'
 
+const router = useRouter()
 const matchStore = useMatchStore()
 
+const dashboard = ref({
+  total_matches: 0,
+  total_groups: 0,
+  total_teams: 0,
+  total_users: 0,
+  total_competitions: 0,
+  total_reminders: 0,
+})
+const loading = ref(true)
+const error = ref('')
+
+async function loadDashboard() {
+  loading.value = true
+  error.value = ''
+  try {
+    dashboard.value = await apiAdminDashboard()
+  } catch (err: any) {
+    error.value = err?.message || '看板数据加载失败'
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
+  loadDashboard()
   matchStore.fetchMatches({ page: 1, page_size: 20 })
 })
 </script>
@@ -19,13 +46,18 @@ onMounted(() => {
           <h2>后台数据看板</h2>
           <span>WorldCup Mate Admin</span>
         </div>
-        <button class="pill-btn primary">新增比赛</button>
+        <button class="pill-btn primary" @click="router.push('/admin/matches')">新增比赛</button>
       </div>
-      <div class="admin-kpis">
-        <StatCard :value="104" label="总比赛数" />
-        <StatCard :value="12" label="小组数量" />
-        <StatCard :value="48" label="球队数量" />
-        <StatCard :value="286" label="提醒总数" />
+
+      <div v-if="loading" class="admin-hint" aria-busy="true">看板数据加载中...</div>
+      <div v-else-if="error" class="admin-hint error" role="alert">{{ error }}</div>
+      <div v-else class="admin-kpis">
+        <StatCard :value="dashboard.total_matches" label="总比赛数" />
+        <StatCard :value="dashboard.total_groups" label="小组数量" />
+        <StatCard :value="dashboard.total_teams" label="球队数量" />
+        <StatCard :value="dashboard.total_competitions" label="赛事数量" />
+        <StatCard :value="dashboard.total_users" label="用户数量" />
+        <StatCard :value="dashboard.total_reminders" label="提醒总数" />
       </div>
       <SyncStatusBadge mode="card" />
     </article>
@@ -40,7 +72,7 @@ onMounted(() => {
         <tbody>
           <tr v-for="m in matchStore.matches" :key="m.id">
             <td>{{ m.home_team_name }} vs {{ m.away_team_name }}</td>
-            <td>{{ m.group_name }}</td>
+            <td>{{ m.group_name || (m.matchday ? `第 ${m.matchday} 轮` : '-') }}</td>
             <td>{{ m.local_kickoff_time }}</td>
             <td>
               <span v-if="m.status === 'live'" class="tag live">
@@ -55,7 +87,7 @@ onMounted(() => {
               <span v-else class="tag">-</span>
             </td>
             <td>
-              <button class="pill-btn">编辑</button>
+              <button class="pill-btn" @click="router.push('/admin/matches')">编辑</button>
             </td>
           </tr>
           <tr v-if="!matchStore.matches.length">
@@ -103,6 +135,16 @@ onMounted(() => {
   gap: 10px;
 }
 
+.admin-hint {
+  padding: 16px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.admin-hint.error {
+  color: var(--primary);
+}
+
 .table-card {
   overflow: hidden;
 }
@@ -119,7 +161,7 @@ onMounted(() => {
 
 th,
 td {
-  padding: 12px 10px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   text-align: left;
   font-size: 13px;
@@ -127,16 +169,8 @@ td {
 
 th {
   color: var(--muted);
-  font-weight: 700;
+  font-weight: 600;
   background: var(--card-soft);
-}
-
-td {
-  color: var(--text);
-}
-
-tr:last-child td {
-  border-bottom: 0;
 }
 
 .empty-row {
@@ -146,7 +180,13 @@ tr:last-child td {
 
 @media (min-width: 768px) {
   .admin-kpis {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 </style>

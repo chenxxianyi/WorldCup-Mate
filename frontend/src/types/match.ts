@@ -28,6 +28,7 @@ export interface ApiMatch {
   home_score: number | null
   away_score: number | null
   status: MatchStatus
+  live_minute?: number | null
   kickoff_time_utc: string
   stadium: { id: number; name: string; city_id: number } | null
   city: { id: number; name: string } | null
@@ -116,8 +117,29 @@ export function normalizeMatch(m: ApiMatch): Match {
     stadium: m.stadium?.name || '',
     importance_level: m.importance_level,
     is_featured: m.importance_level >= 2,
-    minute: null,
+    minute: m.live_minute ?? null,
     matchday: m.matchday ?? null,
     competition_id: m.competition_id ?? null,
   }
+}
+
+// Unified match status mapping (DATA-04): every card/detail page must use
+// these helpers so postponed/cancelled/live-minute semantics stay consistent.
+export function matchStatusLabel(status: string, minute: number | null): string {
+  if (status === 'live') {
+    // minute may be null when the provider has no live clock data:
+    // never render a fake "0'".
+    return minute != null ? `${minute}'` : '直播中'
+  }
+  if (status === 'finished') return '已结束'
+  if (status === 'postponed') return '已延期'
+  if (status === 'cancelled') return '已取消'
+  return '未开始'
+}
+
+export function matchStatusClass(status: string): string {
+  if (status === 'live') return 'live'
+  if (status === 'finished') return 'green'
+  if (status === 'postponed' || status === 'cancelled') return 'warn'
+  return ''
 }

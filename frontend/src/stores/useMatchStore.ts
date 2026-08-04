@@ -22,8 +22,8 @@ export const useMatchStore = defineStore('match', () => {
   async function fetchMatches(params?: Record<string, any>) {
     loading.value = true
     try {
-      const res = await apiListMatches(params) as any
-      matches.value = (res.list || res).map(normalizeMatch)
+      const res = await apiListMatches(params)
+      matches.value = res.list.map(normalizeMatch)
     } finally {
       loading.value = false
     }
@@ -31,7 +31,7 @@ export const useMatchStore = defineStore('match', () => {
 
   async function fetchTodayMatches() {
     try {
-      const res = await apiGetTodayMatches() as any
+      const res = await apiGetTodayMatches()
       todayMatches.value = (res || []).map(normalizeMatch)
     } catch {
       todayMatches.value = []
@@ -40,7 +40,7 @@ export const useMatchStore = defineStore('match', () => {
 
   async function fetchTomorrowMatches() {
     try {
-      const res = await apiGetTomorrowMatches() as any
+      const res = await apiGetTomorrowMatches()
       tomorrowMatches.value = (res || []).map(normalizeMatch)
     } catch {
       tomorrowMatches.value = []
@@ -49,7 +49,7 @@ export const useMatchStore = defineStore('match', () => {
 
   async function fetchRecommendedMatches() {
     try {
-      const res = await apiGetRecommendedMatches() as any
+      const res = await apiGetRecommendedMatches()
       recommendedMatches.value = (res || []).map(normalizeMatch)
     } catch {
       recommendedMatches.value = []
@@ -59,7 +59,7 @@ export const useMatchStore = defineStore('match', () => {
   async function fetchMatchDetail(id: number) {
     loading.value = true
     try {
-      const res = await apiGetMatchDetail(id) as any
+      const res = await apiGetMatchDetail(id)
       currentMatch.value = normalizeMatch(res)
       return currentMatch.value
     } finally {
@@ -69,7 +69,7 @@ export const useMatchStore = defineStore('match', () => {
 
   async function fetchMatchesByTeam(teamId: number) {
     try {
-      const res = await apiGetMatchesByTeam(teamId) as any
+      const res = await apiGetMatchesByTeam(teamId)
       return (res || []).map(normalizeMatch)
     } catch {
       return []

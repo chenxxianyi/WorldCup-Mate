@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"strconv"
 
 	"worldcup-mate/internal/services"
 	"worldcup-mate/internal/utils"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func ListNotifications(c *gin.Context) {
@@ -37,7 +39,12 @@ func MarkNotificationRead(c *gin.Context) {
 		utils.Error(c, 400, "invalid notification id")
 		return
 	}
-	if err := services.MarkNotificationRead(uint(id)); err != nil {
+	userID := c.MustGet("user_id").(uint)
+	if err := services.MarkNotificationRead(uint(id), userID); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.Error(c, 404, "notification not found")
+			return
+		}
 		utils.Error(c, 500, err.Error())
 		return
 	}

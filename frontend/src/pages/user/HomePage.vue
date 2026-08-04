@@ -44,13 +44,13 @@ function standingBadge(item: PreviewStanding) {
 async function loadStandings() {
   try {
     if (theme.current.slug === 'wc') {
-      const rows = await apiGetAllStandings() as any[]
+      const rows = await apiGetAllStandings()
       standings.value = rows.slice(0, 5).map((row, index) => {
         const item = normalizeStanding(row)
         return { teamId: item.team_id, name: item.team_name, code: item.team_code, flag: item.flag, points: item.points, position: item.rank || index + 1 }
       })
     } else {
-      const rows = await apiGetCompetitionStandings(theme.currentCode, { type: 'total' }) as any[]
+      const rows = await apiGetCompetitionStandings(theme.currentCode, { type: 'total' })
       standings.value = rows.slice(0, 5).map((row) => {
         const item = normalizeLeagueStanding(row)
         return { teamId: item.team_id, name: item.team_name, code: item.team_code, flag: item.flag, points: item.points, position: item.position }
@@ -66,7 +66,7 @@ async function loadFollowedSchedule() {
   if (!auth.isLoggedIn || !favorites.followedTeamIds.length) return
   const lists = await Promise.all(favorites.followedTeamIds.slice(0, 5).map(async (teamId) => {
     try {
-      const rows = await apiGetMatchesByTeam(teamId) as any[]
+      const rows = await apiGetMatchesByTeam(teamId)
       return rows.map(normalizeMatch)
     } catch { return [] }
   }))
@@ -87,11 +87,11 @@ async function loadHome() {
     const [response, finishedResponse] = await Promise.all([
       apiListMatches({ page: 1, page_size: 50 }),
       apiListMatches({ page: 1, page_size: 1, status: 'finished' }),
-    ]) as any[]
-    const list = (response.list || response || []).map(normalizeMatch)
+    ])
+    const list = response.list.map(normalizeMatch)
     matches.value = list
     totalMatches.value = Number(response.total ?? list.length)
-    const finishedList = finishedResponse.list || finishedResponse || []
+    const finishedList = finishedResponse.list
     finishedMatches.value = Number(finishedResponse.total ?? finishedList.length)
     if (auth.isLoggedIn) await favorites.fetchFavoriteTeams()
     await Promise.all([loadStandings(), loadFollowedSchedule()])

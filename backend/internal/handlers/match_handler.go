@@ -27,7 +27,7 @@ func ListMatches(c *gin.Context) {
 }
 
 func GetTodayMatches(c *gin.Context) {
-	matches, err := services.GetTodayMatches()
+	matches, err := services.GetTodayMatches(isWorldCupQuery(c))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -36,7 +36,7 @@ func GetTodayMatches(c *gin.Context) {
 }
 
 func GetTomorrowMatches(c *gin.Context) {
-	matches, err := services.GetTomorrowMatches()
+	matches, err := services.GetTomorrowMatches(isWorldCupQuery(c))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -45,7 +45,7 @@ func GetTomorrowMatches(c *gin.Context) {
 }
 
 func GetUpcomingMatches(c *gin.Context) {
-	matches, err := services.GetUpcomingMatches()
+	matches, err := services.GetUpcomingMatches(isWorldCupQuery(c))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -54,7 +54,7 @@ func GetUpcomingMatches(c *gin.Context) {
 }
 
 func GetLiveMatches(c *gin.Context) {
-	matches, err := services.GetLiveMatches()
+	matches, err := services.GetLiveMatches(isWorldCupQuery(c))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -63,12 +63,18 @@ func GetLiveMatches(c *gin.Context) {
 }
 
 func GetRecommendedMatches(c *gin.Context) {
-	matches, err := services.GetRecommendedMatches()
+	matches, err := services.GetRecommendedMatches(isWorldCupQuery(c))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
 	}
 	utils.Success(c, matches)
+}
+
+// isWorldCupQuery reports whether the client requested World Cup-only
+// data (worldCup=true, used by the default World Cup view).
+func isWorldCupQuery(c *gin.Context) bool {
+	return c.Query("worldCup") == "true"
 }
 
 func GetMatchDetail(c *gin.Context) {

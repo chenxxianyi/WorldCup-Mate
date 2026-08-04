@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"time"
 
 	"worldcup-mate/internal/config"
@@ -59,6 +60,8 @@ func main() {
 		&models.SyncState{},
 		&models.Competition{},
 		&models.LeagueStanding{},
+		&models.AdminAuditLog{},
+		&models.RefreshToken{},
 	)
 	if err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
@@ -82,8 +85,11 @@ func main() {
 	r := routes.Setup()
 
 	// Serve uploaded files
-	os.MkdirAll("uploads/avatars", 0755)
-	r.Static("/uploads", "uploads")
+	if err := os.MkdirAll(filepath.Join(cfg.UploadDir, "avatars"), 0755); err != nil {
+		log.Printf("[warn] failed to create upload dir: %v", err)
+	}
+	services.SetUploadRoot(cfg.UploadDir)
+	r.Static("/uploads", cfg.UploadDir)
 	addr := fmt.Sprintf(":%s", cfg.AppPort)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {

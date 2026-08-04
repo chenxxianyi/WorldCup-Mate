@@ -25,8 +25,8 @@ export const useFavoriteStore = defineStore('favorite', () => {
 
   async function fetchFavoriteTeams() {
     try {
-      const res = await apiListFavoriteTeams() as any[]
-      followedTeamIds.value = res.map((f: any) => f.team_id)
+      const res = await apiListFavoriteTeams()
+      followedTeamIds.value = res.map((f) => f.team_id)
     } catch {
       followedTeamIds.value = []
     }
@@ -34,9 +34,9 @@ export const useFavoriteStore = defineStore('favorite', () => {
 
   async function fetchFavoriteMatches() {
     try {
-      const res = await apiListFavoriteMatches() as any[]
-      favoriteMatchIds.value = res.map((f: any) => f.match_id)
-      favoriteMatches.value = res.filter((f: any) => f.match).map((f: any) => normalizeMatch(f.match))
+      const res = await apiListFavoriteMatches()
+      favoriteMatchIds.value = res.map((f) => f.match_id)
+      favoriteMatches.value = res.filter((f) => f.match).map((f) => normalizeMatch(f.match!))
     } catch {
       favoriteMatchIds.value = []
       favoriteMatches.value = []

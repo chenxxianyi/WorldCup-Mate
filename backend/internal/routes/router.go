@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"worldcup-mate/internal/handlers"
 	"worldcup-mate/internal/middleware"
 
@@ -9,17 +11,18 @@ import (
 
 func Setup() *gin.Engine {
 	r := gin.New()
+	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger())
 	r.Use(middleware.Recover())
 	r.Use(middleware.CORS())
-
 	api := r.Group("/api")
 
 	// Auth (public)
 	auth := api.Group("/auth")
 	{
-		auth.POST("/register", handlers.Register)
-		auth.POST("/login", handlers.Login)
+		auth.POST("/register", middleware.RateLimit("rl:register:ip", 5, time.Minute), handlers.Register)
+		auth.POST("/login", middleware.RateLimit("rl:login:ip", 20, time.Minute), handlers.Login)
+		auth.POST("/refresh", handlers.Refresh)
 		auth.POST("/logout", handlers.Logout)
 	}
 
@@ -134,6 +137,7 @@ func Setup() *gin.Engine {
 			adminAuth.GET("/groups", handlers.AdminListGroups)
 			adminAuth.POST("/groups", handlers.AdminCreateGroup)
 			adminAuth.PUT("/groups/:id", handlers.AdminUpdateGroup)
+			adminAuth.DELETE("/groups/:id", handlers.AdminDeleteGroup)
 
 			adminAuth.GET("/cities", handlers.AdminListCities)
 			adminAuth.POST("/cities", handlers.AdminCreateCity)

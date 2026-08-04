@@ -11,8 +11,8 @@ export const useTeamStore = defineStore('team', () => {
   async function fetchTeams(params?: Record<string, any>) {
     loading.value = true
     try {
-      const res = await apiListTeams(params) as any
-      teams.value = (res.list || res).map(normalizeTeam)
+      const res = await apiListTeams(params)
+      teams.value = res.list.map(normalizeTeam)
     } finally {
       loading.value = false
     }
@@ -20,7 +20,7 @@ export const useTeamStore = defineStore('team', () => {
 
   async function fetchTeamDetail(id: number) {
     try {
-      const res = await apiGetTeamDetail(id) as any
+      const res = await apiGetTeamDetail(id)
       return normalizeTeam(res)
     } catch {
       return null

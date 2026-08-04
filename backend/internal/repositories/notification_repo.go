@@ -28,8 +28,22 @@ func CountUnreadNotifications(userID uint) (int64, error) {
 	return total, err
 }
 
-func MarkNotificationRead(id uint) error {
-	return database.DB.Model(&models.Notification{}).Where("id = ?", id).Update("is_read", true).Error
+// MarkNotificationRead marks a notification read only if it belongs to
+// userID. Idempotent: re-marking an already-read notification succeeds.
+// Returns gorm.ErrRecordNotFound when the notification does not exist or
+// belongs to another user (no cross-user path).
+func MarkNotificationRead(id, userID uint) error {
+	var notification models.Notification
+	err := database.DB.Where("id = ? AND user_id = ?", id, userID).First(&notification).Error
+	if err != nil {
+		return err
+	}
+	if !notification.IsRead {
+		return database.DB.Model(&models.Notification{}).
+			Where("id = ?", id).
+			Update("is_read", true).Error
+	}
+	return nil
 }
 
 func MarkAllNotificationsRead(userID uint) error {

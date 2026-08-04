@@ -47,24 +47,25 @@ func GetMatchByID(id uint) (*models.Match, error) {
 	return repositories.GetMatchByID(id)
 }
 
-func GetTodayMatches() ([]models.Match, error) {
+func GetTodayMatches(worldCup bool) ([]models.Match, error) {
 	now := time.Now().UTC()
 	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	end := start.AddDate(0, 0, 1)
-	return repositories.GetMatchesByDateRange(start, end)
+	return repositories.GetMatchesByDateRange(start, end, worldCup)
 }
 
-func GetTomorrowMatches() ([]models.Match, error) {
+func GetTomorrowMatches(worldCup bool) ([]models.Match, error) {
 	now := time.Now().UTC()
 	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, 1)
 	end := start.AddDate(0, 0, 1)
-	return repositories.GetMatchesByDateRange(start, end)
+	return repositories.GetMatchesByDateRange(start, end, worldCup)
 }
 
-func GetUpcomingMatches() ([]models.Match, error) {
+func GetUpcomingMatches(worldCup bool) ([]models.Match, error) {
 	var matches []models.Match
 	all, _, err := repositories.ListMatches(repositories.MatchFilter{
 		Status:   "scheduled",
+		WorldCupOnly: worldCup,
 		Page:     1,
 		PageSize: 10,
 	})
@@ -75,17 +76,18 @@ func GetUpcomingMatches() ([]models.Match, error) {
 	return matches, nil
 }
 
-func GetLiveMatches() ([]models.Match, error) {
+func GetLiveMatches(worldCup bool) ([]models.Match, error) {
 	matches, _, err := repositories.ListMatches(repositories.MatchFilter{
 		Status:   "live",
+		WorldCupOnly: worldCup,
 		Page:     1,
 		PageSize: 100,
 	})
 	return matches, err
 }
 
-func GetRecommendedMatches() ([]models.Match, error) {
-	return repositories.GetRecommendedMatches()
+func GetRecommendedMatches(worldCup bool) ([]models.Match, error) {
+	return repositories.GetRecommendedMatches(worldCup)
 }
 
 func GetMatchesByTeamID(teamID uint) ([]models.Match, error) {

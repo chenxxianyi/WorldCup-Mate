@@ -3,11 +3,12 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { apiAdminListMatches } from '@/api/admin'
 import { apiListCompetitions } from '@/api/competitions'
 import { normalizeMatch, type Match } from '@/types/match'
+import type { Competition } from '@/types/competition'
 
 const search = ref('')
 const status = ref('')
 const competitionId = ref<number | null>(null)
-const competitions = ref<any[]>([])
+const competitions = ref<Competition[]>([])
 const matches = ref<Match[]>([])
 const loading = ref(false)
 
@@ -33,8 +34,8 @@ async function loadMatches() {
   try {
     const params: Record<string, any> = { page: 1, page_size: 100 }
     if (competitionId.value) params.competitionId = competitionId.value
-    const res = await apiAdminListMatches(params) as any
-    matches.value = (res.list || res || []).map(normalizeMatch)
+    const res = await apiAdminListMatches(params)
+    matches.value = res.list.map(normalizeMatch)
   } finally {
     loading.value = false
   }

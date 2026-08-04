@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useFavoriteStore } from '@/stores/useFavoriteStore'
-import type { Match } from '@/types/match'
+import { matchStatusLabel, type Match } from '@/types/match'
 import ReminderControl from '@/components/common/ReminderControl.vue'
 import TeamFlag from '@/components/common/TeamFlag.vue'
 
@@ -35,9 +35,7 @@ function stageTagText(match: Match) {
 }
 
 function statusText(match: Match) {
-  if (match.status === 'live') return `${match.minute || 0}' LIVE`
-  if (match.status === 'finished') return '已结束'
-  return '未开始'
+  return matchStatusLabel(match.status, match.minute)
 }
 
 function kickoffText(match: Match) {

@@ -2,8 +2,11 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { apiAdminListStandings, apiAdminRecalculateStandings, apiAdminRecalculateLeagueStanding } from '@/api/admin'
 import { apiListCompetitions, apiGetCompetitionStandings } from '@/api/competitions'
+import type { ApiStanding } from '@/types/standing'
+import type { ApiLeagueStanding } from '@/types/standing'
+import type { Competition } from '@/types/competition'
 
-const standings = ref<any[]>([])
+const standings = ref<ApiStanding[]>([])
 const groupName = ref('')
 const loading = ref(false)
 const recalculating = ref(false)
@@ -11,8 +14,8 @@ const recalculating = ref(false)
 // League mode: switch between group tables (World Cup) and league tables.
 const mode = ref<'group' | 'league'>('group')
 const leagueCode = ref('')
-const leagueStandings = ref<any[]>([])
-const competitions = ref<any[]>([])
+const leagueStandings = ref<ApiLeagueStanding[]>([])
+const competitions = ref<Competition[]>([])
 const leagueLoading = ref(false)
 
 const filteredStandings = computed(() => {
@@ -27,8 +30,8 @@ const groupOptions = computed(() =>
 async function loadStandings() {
   loading.value = true
   try {
-    const res = await apiAdminListStandings({ page: 1, page_size: 100 }) as any
-    standings.value = res.list || res || []
+    const res = await apiAdminListStandings({ page: 1, page_size: 100 })
+    standings.value = res || []
   } finally {
     loading.value = false
   }
@@ -51,7 +54,7 @@ async function loadLeagueStandings() {
   }
   leagueLoading.value = true
   try {
-    const res = await apiGetCompetitionStandings(leagueCode.value, { type: 'total' }) as any[]
+    const res = await apiGetCompetitionStandings(leagueCode.value, { type: 'total' })
     leagueStandings.value = res || []
   } catch {
     leagueStandings.value = []

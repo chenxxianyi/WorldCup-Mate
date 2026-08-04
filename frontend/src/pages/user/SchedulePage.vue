@@ -45,16 +45,16 @@ async function loadMatches() {
     }
     if (filter.value === '收藏') await favorites.fetchFavoriteMatches()
     const params = queryForFilter()
-    const response = await apiListMatches(params) as any
-    let rawRows = response.list || response || []
+    const response = await apiListMatches(params)
+    let rawRows = response.list
     const total = Number(response.total ?? rawRows.length)
     if (rawRows.length && rawRows.length < total) {
       const pageSize = Number(response.page_size || params.page_size || 100)
       const pageCount = Math.ceil(total / pageSize)
       const remaining = await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) =>
-        apiListMatches({ ...params, page: index + 2, page_size: pageSize }) as Promise<any>,
+        apiListMatches({ ...params, page: index + 2, page_size: pageSize }),
       ))
-      rawRows = rawRows.concat(...remaining.map((page) => page.list || page || []))
+      rawRows = rawRows.concat(...remaining.map((page) => page.list))
     }
     let rows = rawRows.map(normalizeMatch)
     if (filter.value === '收藏') rows = rows.filter((match: any) => favorites.isMatchFavorite(match.id))

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { apiGetSyncStatus } from '@/api/sync'
+import type { SyncState } from '@/types/sync'
 
 const props = withDefaults(defineProps<{
   mode?: 'line' | 'card'
@@ -9,7 +10,7 @@ const props = withDefaults(defineProps<{
 })
 
 const loading = ref(false)
-const state = ref<any | null>(null)
+const state = ref<SyncState | null>(null)
 
 const statusText = computed(() => {
   if (loading.value) return '同步状态读取中'
@@ -36,7 +37,7 @@ const timeText = computed(() => {
 async function loadStatus() {
   loading.value = true
   try {
-    const res = await apiGetSyncStatus() as any[]
+    const res = await apiGetSyncStatus()
     state.value = (res || []).find((item) => item.resource === 'matches') || res?.[0] || null
   } catch {
     state.value = null

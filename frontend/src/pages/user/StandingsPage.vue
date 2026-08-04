@@ -39,14 +39,14 @@ async function loadStandings() {
     if (theme.current.slug === 'wc') {
       const response = mode.value === '最佳第三' ? await apiGetBestThird() : await apiGetAllStandings()
       const groupName = mode.value.replace('小组 ', 'Group ')
-      const filtered = mode.value === '最佳第三' ? response : (response as any[]).filter((item) => item.group?.name === groupName)
-      rows.value = (filtered as any[]).map((item, index) => {
+      const filtered = mode.value === '最佳第三' ? response : response.filter((item) => item.group?.name === groupName)
+      rows.value = filtered.map((item, index) => {
         const row = normalizeStanding(item)
         return { teamId: row.team_id, name: row.team_name, code: row.team_code, flag: row.flag, position: row.rank || index + 1, played: row.played, won: row.won, drawn: row.drawn, lost: row.lost, goalDifference: row.goal_difference, points: row.points, zone: row.status }
       })
     } else {
       const type = ({ 总榜: 'total', 主场: 'home', 客场: 'away' } as Record<string, string>)[mode.value] || 'total'
-      const response = await apiGetCompetitionStandings(theme.currentCode, { type }) as any[]
+      const response = await apiGetCompetitionStandings(theme.currentCode, { type })
       rows.value = response.map((item) => {
         const row = normalizeLeagueStanding(item)
         return { teamId: row.team_id, name: row.team_name, code: row.team_code, flag: row.flag, position: row.position, played: row.played, won: row.won, drawn: row.drawn, lost: row.lost, goalDifference: row.goal_difference, points: row.points, zone: row.zone }

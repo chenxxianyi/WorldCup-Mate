@@ -12,6 +12,7 @@ import (
 type Config struct {
 	AppEnv                      string
 	AppPort                     string
+	UploadDir                   string
 	JWTSecret                   string
 	MySQLDSN                    string
 	RedisAddr                   string
@@ -39,6 +40,7 @@ func Load() *Config {
 	return &Config{
 		AppEnv:                      getEnv("APP_ENV", "development"),
 		AppPort:                     getEnv("APP_PORT", "8080"),
+		UploadDir:                   getEnv("UPLOAD_DIR", "uploads"),
 		JWTSecret:                   getEnv("JWT_SECRET", "default_secret"),
 		MySQLDSN:                    getEnv("MYSQL_DSN", "xxladmin:XXLadmin_2021!@tcp(127.0.0.1:3310)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local"),
 		RedisAddr:                   getEnv("REDIS_ADDR", "127.0.0.1:5001"),

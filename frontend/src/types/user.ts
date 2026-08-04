@@ -18,6 +18,7 @@ export interface User {
   timezone: string
   language: string
   notificationEmail: string
+  role: string
   followed_teams?: number[]
   favorite_matches?: number[]
 }
@@ -32,5 +33,6 @@ export function normalizeUser(u: ApiUser): User {
     timezone: u.timezone,
     language: u.language,
     notificationEmail: u.notification_email || '',
+    role: u.role || 'user',
   }
 }

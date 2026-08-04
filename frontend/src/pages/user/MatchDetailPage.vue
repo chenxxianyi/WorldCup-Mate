@@ -11,6 +11,7 @@ import { useLeagueThemeStore } from '@/stores/useLeagueThemeStore'
 import { useMatchStore } from '@/stores/useMatchStore'
 import { useReminderStore } from '@/stores/useReminderStore'
 import { normalizeStanding, type Standing } from '@/types/standing'
+import { matchStatusLabel } from '@/types/match'
 
 const route = useRoute()
 const router = useRouter()
@@ -36,7 +37,7 @@ async function loadMatch() {
   try {
     const current = await matchStore.fetchMatchDetail(id)
     if (current?.group_id) {
-      const rows = await apiGetGroupStandings(current.group_id) as any[]
+      const rows = await apiGetGroupStandings(current.group_id)
       groupStandings.value = rows.map(normalizeStanding)
     }
   } catch (reason) {
@@ -82,7 +83,7 @@ watch(() => theme.currentCode, () => router.push('/schedule'))
       </section>
 
       <div class="detail-grid section">
-        <article class="card detail-panel"><h3>比赛信息</h3><div class="info-list"><span><small>赛事阶段</small><strong>{{ formatMatchday(displayMatch.source, theme.current.stage) }}</strong></span><span><small>开球时间</small><strong>{{ displayMatch.date }} {{ displayMatch.time }}</strong></span><span><small>比赛城市</small><strong>{{ match?.city || '待定' }}</strong></span><span><small>比赛球场</small><strong>{{ match?.stadium || '待定' }}</strong></span><span><small>比赛编号</small><strong>#{{ match?.match_number || displayMatch.id }}</strong></span><span><small>当前状态</small><strong>{{ displayMatch.status === 'live' ? '直播中' : displayMatch.status === 'finished' ? '已结束' : '未开始' }}</strong></span></div></article>
+        <article class="card detail-panel"><h3>比赛信息</h3><div class="info-list"><span><small>赛事阶段</small><strong>{{ formatMatchday(displayMatch.source, theme.current.stage) }}</strong></span><span><small>开球时间</small><strong>{{ displayMatch.date }} {{ displayMatch.time }}</strong></span><span><small>比赛城市</small><strong>{{ match?.city || '待定' }}</strong></span><span><small>比赛球场</small><strong>{{ match?.stadium || '待定' }}</strong></span><span><small>比赛编号</small><strong>#{{ match?.match_number || displayMatch.id }}</strong></span><span><small>当前状态</small><strong>{{ matchStatusLabel(displayMatch.status, match?.minute ?? null) }}</strong></span></div></article>
         <article class="card timeline-card"><h3>数据说明</h3><div class="timeline-item"><span class="timeline-minute">API</span><i class="timeline-node" /><span class="timeline-copy"><strong>比赛基础数据已实时连接</strong><span>比分、状态、球队、开球时间和场地来自后端。</span></span></div><div class="timeline-item"><span class="timeline-minute">LIVE</span><i class="timeline-node" /><span class="timeline-copy"><strong>技术统计与事件流</strong><span>当前数据源未提供射门、控球和逐分钟事件，接口扩展后可直接接入。</span></span></div></article>
       </div>
 

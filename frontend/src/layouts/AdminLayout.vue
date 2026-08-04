@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 const router = useRouter()
 const route = useRoute()
+const auth = useAuthStore()
 
 const navItems = [
   { label: '数据看板', path: '/admin' },
@@ -15,6 +17,11 @@ const navItems = [
 function isActive(path: string) {
   if (path === '/admin') return route.path === '/admin'
   return route.path.startsWith(path)
+}
+
+function logout() {
+  auth.logout()
+  router.push('/')
 }
 </script>
 
@@ -37,6 +44,10 @@ function isActive(path: string) {
         </button>
       </nav>
       <button class="sidebar-link" @click="router.push('/')">返回前台</button>
+      <div class="admin-user">
+        <span class="admin-user-email">{{ auth.user?.email || 'Admin' }}</span>
+        <button class="sidebar-link" @click="logout">退出登录</button>
+      </div>
     </aside>
     <main class="admin-main">
       <router-view />
@@ -88,6 +99,22 @@ function isActive(path: string) {
   flex-direction: column;
   gap: 4px;
   flex: 1;
+}
+
+.admin-user {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 8px 4px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-user-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .sidebar-link {

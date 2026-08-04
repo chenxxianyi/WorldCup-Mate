@@ -23,7 +23,7 @@ export const useNotificationStore = defineStore('notification', () => {
 
   async function fetchUnreadCount() {
     try {
-      const res = await apiGetUnreadNotificationCount() as any
+      const res = await apiGetUnreadNotificationCount()
       unreadCount.value = Number(res.count || 0)
     } catch {
       unreadCount.value = 0
@@ -33,8 +33,8 @@ export const useNotificationStore = defineStore('notification', () => {
   async function fetchNotifications() {
     loading.value = true
     try {
-      const res = await apiListNotifications({ page: 1, page_size: 20 }) as any
-      notifications.value = res.list || res || []
+      const res = await apiListNotifications({ page: 1, page_size: 20 })
+      notifications.value = res.list || []
       unreadCount.value = notifications.value.filter((item) => !item.is_read).length
     } finally {
       loading.value = false

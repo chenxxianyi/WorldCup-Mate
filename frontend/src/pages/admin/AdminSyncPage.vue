@@ -4,17 +4,19 @@ import { apiAdminSyncMatches } from '@/api/admin'
 import { apiGetSyncStatus } from '@/api/sync'
 import { apiListCompetitions } from '@/api/competitions'
 import SyncStatusBadge from '@/components/common/SyncStatusBadge.vue'
+import type { SyncState, LeagueSyncResult } from '@/types/sync'
+import type { Competition } from '@/types/competition'
 
-const states = ref<any[]>([])
+const states = ref<SyncState[]>([])
 const syncing = ref(false)
-const result = ref<any | null>(null)
+const result = ref<LeagueSyncResult | null>(null)
 const error = ref('')
-const competitions = ref<any[]>([])
+const competitions = ref<Competition[]>([])
 const selectedCode = ref('')
 
 async function loadStates() {
   try {
-    states.value = await apiGetSyncStatus() as any[]
+    states.value = await apiGetSyncStatus()
   } catch {
     states.value = []
   }
@@ -36,7 +38,7 @@ async function syncMatches() {
   }
 }
 
-function timeText(value: string) {
+function timeText(value: string | null | undefined) {
   if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'

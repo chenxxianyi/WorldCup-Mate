@@ -108,10 +108,13 @@ func GetMatchByExternal(provider, externalID string) (*models.Match, error) {
 	return &match, err
 }
 
-func GetMatchesByDateRange(start, end time.Time) ([]models.Match, error) {
+func GetMatchesByDateRange(start, end time.Time, worldCup bool) ([]models.Match, error) {
 	var matches []models.Match
-	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City").
-		Where("kickoff_time_utc >= ? AND kickoff_time_utc < ?", start, end).
+	q := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City")
+	if worldCup {
+		q = q.Where("competition_id IS NULL")
+	}
+	err := q.Where("kickoff_time_utc >= ? AND kickoff_time_utc < ?", start, end).
 		Order("kickoff_time_utc ASC").Find(&matches).Error
 	return matches, err
 }
@@ -126,10 +129,13 @@ func CountMatchesInSyncWindow(now time.Time) (int64, error) {
 	return count, err
 }
 
-func GetRecommendedMatches() ([]models.Match, error) {
+func GetRecommendedMatches(worldCup bool) ([]models.Match, error) {
 	var matches []models.Match
-	err := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City").
-		Where("status = ? OR (status != ? AND kickoff_time_utc >= ?)", "live", "finished", time.Now().UTC()).
+	q := database.DB.Preload("HomeTeam").Preload("AwayTeam").Preload("Stadium").Preload("City")
+	if worldCup {
+		q = q.Where("competition_id IS NULL")
+	}
+	err := q.Where("status = ? OR (status != ? AND kickoff_time_utc >= ?)", "live", "finished", time.Now().UTC()).
 		Order("CASE WHEN status = 'live' THEN 0 ELSE 1 END, kickoff_time_utc ASC").
 		Limit(3).
 		Find(&matches).Error
