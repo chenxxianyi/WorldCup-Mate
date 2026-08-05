@@ -36,10 +36,28 @@ onMounted(() => {
       </button>
     </div>
 
-    <div v-if="!auth.isLoggedIn" class="card empty-card">登录后查看通知</div>
-    <div v-else-if="notification.loading" class="card empty-card">通知加载中...</div>
-    <div v-else-if="!notification.notifications.length" class="card empty-card">暂无通知</div>
-    <div v-else class="card notification-card">
+    <div
+      v-if="!auth.isLoggedIn"
+      class="card empty-card"
+    >
+      登录后查看通知
+    </div>
+    <div
+      v-else-if="notification.loading"
+      class="card empty-card"
+    >
+      通知加载中...
+    </div>
+    <div
+      v-else-if="!notification.notifications.length"
+      class="card empty-card"
+    >
+      暂无通知
+    </div>
+    <div
+      v-else
+      class="card notification-card"
+    >
       <button
         v-for="item in notification.notifications"
         :key="item.id"
@@ -47,7 +65,7 @@ onMounted(() => {
         :class="{ unread: !item.is_read }"
         @click="!item.is_read && notification.markRead(item.id)"
       >
-        <span class="dot"></span>
+        <span class="dot" />
         <span class="notification-copy">
           <b>{{ item.title }}</b>
           <small>{{ item.content }}</small>

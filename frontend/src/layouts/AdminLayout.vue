@@ -8,6 +8,8 @@ const auth = useAuthStore()
 
 const navItems = [
   { label: '数据看板', path: '/admin' },
+  { label: '赛事管理', path: '/admin/competitions' },
+  { label: '焦点管理', path: '/admin/featured' },
   { label: '球队管理', path: '/admin/teams' },
   { label: '比赛管理', path: '/admin/matches' },
   { label: '积分榜管理', path: '/admin/standings' },
@@ -29,7 +31,9 @@ function logout() {
   <div class="admin-layout">
     <aside class="admin-sidebar">
       <div class="sidebar-brand">
-        <div class="sidebar-mark">WM</div>
+        <div class="sidebar-mark">
+          WM
+        </div>
         <span>Admin</span>
       </div>
       <nav class="sidebar-nav">
@@ -43,10 +47,20 @@ function logout() {
           {{ item.label }}
         </button>
       </nav>
-      <button class="sidebar-link" @click="router.push('/')">返回前台</button>
+      <button
+        class="sidebar-link"
+        @click="router.push('/')"
+      >
+        返回前台
+      </button>
       <div class="admin-user">
         <span class="admin-user-email">{{ auth.user?.email || 'Admin' }}</span>
-        <button class="sidebar-link" @click="logout">退出登录</button>
+        <button
+          class="sidebar-link"
+          @click="logout"
+        >
+          退出登录
+        </button>
       </div>
     </aside>
     <main class="admin-main">

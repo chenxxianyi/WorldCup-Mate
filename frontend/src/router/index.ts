@@ -37,6 +37,8 @@ const router = createRouter({
       meta: { requiresAdmin: true },
       children: [
         { path: '', name: 'admin', component: () => import('@/pages/admin/AdminDashboard.vue') },
+        { path: 'competitions', name: 'admin-competitions', component: () => import('@/pages/admin/AdminCompetitionsPage.vue') },
+        { path: 'featured', name: 'admin-featured', component: () => import('@/pages/admin/AdminFeaturedPage.vue') },
         { path: 'teams', name: 'admin-teams', component: () => import('@/pages/admin/AdminTeamsPage.vue') },
         { path: 'matches', name: 'admin-matches', component: () => import('@/pages/admin/AdminMatchesPage.vue') },
         { path: 'standings', name: 'admin-standings', component: () => import('@/pages/admin/AdminStandingsPage.vue') },

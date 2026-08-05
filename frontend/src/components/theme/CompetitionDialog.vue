@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, watch } from 'vue'
-import { leagueThemes, type CompetitionCode } from '@/data/leagueTheme'
+import { type CompetitionCode } from '@/data/leagueTheme'
 import { useLeagueThemeStore } from '@/stores/useLeagueThemeStore'
 import ThemeIcon from './ThemeIcon.vue'
 
@@ -16,7 +16,11 @@ function onKeydown(event: KeyboardEvent) {
 
 watch(() => theme.competitionDialogOpen, (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
-  open ? document.addEventListener('keydown', onKeydown) : document.removeEventListener('keydown', onKeydown)
+  if (open) {
+    document.addEventListener('keydown', onKeydown)
+  } else {
+    document.removeEventListener('keydown', onKeydown)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -26,13 +30,42 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="theme.competitionDialogOpen" id="competition-dialog" class="dialog-layer">
-    <button class="dialog-backdrop" type="button" aria-label="关闭赛事选择" @click="close" />
-    <section class="competition-sheet" role="dialog" aria-modal="true" aria-labelledby="competition-title">
-      <div class="sheet-grabber" aria-hidden="true" />
+  <div
+    v-if="theme.competitionDialogOpen"
+    id="competition-dialog"
+    class="dialog-layer"
+  >
+    <button
+      class="dialog-backdrop"
+      type="button"
+      aria-label="关闭赛事选择"
+      @click="close"
+    />
+    <section
+      class="competition-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="competition-title"
+    >
+      <div
+        class="sheet-grabber"
+        aria-hidden="true"
+      />
       <div class="sheet-heading">
-        <div><p class="eyebrow">CHOOSE YOUR WORLD</p><h2 id="competition-title">切换赛事</h2></div>
-        <button class="text-button" type="button" @click="close">完成</button>
+        <div>
+          <p class="eyebrow">
+            CHOOSE YOUR WORLD
+          </p><h2 id="competition-title">
+            切换赛事
+          </h2>
+        </div>
+        <button
+          class="text-button"
+          type="button"
+          @click="close"
+        >
+          完成
+        </button>
       </div>
       <div class="competition-grid">
         <button
@@ -41,13 +74,16 @@ onBeforeUnmount(() => {
           class="competition-option"
           :class="{ active: code === theme.currentCode }"
           type="button"
-          :data-preview="leagueThemes[code].slug"
+          :data-preview="theme.themeFor(code).slug"
           :aria-pressed="code === theme.currentCode"
           @click="theme.setCompetition(code as CompetitionCode)"
         >
-          <span v-if="code === theme.currentCode" class="option-check"><ThemeIcon name="check" /></span>
-          <span class="option-mark">{{ leagueThemes[code].mark }}</span>
-          <span><strong>{{ leagueThemes[code].name }}</strong><small>{{ leagueThemes[code].en }} · {{ leagueThemes[code].season }}</small></span>
+          <span
+            v-if="code === theme.currentCode"
+            class="option-check"
+          ><ThemeIcon name="check" /></span>
+          <span class="option-mark">{{ theme.themeFor(code).mark }}</span>
+          <span><strong>{{ theme.themeFor(code).name }}</strong><small>{{ theme.themeFor(code).en }} · {{ theme.themeFor(code).season }}</small></span>
         </button>
       </div>
     </section>

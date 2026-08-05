@@ -25,8 +25,11 @@ watch(crest, () => { failed.value = false })
       decoding="async"
       referrerpolicy="no-referrer"
       @error="failed = true"
-    />
-    <span v-else aria-hidden="true">{{ team[1] }}</span>
+    >
+    <span
+      v-else
+      aria-hidden="true"
+    >{{ team[1] }}</span>
   </span>
 </template>
 

@@ -58,7 +58,11 @@ const isLocalIcon = computed(() => Boolean(localIcon.value && !failed.value))
 </script>
 
 <template>
-  <span class="team-flag" :class="[size, { 'has-local-icon': isLocalIcon }]" aria-hidden="true">
+  <span
+    class="team-flag"
+    :class="[size, { 'has-local-icon': isLocalIcon }]"
+    aria-hidden="true"
+  >
     <img
       v-if="imageSrc && !failed"
       :src="imageSrc"
@@ -66,10 +70,20 @@ const isLocalIcon = computed(() => Boolean(localIcon.value && !failed.value))
       loading="lazy"
       decoding="async"
       @error="failed = true"
+    >
+    <span
+      v-else-if="artClass"
+      class="flag-art"
+      :class="artClass"
     />
-    <span v-else-if="artClass" class="flag-art" :class="artClass"></span>
-    <span v-else-if="source && !isImage" class="flag-text">{{ source }}</span>
-    <span v-else class="flag-fallback">{{ fallbackText }}</span>
+    <span
+      v-else-if="source && !isImage"
+      class="flag-text"
+    >{{ source }}</span>
+    <span
+      v-else
+      class="flag-fallback"
+    >{{ fallbackText }}</span>
   </span>
 </template>
 

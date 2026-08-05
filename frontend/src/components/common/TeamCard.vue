@@ -15,7 +15,12 @@ function goDetail() {
 </script>
 
 <template>
-  <article class="card team-card" tabindex="0" @click="goDetail" @keydown.enter="goDetail">
+  <article
+    class="card team-card"
+    tabindex="0"
+    @click="goDetail"
+    @keydown.enter="goDetail"
+  >
     <button
       class="fav-mini"
       :class="{ active: fav.isTeamFollowed(team.id) }"
@@ -27,11 +32,24 @@ function goDetail() {
         :style="fav.isTeamFollowed(team.id) ? 'font-variation-settings: \'FILL\' 1' : ''"
       >star</span>
     </button>
-    <TeamFlag :value="team.flag" :alt="team.name" :fallback="team.code" size="lg" />
+    <TeamFlag
+      :value="team.flag"
+      :alt="team.name"
+      :fallback="team.code"
+      size="lg"
+    />
     <h3>{{ team.name }}</h3>
     <p>{{ team.name_en }} · {{ team.group_name }}</p>
-    <span v-if="fav.isTeamFollowed(team.id)" class="tag green" style="margin-top: 12px">已关注</span>
-    <span v-else class="tag" style="margin-top: 12px">{{ team.continent }}</span>
+    <span
+      v-if="fav.isTeamFollowed(team.id)"
+      class="tag green"
+      style="margin-top: 12px"
+    >已关注</span>
+    <span
+      v-else
+      class="tag"
+      style="margin-top: 12px"
+    >{{ team.continent }}</span>
   </article>
 </template>
 

@@ -23,7 +23,10 @@ function navigate(tabRoute: string) {
 </script>
 
 <template>
-  <nav class="bottom-nav" aria-label="底部导航">
+  <nav
+    class="bottom-nav"
+    aria-label="底部导航"
+  >
     <button
       v-for="tab in tabs"
       :key="tab.route"

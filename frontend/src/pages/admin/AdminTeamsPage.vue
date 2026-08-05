@@ -43,12 +43,26 @@ watch(search, () => {})
         <span>{{ filteredTeams.length }} 支球队</span>
       </div>
       <div class="tools">
-        <select v-model="teamType" class="admin-select" aria-label="球队类型">
-          <option value="">全部类型</option>
-          <option value="national">国家队</option>
-          <option value="club">俱乐部</option>
+        <select
+          v-model="teamType"
+          class="admin-select"
+          aria-label="球队类型"
+        >
+          <option value="">
+            全部类型
+          </option>
+          <option value="national">
+            国家队
+          </option>
+          <option value="club">
+            俱乐部
+          </option>
         </select>
-        <input v-model="search" class="admin-search" placeholder="搜索球队 / 小组 / 大洲" />
+        <input
+          v-model="search"
+          class="admin-search"
+          placeholder="搜索球队 / 小组 / 大洲"
+        >
       </div>
     </div>
 
@@ -60,7 +74,10 @@ watch(search, () => {})
           </tr>
         </thead>
         <tbody>
-          <tr v-for="team in filteredTeams" :key="team.id">
+          <tr
+            v-for="team in filteredTeams"
+            :key="team.id"
+          >
             <td><b>{{ team.name }}</b></td>
             <td>{{ team.fifa_code }}</td>
             <td>{{ team.name_en }}</td>
@@ -68,7 +85,12 @@ watch(search, () => {})
             <td>{{ team.group?.name || '-' }}</td>
           </tr>
           <tr v-if="!loading && !filteredTeams.length">
-            <td colspan="5" class="empty-row">暂无球队数据</td>
+            <td
+              colspan="5"
+              class="empty-row"
+            >
+              暂无球队数据
+            </td>
           </tr>
         </tbody>
       </table>

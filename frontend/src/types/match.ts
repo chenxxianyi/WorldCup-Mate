@@ -1,3 +1,5 @@
+import { formatKickoff } from '@/utils/datetime'
+
 export type MatchStatus = 'scheduled' | 'upcoming' | 'live' | 'finished' | 'postponed' | 'cancelled'
 
 export type Stage =
@@ -69,29 +71,6 @@ export interface Match {
   competition_id: number | null
 }
 
-/** Convert UTC time string to Beijing time (UTC+8), format: "MM-DD HH:mm" */
-function formatBeijingTime(utcStr: string): string {
-  if (!utcStr) return ''
-  const d = new Date(utcStr)
-  if (isNaN(d.getTime())) return ''
-
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Shanghai',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(d)
-  const pick = (type: string) => parts.find((p) => p.type === type)?.value || '00'
-
-  const mm = pick('month')
-  const dd = pick('day')
-  const hh = pick('hour')
-  const mi = pick('minute')
-  return `${mm}-${dd} ${hh}:${mi}`
-}
-
 /** Transform backend match to frontend match */
 export function normalizeMatch(m: ApiMatch): Match {
   return {
@@ -112,7 +91,7 @@ export function normalizeMatch(m: ApiMatch): Match {
     away_score: m.away_score,
     status: m.status,
     kickoff_time_utc: m.kickoff_time_utc,
-    local_kickoff_time: formatBeijingTime(m.kickoff_time_utc),
+    local_kickoff_time: formatKickoff(m.kickoff_time_utc),
     city: m.city?.name || '',
     stadium: m.stadium?.name || '',
     importance_level: m.importance_level,

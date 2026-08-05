@@ -60,50 +60,84 @@ function goDetail() {
 </script>
 
 <template>
-  <article class="card match-card" :class="{ featured: featured || match.is_featured }">
-    <div v-if="(featured || match.is_featured) && kickoffDateText(match)" class="date-ribbon">
+  <article
+    class="card match-card"
+    :class="{ featured: featured || match.is_featured }"
+  >
+    <div
+      v-if="(featured || match.is_featured) && kickoffDateText(match)"
+      class="date-ribbon"
+    >
       {{ kickoffDateText(match) }}
     </div>
-    <div v-if="featured || match.is_featured" class="hot-ribbon">热门比赛</div>
+    <div
+      v-if="featured || match.is_featured"
+      class="hot-ribbon"
+    >
+      热门比赛
+    </div>
     <div class="match-top">
       <span class="tag blue">{{ stageTagText(match) }}</span>
       <span
         class="tag"
         :class="{ live: match.status === 'live', green: match.status === 'finished' }"
       >
-        <i v-if="match.status === 'live'" class="live-dot" style="background: #fff"></i>
+        <i
+          v-if="match.status === 'live'"
+          class="live-dot"
+          style="background: #fff"
+        />
         {{ statusText(match) }}
       </span>
     </div>
 
-    <div class="teams-line" @click="goDetail">
+    <div
+      class="teams-line"
+      @click="goDetail"
+    >
       <div class="team-side">
-        <TeamFlag :value="match.home_flag" :alt="match.home_team_name" :fallback="match.home_team_code" />
+        <TeamFlag
+          :value="match.home_flag"
+          :alt="match.home_team_name"
+          :fallback="match.home_team_code"
+        />
         <div class="team-copy">
           <span class="team-name">{{ match.home_team_name }}</span>
           <span class="team-meta">{{ match.home_team_code }}</span>
         </div>
       </div>
-      <div v-if="match.status === 'live' || match.status === 'finished'" class="score">
+      <div
+        v-if="match.status === 'live' || match.status === 'finished'"
+        class="score"
+      >
         {{ match.home_score }}-{{ match.away_score }}
       </div>
-      <div v-else class="vs">VS</div>
+      <div
+        v-else
+        class="vs"
+      >
+        VS
+      </div>
       <div class="team-side away">
         <div class="team-copy">
           <span class="team-name">{{ match.away_team_name }}</span>
           <span class="team-meta">{{ match.away_team_code }}</span>
         </div>
-        <TeamFlag :value="match.away_flag" :alt="match.away_team_name" :fallback="match.away_team_code" />
+        <TeamFlag
+          :value="match.away_flag"
+          :alt="match.away_team_name"
+          :fallback="match.away_team_code"
+        />
       </div>
     </div>
 
     <div class="match-bottom">
       <div class="where">
         <template v-if="match.status === 'live'">
-          进行中 · {{ match.minute || 0 }}'<br />{{ match.stadium || 'TBD' }}
+          进行中 · {{ statusText(match) }}<br>{{ match.stadium || 'TBD' }}
         </template>
         <template v-else>
-          {{ kickoffText(match) }} · {{ match.city || 'TBD' }}<br />{{ match.stadium || 'TBD' }}
+          {{ kickoffText(match) }} · {{ match.city || 'TBD' }}<br>{{ match.stadium || 'TBD' }}
         </template>
       </div>
       <div class="actions">

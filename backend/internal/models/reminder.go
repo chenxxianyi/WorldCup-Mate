@@ -16,6 +16,7 @@ type Reminder struct {
 	RemindAt            time.Time      `gorm:"not null;index" json:"remind_at"`
 	Channel             string         `gorm:"size:20;default:site" json:"channel"`
 	Status              string         `gorm:"size:20;default:pending;index" json:"status"`
+	RetryCount          int            `gorm:"default:0" json:"retry_count"`
 	CreatedAt           time.Time      `json:"created_at"`
 	UpdatedAt           time.Time      `json:"updated_at"`
 	DeletedAt           gorm.DeletedAt `gorm:"index" json:"-"`

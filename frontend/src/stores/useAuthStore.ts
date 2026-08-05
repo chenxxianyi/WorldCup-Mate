@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import axios from 'axios'
 import type { User } from '@/types/user'
 import { normalizeUser } from '@/types/user'
+import { setUserTimezone } from '@/utils/datetime'
 import { apiLogin as apiLoginReq, apiRegister as apiRegisterReq, apiAdminLogin as apiAdminLoginReq, apiGetProfile, apiUploadAvatar, apiChangePassword, apiUpdateProfile } from '@/api/auth'
 
 const TOKEN_KEY = 'wm-token'
@@ -30,6 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = res.refresh_token
     saveSession(res.token, res.refresh_token, persist)
     user.value = normalizeUser(res.user)
+    setUserTimezone(res.user.timezone)
     return user.value
   }
 
@@ -39,6 +41,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = res.refresh_token
     saveSession(res.token, res.refresh_token, persist)
     user.value = normalizeUser(res.user)
+    setUserTimezone(res.user.timezone)
     return user.value
   }
 
@@ -49,6 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = res.refresh_token
     saveSession(res.token, res.refresh_token, persist)
     user.value = normalizeUser(res.user)
+    setUserTimezone(res.user.timezone)
     return user.value
   }
 
@@ -57,6 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await apiGetProfile()
       user.value = normalizeUser(res)
+      setUserTimezone(res.timezone)
     } catch {
       logout()
     }
@@ -70,6 +75,8 @@ export const useAuthStore = defineStore('auth', () => {
     sessionStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_KEY)
     sessionStorage.removeItem(REFRESH_KEY)
+    // DATA-05: logout resets the timezone on shared devices.
+    setUserTimezone(null)
   }
 
   function logout() {

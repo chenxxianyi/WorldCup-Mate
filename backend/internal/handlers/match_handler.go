@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +28,7 @@ func ListMatches(c *gin.Context) {
 }
 
 func GetTodayMatches(c *gin.Context) {
-	matches, err := services.GetTodayMatches(isWorldCupQuery(c))
+	matches, err := services.GetTodayMatches(isWorldCupQuery(c), c.Query("tz"))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -36,7 +37,7 @@ func GetTodayMatches(c *gin.Context) {
 }
 
 func GetTomorrowMatches(c *gin.Context) {
-	matches, err := services.GetTomorrowMatches(isWorldCupQuery(c))
+	matches, err := services.GetTomorrowMatches(isWorldCupQuery(c), c.Query("tz"))
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -156,6 +157,11 @@ func AdminSyncMatches(c *gin.Context) {
 		defer cancel()
 		result, err := services.SyncLeague(ctx, code, season, "manual")
 		if err != nil {
+			// REL-06: another worker (manual or scheduled) holds the lock.
+			if errors.Is(err, services.ErrSyncAlreadyRunning) {
+				utils.Error(c, 409, err.Error())
+				return
+			}
 			utils.Error(c, 500, err.Error())
 			return
 		}

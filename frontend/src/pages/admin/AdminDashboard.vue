@@ -41,23 +41,64 @@ onMounted(() => {
 <template>
   <div class="admin-shell">
     <article class="card admin-hero">
-      <div class="section-head" style="margin-bottom: 0">
+      <div
+        class="section-head"
+        style="margin-bottom: 0"
+      >
         <div>
           <h2>后台数据看板</h2>
           <span>WorldCup Mate Admin</span>
         </div>
-        <button class="pill-btn primary" @click="router.push('/admin/matches')">新增比赛</button>
+        <button
+          class="pill-btn primary"
+          @click="router.push('/admin/matches')"
+        >
+          新增比赛
+        </button>
       </div>
 
-      <div v-if="loading" class="admin-hint" aria-busy="true">看板数据加载中...</div>
-      <div v-else-if="error" class="admin-hint error" role="alert">{{ error }}</div>
-      <div v-else class="admin-kpis">
-        <StatCard :value="dashboard.total_matches" label="总比赛数" />
-        <StatCard :value="dashboard.total_groups" label="小组数量" />
-        <StatCard :value="dashboard.total_teams" label="球队数量" />
-        <StatCard :value="dashboard.total_competitions" label="赛事数量" />
-        <StatCard :value="dashboard.total_users" label="用户数量" />
-        <StatCard :value="dashboard.total_reminders" label="提醒总数" />
+      <div
+        v-if="loading"
+        class="admin-hint"
+        aria-busy="true"
+      >
+        看板数据加载中...
+      </div>
+      <div
+        v-else-if="error"
+        class="admin-hint error"
+        role="alert"
+      >
+        {{ error }}
+      </div>
+      <div
+        v-else
+        class="admin-kpis"
+      >
+        <StatCard
+          :value="dashboard.total_matches"
+          label="总比赛数"
+        />
+        <StatCard
+          :value="dashboard.total_groups"
+          label="小组数量"
+        />
+        <StatCard
+          :value="dashboard.total_teams"
+          label="球队数量"
+        />
+        <StatCard
+          :value="dashboard.total_competitions"
+          label="赛事数量"
+        />
+        <StatCard
+          :value="dashboard.total_users"
+          label="用户数量"
+        />
+        <StatCard
+          :value="dashboard.total_reminders"
+          label="提醒总数"
+        />
       </div>
       <SyncStatusBadge mode="card" />
     </article>
@@ -70,28 +111,62 @@ onMounted(() => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="m in matchStore.matches" :key="m.id">
+          <tr
+            v-for="m in matchStore.matches"
+            :key="m.id"
+          >
             <td>{{ m.home_team_name }} vs {{ m.away_team_name }}</td>
             <td>{{ m.group_name || (m.matchday ? `第 ${m.matchday} 轮` : '-') }}</td>
             <td>{{ m.local_kickoff_time }}</td>
             <td>
-              <span v-if="m.status === 'live'" class="tag live">
-                <i class="live-dot" style="background: #fff"></i> LIVE
+              <span
+                v-if="m.status === 'live'"
+                class="tag live"
+              >
+                <i
+                  class="live-dot"
+                  style="background: #fff"
+                /> LIVE
               </span>
-              <span v-else-if="m.status === 'finished'" class="tag green">已结束</span>
-              <span v-else class="tag">未开始</span>
+              <span
+                v-else-if="m.status === 'finished'"
+                class="tag green"
+              >已结束</span>
+              <span
+                v-else
+                class="tag"
+              >未开始</span>
             </td>
             <td>
-              <span v-if="m.is_featured" class="tag gold">热门</span>
-              <span v-else-if="m.importance_level >= 2" class="tag blue">焦点</span>
-              <span v-else class="tag">-</span>
+              <span
+                v-if="m.is_featured"
+                class="tag gold"
+              >热门</span>
+              <span
+                v-else-if="m.importance_level >= 2"
+                class="tag blue"
+              >焦点</span>
+              <span
+                v-else
+                class="tag"
+              >-</span>
             </td>
             <td>
-              <button class="pill-btn" @click="router.push('/admin/matches')">编辑</button>
+              <button
+                class="pill-btn"
+                @click="router.push('/admin/matches')"
+              >
+                编辑
+              </button>
             </td>
           </tr>
           <tr v-if="!matchStore.matches.length">
-            <td colspan="6" class="empty-row">暂无比赛数据</td>
+            <td
+              colspan="6"
+              class="empty-row"
+            >
+              暂无比赛数据
+            </td>
           </tr>
         </tbody>
       </table>

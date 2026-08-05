@@ -56,25 +56,46 @@ async function toggleReminder() {
 </script>
 
 <template>
-  <article class="card match-card clickable-card" :class="{ featured: match.featured }" @click="openMatch">
+  <article
+    class="card match-card clickable-card"
+    :class="{ featured: match.featured }"
+    @click="openMatch"
+  >
     <div class="match-card-top">
       <span class="label">{{ formatMatchday(match.source, theme.current.stage) }}</span>
-      <span class="status-pill" :class="match.status">
-        <i v-if="match.status === 'live'" class="live-dot" />
+      <span
+        class="status-pill"
+        :class="match.status"
+      >
+        <i
+          v-if="match.status === 'live'"
+          class="live-dot"
+        />
         {{ statusLabel(match.status) }}
       </span>
     </div>
     <div class="match-teams">
       <div class="match-team">
-        <TeamBadge :team="match.home" size="small" />
+        <TeamBadge
+          :team="match.home"
+          size="small"
+        />
         <span class="match-team-copy"><strong>{{ match.home[0] }}</strong><small>{{ match.home[1] }}</small></span>
       </div>
-      <button class="match-score text-button" type="button" :aria-label="`查看 ${match.home[0]} 对 ${match.away[0]} 比赛详情`" @click.stop="openMatch">
+      <button
+        class="match-score text-button"
+        type="button"
+        :aria-label="`查看 ${match.home[0]} 对 ${match.away[0]} 比赛详情`"
+        @click.stop="openMatch"
+      >
         {{ match.score }}
       </button>
       <div class="match-team away">
         <span class="match-team-copy"><strong>{{ match.away[0] }}</strong><small>{{ match.away[1] }}</small></span>
-        <TeamBadge :team="match.away" size="small" />
+        <TeamBadge
+          :team="match.away"
+          size="small"
+        />
       </div>
     </div>
     <div class="match-card-bottom">

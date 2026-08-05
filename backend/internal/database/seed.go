@@ -16,6 +16,7 @@ import (
 
 func Seed() {
 	seedCompetitions()
+	seedFeaturedConfigs()
 	seedAdmin()
 	seedTestUsers()
 	seedGroups()
@@ -313,4 +314,41 @@ func seedMatches() {
 		DB.Create(&m)
 	}
 	log.Println("seed matches created")
+}
+
+// seedFeaturedConfigs seeds per-competition hero defaults (focus copy) so
+// the frontend keeps its current look until an admin edits them. The focus
+// match stays unset (automatic) — admins can pin one per competition.
+// Idempotent: never overwrites existing rows.
+func seedFeaturedConfigs() {
+	configs := []struct {
+		code        string
+		tagline     string
+		description string
+		stageLabel  string
+	}{
+		{"PL", "每一轮，都有新的主角", "从争冠集团到保级大战，英超的悬念永远持续到最后一分钟。", "MATCHWEEK"},
+		{"PD", "看见西班牙足球的灵魂", "从传控美学到青春风暴，西甲永远不缺想象力。", "JORNADA"},
+		{"BL1", "声浪与速度的盛宴", "最狂热的看台、最快的攻防转换，德甲制造。", "SPIELTAG"},
+		{"SA", "意式战术的文艺复兴", "链式防守与大师中场，意甲用战术说话。", "GIORNATA"},
+		{"FL1", "看见法式足球的新锋芒", "年轻天赋、街头文化和大胆表达，让法国比赛日成为一张持续更新的视觉海报。", "JOURNÉE"},
+	}
+	for _, c := range configs {
+		var comp models.Competition
+		if err := DB.Where("code = ?", c.code).First(&comp).Error; err != nil {
+			continue
+		}
+		var count int64
+		DB.Model(&models.FeaturedConfig{}).Where("competition_id = ?", comp.ID).Count(&count)
+		if count > 0 {
+			continue
+		}
+		DB.Create(&models.FeaturedConfig{
+			CompetitionID: comp.ID,
+			Tagline:       c.tagline,
+			Description:   c.description,
+			StageLabel:    c.stageLabel,
+			Enabled:       true,
+		})
+	}
 }

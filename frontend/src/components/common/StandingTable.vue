@@ -28,14 +28,25 @@ function rowClass(status: string) {
             <th>负</th>
             <th>净胜球</th>
             <th>积分</th>
-            <th v-if="showStatus">状态</th>
+            <th v-if="showStatus">
+              状态
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(s, i) in standings" :key="s.team_id" :class="rowClass(s.status)">
+          <tr
+            v-for="(s, i) in standings"
+            :key="s.team_id"
+            :class="rowClass(s.status)"
+          >
             <td>{{ i + 1 }}</td>
             <td class="team-cell">
-              <TeamFlag :value="s.flag" :alt="s.team_name" :fallback="s.team_code" size="sm" />
+              <TeamFlag
+                :value="s.flag"
+                :alt="s.team_name"
+                :fallback="s.team_code"
+                size="sm"
+              />
               <span>{{ s.team_name }}</span>
             </td>
             <td>{{ s.played }}</td>

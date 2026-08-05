@@ -32,10 +32,18 @@ async function submit() {
   <div class="admin-login-page">
     <div class="admin-login-card">
       <div class="brand">
-        <div class="brand-mark">WM</div>
+        <div class="brand-mark">
+          WM
+        </div>
         <span>WorldCup Mate Admin</span>
       </div>
-      <input v-model="email" class="admin-login-input" type="email" placeholder="管理员邮箱" autocomplete="username" />
+      <input
+        v-model="email"
+        class="admin-login-input"
+        type="email"
+        placeholder="管理员邮箱"
+        autocomplete="username"
+      >
       <input
         v-model="password"
         class="admin-login-input"
@@ -43,12 +51,25 @@ async function submit() {
         placeholder="密码"
         autocomplete="current-password"
         @keyup.enter="submit"
-      />
-      <p v-if="error" class="login-error" role="alert">{{ error }}</p>
-      <button class="pill-btn primary admin-login-btn" :disabled="loading" @click="submit">
+      >
+      <p
+        v-if="error"
+        class="login-error"
+        role="alert"
+      >
+        {{ error }}
+      </p>
+      <button
+        class="pill-btn primary admin-login-btn"
+        :disabled="loading"
+        @click="submit"
+      >
         {{ loading ? '登录中...' : '管理员登录' }}
       </button>
-      <a class="back-link" @click="router.push('/')">← 返回前台</a>
+      <a
+        class="back-link"
+        @click="router.push('/')"
+      >← 返回前台</a>
     </div>
   </div>
 </template>

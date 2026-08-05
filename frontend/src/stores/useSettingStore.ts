@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getStoredTheme, setTheme as applyTheme, type Theme } from '@/utils/theme'
+import { DEFAULT_TIMEZONE } from '@/utils/datetime'
 
 export const useSettingStore = defineStore('setting', () => {
   const theme = ref<Theme>(getStoredTheme())
   const timezone = ref<string>(
-    localStorage.getItem('wm-timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
+    localStorage.getItem('wm-timezone') || DEFAULT_TIMEZONE
   )
   const language = ref<string>(localStorage.getItem('wm-language') || 'zh-CN')
   const defaultReminderChannel = ref<string>(localStorage.getItem('wm-reminder-channel') || 'site')

@@ -1,6 +1,7 @@
 import type { DemoMatch, DemoTeam } from '@/data/leagueTheme'
 import type { Match, MatchStatus } from '@/types/match'
 import type { Team } from '@/types/team'
+import { getUserTimezone, formatTime, dayKey } from '@/utils/datetime'
 
 const badgeColors = ['#9f224e', '#0068b5', '#009c3b', '#d20515', '#5b2c83', '#f58220', '#173a84', '#670e36']
 
@@ -36,11 +37,14 @@ function matchScore(match: Match) {
 }
 
 function dateParts(value: string) {
-  const date = value ? new Date(value) : null
-  if (!date || Number.isNaN(date.getTime())) return { date: '时间待定', time: '--:--', key: 'unknown' }
-  const dateText = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' }).format(date).replace('/', '月') + '日'
-  const time = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date)
-  const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  if (!value) return { date: '时间待定', time: '--:--', key: 'unknown' }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return { date: '时间待定', time: '--:--', key: 'unknown' }
+  // DATA-05: render in the user's timezone, not the browser/system zone.
+  const tz = getUserTimezone()
+  const dateText = new Intl.DateTimeFormat('zh-CN', { timeZone: tz, month: '2-digit', day: '2-digit' }).format(date).replace('/', '月') + '日'
+  const time = formatTime(value, tz)
+  const key = dayKey(value, tz)
   return { date: dateText, time, key }
 }
 

@@ -14,6 +14,7 @@ type Client struct {
 	baseURL    string
 	apiToken   string
 	httpClient *http.Client
+	retry      RetryConfig
 }
 
 func NewClient(baseURL, apiToken string) *Client {
@@ -27,6 +28,7 @@ func NewClient(baseURL, apiToken string) *Client {
 			Transport: &http.Transport{Proxy: nil},
 			Timeout:   15 * time.Second,
 		},
+		retry: defaultRetryConfig(),
 	}
 }
 
@@ -48,15 +50,11 @@ func (c *Client) CompetitionMatches(ctx context.Context, competitionCode string,
 	req.Header.Set("X-Auth-Token", c.apiToken)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.do(ctx, req) // REL-05: retry/backoff on transient failures
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("football-data returned status %d", resp.StatusCode)
-	}
 
 	var data MatchesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
@@ -86,15 +84,11 @@ func (c *Client) CompetitionStandings(ctx context.Context, competitionCode strin
 	req.Header.Set("X-Auth-Token", c.apiToken)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.do(ctx, req) // REL-05: retry/backoff on transient failures
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("football-data returned status %d", resp.StatusCode)
-	}
 
 	var data StandingsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {

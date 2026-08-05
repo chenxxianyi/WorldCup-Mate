@@ -62,6 +62,7 @@ func main() {
 		&models.LeagueStanding{},
 		&models.AdminAuditLog{},
 		&models.RefreshToken{},
+		&models.FeaturedConfig{},
 	)
 	if err != nil {
 		log.Fatalf("auto migrate failed: %v", err)

@@ -64,19 +64,46 @@ watch(competitionId, loadMatches)
         <span>{{ filteredMatches.length }} 场比赛</span>
       </div>
       <div class="tools">
-        <input v-model="search" class="admin-search" placeholder="搜索球队 / 城市 / 球场" />
-        <select v-model="competitionId" class="admin-select" aria-label="选择赛事">
-          <option :value="null">全部赛事</option>
+        <input
+          v-model="search"
+          class="admin-search"
+          placeholder="搜索球队 / 城市 / 球场"
+        >
+        <select
+          v-model="competitionId"
+          class="admin-select"
+          aria-label="选择赛事"
+        >
+          <option :value="null">
+            全部赛事
+          </option>
           <!-- Legacy World Cup matches have NULL competition_id and are
                included in "全部赛事"; cup competitions (WC) can't be
                filtered by id, so only leagues are listed here. -->
-          <option v-for="c in competitions.filter((x) => x.format === 'league')" :key="c.id" :value="c.id">{{ c.name }}</option>
+          <option
+            v-for="c in competitions.filter((x) => x.format === 'league')"
+            :key="c.id"
+            :value="c.id"
+          >
+            {{ c.name }}
+          </option>
         </select>
-        <select v-model="status" class="admin-select">
-          <option value="">全部状态</option>
-          <option value="scheduled">未开始</option>
-          <option value="live">进行中</option>
-          <option value="finished">已结束</option>
+        <select
+          v-model="status"
+          class="admin-select"
+        >
+          <option value="">
+            全部状态
+          </option>
+          <option value="scheduled">
+            未开始
+          </option>
+          <option value="live">
+            进行中
+          </option>
+          <option value="finished">
+            已结束
+          </option>
         </select>
       </div>
     </div>
@@ -89,7 +116,10 @@ watch(competitionId, loadMatches)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="match in filteredMatches" :key="match.id">
+          <tr
+            v-for="match in filteredMatches"
+            :key="match.id"
+          >
             <td><b>{{ match.home_team_name }} vs {{ match.away_team_name }}</b></td>
             <td>{{ match.group_name || '-' }}</td>
             <td>{{ match.local_kickoff_time || '-' }}</td>
@@ -98,7 +128,12 @@ watch(competitionId, loadMatches)
             <td>{{ match.status }}</td>
           </tr>
           <tr v-if="!loading && !filteredMatches.length">
-            <td colspan="6" class="empty-row">暂无比赛数据</td>
+            <td
+              colspan="6"
+              class="empty-row"
+            >
+              暂无比赛数据
+            </td>
           </tr>
         </tbody>
       </table>

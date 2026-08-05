@@ -51,7 +51,10 @@ onMounted(loadStatus)
 
 <template>
   <div :class="mode === 'card' ? 'sync-card' : 'sync-line'">
-    <span class="sync-dot" :class="state?.status || 'idle'"></span>
+    <span
+      class="sync-dot"
+      :class="state?.status || 'idle'"
+    />
     <div class="sync-copy">
       <b>{{ statusText }}</b>
       <span v-if="timeText">更新时间 {{ timeText }}</span>

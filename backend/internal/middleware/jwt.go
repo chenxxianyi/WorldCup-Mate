@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"strings"
+	"time"
 
 	"worldcup-mate/internal/repositories"
 	"worldcup-mate/internal/utils"
@@ -42,8 +43,14 @@ func JWTAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		// SEC-04: tokens issued before the last password change are rejected.
+		// iat is already second-precision (golang-jwt TimePrecision), while
+		// PasswordChangedAt has microseconds; truncate only the latter so a
+		// fresh token minted in the same second as the change is accepted.
+		// Trade-off: a token issued in the same second BEFORE the change
+		// stays valid for up to ~1s — inherent to JWT second precision.
 		if user.PasswordChangedAt != nil && claims.IssuedAt != nil &&
-			claims.IssuedAt.Time.Before(*user.PasswordChangedAt) {
+			claims.IssuedAt.Time.Before(user.PasswordChangedAt.Truncate(time.Second)) {
 			utils.Error(c, 401, "invalid or expired token")
 			c.Abort()
 			return

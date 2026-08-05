@@ -2,6 +2,7 @@ import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/useAuthStore'
 import router from '@/router'
 import { ApiError } from '@/types/common'
+import { getUserTimezone } from '@/utils/datetime'
 
 const TOKEN_KEY = 'wm-token'
 const REFRESH_KEY = 'wm-refresh-token'
@@ -15,6 +16,10 @@ request.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  // DATA-05: today/tomorrow boundaries follow the user's timezone.
+  if (config.url?.startsWith('/matches/today') || config.url?.startsWith('/matches/tomorrow')) {
+    config.params = { ...(config.params || {}), tz: getUserTimezone() }
   }
   // Multi-competition: league calls use competitionId. Legacy World Cup
   // matches have a NULL competition_id, so match-list calls explicitly use
@@ -116,6 +121,10 @@ request.interceptors.response.use(
     return data.data
   },
   (err) => {
+    // LIVE-02: pass aborted requests through untouched — the caller's
+    // isCancel() must see the original CanceledError (code ERR_CANCELED),
+    // not a wrapped ApiError.
+    if (axios.isCancel(err)) return Promise.reject(err)
     // API-01: backend now returns real HTTP status codes (4xx/5xx).
     const status = err.response?.status
     const url = err.config?.url || ''

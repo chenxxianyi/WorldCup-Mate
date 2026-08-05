@@ -16,7 +16,7 @@ defineEmits<{
       :value="modelValue"
       :placeholder="placeholder || '搜索'"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-    />
+    >
     <button
       v-if="modelValue"
       class="clear-btn"

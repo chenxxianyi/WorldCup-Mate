@@ -22,8 +22,13 @@ function isActive(itemRoute: string) {
 </script>
 
 <template>
-  <aside class="desktop-rail" aria-label="桌面导航">
-    <div class="rail-mark">WM</div>
+  <aside
+    class="desktop-rail"
+    aria-label="桌面导航"
+  >
+    <div class="rail-mark">
+      WM
+    </div>
     <nav class="rail-nav">
       <button
         v-for="item in navItems"
@@ -36,7 +41,13 @@ function isActive(itemRoute: string) {
         {{ item.icon }}
       </button>
     </nav>
-    <button class="rail-btn" title="切换主题" @click="settings.toggleTheme">◐</button>
+    <button
+      class="rail-btn"
+      title="切换主题"
+      @click="settings.toggleTheme"
+    >
+      ◐
+    </button>
   </aside>
 </template>
 

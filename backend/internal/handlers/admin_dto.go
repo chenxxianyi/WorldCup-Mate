@@ -102,3 +102,17 @@ type StandingUpdateInput struct {
 	GoalDifference *int   `json:"goal_difference"`
 	Reason         string `json:"reason"`
 }
+
+// CompetitionUpdateInput: explicit DTO for admin competition updates
+// (ADM-01 convention — never a bare map). Status is validated so a typo
+// cannot silently hide a league from the public list.
+type CompetitionUpdateInput struct {
+	Name      *string `json:"name"`
+	NameEn    *string `json:"name_en"`
+	Country   *string `json:"country"`
+	LogoURL   *string `json:"logo_url"`
+	Format    *string `json:"format"`
+	Status    *string `json:"status"`
+	Season    *int    `json:"season"`
+	SortOrder *int    `json:"sort_order"`
+}

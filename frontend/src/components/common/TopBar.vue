@@ -38,15 +38,25 @@ watch(() => auth.isLoggedIn, refreshUnread)
   <header class="topbar">
     <div class="brand">
       <div class="brand-mark">
-        <svg viewBox="0 0 24 24" aria-label="WorldCup Mate">
+        <svg
+          viewBox="0 0 24 24"
+          aria-label="WorldCup Mate"
+        >
           <path
             d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 3.2 2.8 2-1.1 3.3h-3.4L9.2 7.2 12 5.2Zm-6.5 4 2.9.8 1 3.2-2.2 1.9a7 7 0 0 1-2.3-1.3A7.9 7.9 0 0 1 5.5 9.2Zm2.4 8.4a9 9 0 0 1 1.8-2l2.3 1.3 2.3-1.3a9 9 0 0 1 1.8 2 7.8 7.8 0 0 1-8.2 0Zm9.9-2.5-2.2-1.9 1-3.2 2.9-.8a7.9 7.9 0 0 1 .6 3.6 7 7 0 0 1-2.3 1.3ZM14.5 4a7.8 7.8 0 0 1 4 2.5l-2.8.8-2.5-1.8V3.9c.4 0 .8.1 1.3.1ZM10.8 3.9v1.6L8.3 7.3l-2.8-.8a7.8 7.8 0 0 1 4-2.5c.5 0 .9-.1 1.3-.1Z"
           />
         </svg>
       </div>
       <div>
-        <h1 class="brand-title">WorldCup Mate</h1>
-        <p class="brand-sub">{{ brandSub }} <span v-if="versionBadge" class="version-badge">{{ versionBadge }}</span></p>
+        <h1 class="brand-title">
+          WorldCup Mate
+        </h1>
+        <p class="brand-sub">
+          {{ brandSub }} <span
+            v-if="versionBadge"
+            class="version-badge"
+          >{{ versionBadge }}</span>
+        </p>
       </div>
     </div>
 
@@ -58,27 +68,57 @@ watch(() => auth.isLoggedIn, refreshUnread)
         title="切换赛事"
         @change="comp.setCurrent(comp.currentCode)"
       >
-        <option v-for="c in comp.competitions" :key="c.code" :value="c.code">{{ c.name }}</option>
+        <option
+          v-for="c in comp.competitions"
+          :key="c.code"
+          :value="c.code"
+        >
+          {{ c.name }}
+        </option>
       </select>
-      <span class="material-symbols-outlined comp-caret" aria-hidden="true">expand_more</span>
+      <span
+        class="material-symbols-outlined comp-caret"
+        aria-hidden="true"
+      >expand_more</span>
     </div>
 
     <div class="top-actions">
       <template v-if="auth.isLoggedIn">
-        <button class="icon-btn user-btn" title="个人中心" @click="router.push('/profile')">
+        <button
+          class="icon-btn user-btn"
+          title="个人中心"
+          @click="router.push('/profile')"
+        >
           <span class="btn-label">{{ auth.user?.username || '用户' }}</span>
-          <span v-if="notification.unreadCount > 0" class="badge-dot">{{ notification.unreadCount > 9 ? '9+' : notification.unreadCount }}</span>
+          <span
+            v-if="notification.unreadCount > 0"
+            class="badge-dot"
+          >{{ notification.unreadCount > 9 ? '9+' : notification.unreadCount }}</span>
           <template v-if="auth.user?.avatar && auth.user.avatar.startsWith('/')">
-            <img class="user-avatar-img" :src="auth.user.avatar" alt="头像" />
+            <img
+              class="user-avatar-img"
+              :src="auth.user.avatar"
+              alt="头像"
+            >
           </template>
           <template v-else>
             <span class="user-avatar">{{ auth.user?.avatar || 'U' }}</span>
           </template>
         </button>
-        <button class="icon-btn logout-btn" title="退出登录" @click="auth.logout()">
+        <button
+          class="icon-btn logout-btn"
+          title="退出登录"
+          @click="auth.logout()"
+        >
           <span class="btn-label">退出</span>
-          <span class="action-orb logout-orb" aria-hidden="true">
-            <svg class="action-icon" viewBox="0 0 24 24">
+          <span
+            class="action-orb logout-orb"
+            aria-hidden="true"
+          >
+            <svg
+              class="action-icon"
+              viewBox="0 0 24 24"
+            >
               <path d="M10 5H6.8A1.8 1.8 0 0 0 5 6.8v10.4A1.8 1.8 0 0 0 6.8 19H10" />
               <path d="M14 8l4 4-4 4" />
               <path d="M18 12H9" />
@@ -87,10 +127,20 @@ watch(() => auth.isLoggedIn, refreshUnread)
         </button>
       </template>
       <template v-else>
-        <button class="icon-btn login-btn" title="登录" @click="router.push('/login')">
+        <button
+          class="icon-btn login-btn"
+          title="登录"
+          @click="router.push('/login')"
+        >
           <span class="btn-label">登录</span>
-          <span class="action-orb login-orb" aria-hidden="true">
-            <svg class="action-icon" viewBox="0 0 24 24">
+          <span
+            class="action-orb login-orb"
+            aria-hidden="true"
+          >
+            <svg
+              class="action-icon"
+              viewBox="0 0 24 24"
+            >
               <path d="M14 8l4 4-4 4" />
               <path d="M18 12H9" />
               <path d="M10 19h7.2a1.8 1.8 0 0 0 1.8-1.8V6.8A1.8 1.8 0 0 0 17.2 5H10" />
@@ -98,14 +148,34 @@ watch(() => auth.isLoggedIn, refreshUnread)
           </span>
         </button>
       </template>
-      <button class="icon-btn theme-btn" :title="settings.theme === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="settings.toggleTheme">
+      <button
+        class="icon-btn theme-btn"
+        :title="settings.theme === 'dark' ? '切换浅色模式' : '切换深色模式'"
+        @click="settings.toggleTheme"
+      >
         <span class="btn-label">{{ settings.theme === 'dark' ? '深色' : '浅色' }}</span>
-        <span class="action-orb theme-orb" :class="{ dark: settings.theme === 'dark' }" aria-hidden="true">
-          <svg v-if="settings.theme === 'dark'" class="action-icon" viewBox="0 0 24 24">
+        <span
+          class="action-orb theme-orb"
+          :class="{ dark: settings.theme === 'dark' }"
+          aria-hidden="true"
+        >
+          <svg
+            v-if="settings.theme === 'dark'"
+            class="action-icon"
+            viewBox="0 0 24 24"
+          >
             <path d="M19 14.2A7 7 0 0 1 9.8 5a7.5 7.5 0 1 0 9.2 9.2Z" />
           </svg>
-          <svg v-else class="action-icon" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="4" />
+          <svg
+            v-else
+            class="action-icon"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="4"
+            />
             <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
           </svg>
         </span>

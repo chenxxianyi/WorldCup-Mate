@@ -25,16 +25,21 @@ type Claims struct {
 }
 
 func GenerateToken(userID uint, role string) (string, error) {
-	now := time.Now()
+	return GenerateTokenAt(userID, role, time.Now())
+}
+
+// GenerateTokenAt issues a token with a caller-controlled issued-at time
+// (test hook; production uses GenerateToken).
+func GenerateTokenAt(userID uint, role string, issuedAt time.Time) (string, error) {
 	claims := Claims{
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    tokenIssuer,
 			Subject:   strconv.FormatUint(uint64(userID), 10),
-			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(accessTokenTTL)),
-			NotBefore: jwt.NewNumericDate(now),
+			IssuedAt:  jwt.NewNumericDate(issuedAt),
+			ExpiresAt: jwt.NewNumericDate(issuedAt.Add(accessTokenTTL)),
+			NotBefore: jwt.NewNumericDate(issuedAt),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

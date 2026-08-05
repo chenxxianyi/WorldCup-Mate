@@ -11,6 +11,15 @@ func ListCompetitions() ([]models.Competition, error) {
 	return competitions, err
 }
 
+// ListActiveCompetitions returns only the competitions enabled for the
+// public frontend (admin management can disable a league without deleting
+// its data — ADM/competition-config).
+func ListActiveCompetitions() ([]models.Competition, error) {
+	var competitions []models.Competition
+	err := database.DB.Where("status = ?", "active").Order("sort_order ASC, id ASC").Find(&competitions).Error
+	return competitions, err
+}
+
 func GetCompetitionByID(id uint) (*models.Competition, error) {
 	var competition models.Competition
 	err := database.DB.First(&competition, id).Error

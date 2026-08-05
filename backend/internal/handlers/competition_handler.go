@@ -14,7 +14,9 @@ import (
 // ListCompetitions returns all competitions ordered by sort_order.
 // Public endpoint used by the frontend competition switcher.
 func ListCompetitions(c *gin.Context) {
-	competitions, err := repositories.ListCompetitions()
+	// Public endpoint: only enabled competitions (the admin endpoint lists
+	// all of them).
+	competitions, err := repositories.ListActiveCompetitions()
 	if err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -28,6 +30,12 @@ func GetCompetitionStandings(c *gin.Context) {
 	code := strings.ToUpper(c.Param("code"))
 	competition, err := repositories.GetCompetitionByCode(code)
 	if err != nil {
+		utils.Error(c, 404, "competition not found")
+		return
+	}
+	// Disabled competitions are hidden from the public API as well (the
+	// admin/sync paths share GetCompetitionByCode and are unaffected).
+	if competition.Status != "active" {
 		utils.Error(c, 404, "competition not found")
 		return
 	}
@@ -86,6 +94,18 @@ func AdminCreateCompetition(c *gin.Context) {
 	if competition.Status == "" {
 		competition.Status = "active"
 	}
+	// Normalize/validate status exactly like the update path.
+	competition.Status = strings.ToLower(competition.Status)
+	if competition.Status != "active" && competition.Status != "inactive" {
+		utils.Error(c, 400, "invalid status, must be active or inactive")
+		return
+	}
+	// Pre-check the code like the team endpoints do; the unique index
+	// remains the hard guarantee against races.
+	if existing, err := repositories.GetCompetitionByCode(competition.Code); err == nil && existing != nil {
+		utils.Error(c, 409, "competition code already exists")
+		return
+	}
 	if err := repositories.CreateCompetition(&competition); err != nil {
 		utils.Error(c, 500, err.Error())
 		return
@@ -94,8 +114,12 @@ func AdminCreateCompetition(c *gin.Context) {
 }
 
 func AdminUpdateCompetition(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
-	var input map[string]interface{}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.Error(c, 400, "invalid competition id")
+		return
+	}
+	var input CompetitionUpdateInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.Error(c, 400, err.Error())
 		return
@@ -105,29 +129,34 @@ func AdminUpdateCompetition(c *gin.Context) {
 		utils.Error(c, 404, "competition not found")
 		return
 	}
-	if v, ok := input["name"].(string); ok {
-		competition.Name = v
+	if input.Name != nil {
+		competition.Name = *input.Name
 	}
-	if v, ok := input["name_en"].(string); ok {
-		competition.NameEn = v
+	if input.NameEn != nil {
+		competition.NameEn = *input.NameEn
 	}
-	if v, ok := input["country"].(string); ok {
-		competition.Country = v
+	if input.Country != nil {
+		competition.Country = *input.Country
 	}
-	if v, ok := input["logo_url"].(string); ok {
-		competition.LogoURL = v
+	if input.LogoURL != nil {
+		competition.LogoURL = *input.LogoURL
 	}
-	if v, ok := input["format"].(string); ok {
-		competition.Format = v
+	if input.Format != nil {
+		competition.Format = *input.Format
 	}
-	if v, ok := input["status"].(string); ok {
-		competition.Status = v
+	if input.Status != nil {
+		status := strings.ToLower(*input.Status)
+		if status != "active" && status != "inactive" {
+			utils.Error(c, 400, "invalid status, must be active or inactive")
+			return
+		}
+		competition.Status = status
 	}
-	if v, ok := input["season"].(float64); ok {
-		competition.Season = int(v)
+	if input.Season != nil {
+		competition.Season = *input.Season
 	}
-	if v, ok := input["sort_order"].(float64); ok {
-		competition.SortOrder = int(v)
+	if input.SortOrder != nil {
+		competition.SortOrder = *input.SortOrder
 	}
 	if err := repositories.UpdateCompetition(competition); err != nil {
 		utils.Error(c, 500, err.Error())

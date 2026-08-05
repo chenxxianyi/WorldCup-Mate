@@ -67,11 +67,27 @@ onMounted(() => {
         <span>赛事数据同步状态和手动同步</span>
       </div>
       <div class="tools">
-        <select v-model="selectedCode" class="admin-select" aria-label="选择赛事">
-          <option value="">世界杯（WC）</option>
-          <option v-for="c in competitions" :key="c.code" :value="c.code">{{ c.name }}</option>
+        <select
+          v-model="selectedCode"
+          class="admin-select"
+          aria-label="选择赛事"
+        >
+          <option value="">
+            世界杯（WC）
+          </option>
+          <option
+            v-for="c in competitions"
+            :key="c.code"
+            :value="c.code"
+          >
+            {{ c.name }}
+          </option>
         </select>
-        <button class="pill-btn primary" :disabled="syncing" @click="syncMatches">
+        <button
+          class="pill-btn primary"
+          :disabled="syncing"
+          @click="syncMatches"
+        >
           {{ syncing ? '同步中...' : '手动同步' }}
         </button>
       </div>
@@ -79,11 +95,19 @@ onMounted(() => {
 
     <SyncStatusBadge mode="card" />
 
-    <div v-if="result" class="card result-card">
+    <div
+      v-if="result"
+      class="card result-card"
+    >
       <b>本次同步完成</b>
       <span>总数 {{ result.total }}，创建 {{ result.created }}，更新 {{ result.updated }}，跳过 {{ result.skipped }}</span>
     </div>
-    <div v-if="error" class="card result-card error">{{ error }}</div>
+    <div
+      v-if="error"
+      class="card result-card error"
+    >
+      {{ error }}
+    </div>
 
     <div class="card table-card table-scroll">
       <table class="admin-table">
@@ -93,7 +117,10 @@ onMounted(() => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in states" :key="`${item.provider}-${item.resource}`">
+          <tr
+            v-for="item in states"
+            :key="`${item.provider}-${item.resource}`"
+          >
             <td>{{ item.provider }}</td>
             <td>{{ item.resource }}</td>
             <td>{{ item.status }}</td>
@@ -102,7 +129,12 @@ onMounted(() => {
             <td>{{ item.last_error || '-' }}</td>
           </tr>
           <tr v-if="!states.length">
-            <td colspan="6" class="empty-row">暂无同步记录</td>
+            <td
+              colspan="6"
+              class="empty-row"
+            >
+              暂无同步记录
+            </td>
           </tr>
         </tbody>
       </table>

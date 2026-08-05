@@ -62,9 +62,15 @@ watch(() => props.targetTime, () => {
     <div class="countdown-inner">
       <slot />
       <div class="countdown-time">
-        <div class="time-box"><strong>{{ h }}</strong><span>小时</span></div>
-        <div class="time-box"><strong>{{ m }}</strong><span>分钟</span></div>
-        <div class="time-box"><strong>{{ s }}</strong><span>秒</span></div>
+        <div class="time-box">
+          <strong>{{ h }}</strong><span>小时</span>
+        </div>
+        <div class="time-box">
+          <strong>{{ m }}</strong><span>分钟</span>
+        </div>
+        <div class="time-box">
+          <strong>{{ s }}</strong><span>秒</span>
+        </div>
       </div>
     </div>
   </article>

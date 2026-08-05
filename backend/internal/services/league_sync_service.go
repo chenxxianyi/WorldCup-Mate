@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -150,6 +151,21 @@ func syncLeague(ctx context.Context, cfg LeagueSyncConfig, target LeagueSyncTarg
 		season = competition.Season
 	}
 	resource := "matches:" + target.Code
+
+	// REL-06: cross-instance distributed lock (manual + scheduled syncs
+	// share the same key). Redis outage degrades to the process-local
+	// mutex only — sync is not on a critical path.
+	lockKey := syncLockKey(leagueSyncProvider, resource, target.Code, season)
+	lockOwner := randomLockOwner()
+	acquired, lockErr := tryAcquireSyncLock(ctx, lockKey, lockOwner, syncLockTTL)
+	if lockErr != nil {
+		log.Printf("[sync-lock] redis unavailable, running with process-local lock only: %v", lockErr)
+	} else if !acquired {
+		return nil, fmt.Errorf("%w: %s season %d", ErrSyncAlreadyRunning, target.Code, season)
+	} else {
+		defer releaseSyncLock(context.Background(), lockKey, lockOwner)
+	}
+
 	startedAt := time.Now().UTC()
 	next := startedAt.Add(cfg.Interval)
 	_ = saveLeagueSyncStateDetail(resource, "running", "", startedAt, &next)

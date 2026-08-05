@@ -56,14 +56,17 @@ export const useMatchStore = defineStore('match', () => {
     }
   }
 
-  async function fetchMatchDetail(id: number) {
-    loading.value = true
+  async function fetchMatchDetail(id: number, quiet = false, signal?: AbortSignal) {
+    // quiet: polling refreshes must not flash the loading state (LIVE-01).
+    // signal: LIVE-02 abort support so navigation cannot be overwritten by
+    // a slow response for a previous match id.
+    if (!quiet) loading.value = true
     try {
-      const res = await apiGetMatchDetail(id)
+      const res = await apiGetMatchDetail(id, signal ? { signal } : undefined)
       currentMatch.value = normalizeMatch(res)
       return currentMatch.value
     } finally {
-      loading.value = false
+      if (!quiet) loading.value = false
     }
   }
 

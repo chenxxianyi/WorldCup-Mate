@@ -86,19 +86,104 @@ watch(() => theme.currentCode, () => router.push('/teams'))
 
 <template>
   <div class="page-view">
-    <div class="back-row"><button class="back-button" type="button" @click="router.push('/teams')"><ThemeIcon name="back" /> 返回球队</button></div>
-    <div v-if="loading" class="page-state"><span class="state-spinner" />正在加载球队详情</div>
-    <article v-else-if="error || !team || !displayTeam" class="card empty-compact"><span class="empty-art"><ThemeIcon name="shield" /></span><span class="empty-copy"><h3>无法显示球队</h3><p>{{ error || '球队数据不存在。' }}</p></span></article>
+    <div class="back-row">
+      <button
+        class="back-button"
+        type="button"
+        @click="router.push('/teams')"
+      >
+        <ThemeIcon name="back" /> 返回球队
+      </button>
+    </div>
+    <div
+      v-if="loading"
+      class="page-state"
+    >
+      <span class="state-spinner" />正在加载球队详情
+    </div>
+    <article
+      v-else-if="error || !team || !displayTeam"
+      class="card empty-compact"
+    >
+      <span class="empty-art"><ThemeIcon name="shield" /></span><span class="empty-copy"><h3>无法显示球队</h3><p>{{ error || '球队数据不存在。' }}</p></span>
+    </article>
     <template v-else>
-      <section class="team-hero"><div class="team-hero-content"><TeamBadge :team="displayTeam" size="large" /><div class="team-hero-copy"><p class="eyebrow" style="color: var(--competition-accent)">{{ theme.current.en }}</p><h1>{{ team.name }}</h1><p>{{ team.name_en }} · {{ team.code }}</p><div class="team-detail-meta"><span class="hero-meta-pill">当前排名 {{ position || '—' }}</span><span class="hero-meta-pill">主场 {{ team.venue || '待定' }}</span><span class="hero-meta-pill">{{ team.group_name || team.country || team.continent }}</span></div></div><button class="team-hero-follow" :class="{ active: favorites.isTeamFollowed(team.id) }" type="button" @click="toggleFollow"><ThemeIcon name="star" />{{ favorites.isTeamFollowed(team.id) ? '已关注' : '关注' }}</button></div></section>
+      <section class="team-hero">
+        <div class="team-hero-content">
+          <TeamBadge
+            :team="displayTeam"
+            size="large"
+          /><div class="team-hero-copy">
+            <p
+              class="eyebrow"
+              style="color: var(--competition-accent)"
+            >
+              {{ theme.current.en }}
+            </p><h1>{{ team.name }}</h1><p>{{ team.name_en }} · {{ team.code }}</p><div class="team-detail-meta">
+              <span class="hero-meta-pill">当前排名 {{ position || '—' }}</span><span class="hero-meta-pill">主场 {{ team.venue || '待定' }}</span><span class="hero-meta-pill">{{ team.group_name || team.country || team.continent }}</span>
+            </div>
+          </div><button
+            class="team-hero-follow"
+            :class="{ active: favorites.isTeamFollowed(team.id) }"
+            type="button"
+            @click="toggleFollow"
+          >
+            <ThemeIcon name="star" />{{ favorites.isTeamFollowed(team.id) ? '已关注' : '关注' }}
+          </button>
+        </div>
+      </section>
       <div class="detail-grid section">
         <div class="stack">
-          <article class="card detail-panel"><h3>赛季表现</h3><div class="quick-grid" style="margin-top: 0"><span class="quick-card"><small class="muted">积分</small><strong>{{ points ?? '—' }}</strong></span><span class="quick-card"><small class="muted">进球</small><strong>{{ goalsFor ?? '—' }}</strong></span><span class="quick-card"><small class="muted">比赛</small><strong>{{ matches.length }}</strong></span></div></article>
-          <article class="card detail-panel"><h3>球队资料</h3><div class="info-list"><span><small>所在赛事</small><strong>{{ theme.current.name }}</strong></span><span><small>国家 / 地区</small><strong>{{ team.country || team.continent }}</strong></span><span><small>球队代码</small><strong>{{ team.code || '—' }}</strong></span><span><small>主场</small><strong>{{ team.venue || '待定' }}</strong></span></div></article>
+          <article class="card detail-panel">
+            <h3>赛季表现</h3><div
+              class="quick-grid"
+              style="margin-top: 0"
+            >
+              <span class="quick-card"><small class="muted">积分</small><strong>{{ points ?? '—' }}</strong></span><span class="quick-card"><small class="muted">进球</small><strong>{{ goalsFor ?? '—' }}</strong></span><span class="quick-card"><small class="muted">比赛</small><strong>{{ matches.length }}</strong></span>
+            </div>
+          </article>
+          <article class="card detail-panel">
+            <h3>球队资料</h3><div class="info-list">
+              <span><small>所在赛事</small><strong>{{ theme.current.name }}</strong></span><span><small>国家 / 地区</small><strong>{{ team.country || team.continent }}</strong></span><span><small>球队代码</small><strong>{{ team.code || '—' }}</strong></span><span><small>主场</small><strong>{{ team.venue || '待定' }}</strong></span>
+            </div>
+          </article>
         </div>
-        <section><div class="section-heading"><div><p class="eyebrow">NEXT MATCH</p><h2>下一场比赛</h2></div></div><ThemeMatchCard v-if="nextMatch" :match="matchToThemeMatch(nextMatch)" /><article v-else class="card empty-mini">暂无球队赛程</article></section>
+        <section>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">
+                NEXT MATCH
+              </p><h2>下一场比赛</h2>
+            </div>
+          </div><ThemeMatchCard
+            v-if="nextMatch"
+            :match="matchToThemeMatch(nextMatch)"
+          /><article
+            v-else
+            class="card empty-mini"
+          >
+            暂无球队赛程
+          </article>
+        </section>
       </div>
-      <section v-if="displayMatches.length > 1" class="section"><div class="section-heading"><div><p class="eyebrow">FIXTURES</p><h2>球队赛程</h2></div><span>{{ displayMatches.length }} 场</span></div><div class="match-list"><ThemeMatchCard v-for="match in displayMatches" :key="match.id" :match="match" /></div></section>
+      <section
+        v-if="displayMatches.length > 1"
+        class="section"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">
+              FIXTURES
+            </p><h2>球队赛程</h2>
+          </div><span>{{ displayMatches.length }} 场</span>
+        </div><div class="match-list">
+          <ThemeMatchCard
+            v-for="match in displayMatches"
+            :key="match.id"
+            :match="match"
+          />
+        </div>
+      </section>
     </template>
   </div>
 </template>

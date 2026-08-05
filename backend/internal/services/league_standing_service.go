@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -58,7 +59,8 @@ func SyncLeagueStandings(ctx context.Context, code string, season int) error {
 	client := footballdata.NewClient(cfg.BaseURL, cfg.APIKey)
 	data, err := client.CompetitionStandings(ctx, code, season)
 	if err != nil {
-		return err
+		// REL-05C: errors carry competition+season context, never the key.
+		return fmt.Errorf("league %s season %d standings: %w", code, season, err)
 	}
 
 	for _, group := range data.Standings {

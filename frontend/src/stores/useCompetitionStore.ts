@@ -21,21 +21,25 @@ export const useCompetitionStore = defineStore('competition', () => {
     if (loaded.value) return
     try {
       const res = await apiListCompetitions()
-      competitions.value = (res || []).filter((c) => c.status !== 'disabled')
+      competitions.value = (res || []).filter((c) => c.status === 'active')
       loaded.value = true
     } catch {
       loaded.value = false // allow retry on next mount instead of silent degradation
     }
     syncStoredId()
-    // Clean up stale selections: if the stored code no longer resolves to a
-    // known competition (and is not the WC default), fall back to WC.
+    // Clean up stale selections: if the stored code no longer resolves to
+    // an enabled competition, fall back to the first enabled one. When
+    // NOTHING is enabled, keep the current code as-is and never write a
+    // stale WC default — a disabled World Cup must stay hidden.
     if (
       loaded.value &&
-      currentCode.value !== WC_CODE &&
       !competitions.value.some((c) => c.code === currentCode.value)
     ) {
-      currentCode.value = WC_CODE
-      localStorage.setItem(STORAGE_KEY, WC_CODE)
+      if (competitions.value.length > 0) {
+        const fallback = competitions.value[0].code
+        currentCode.value = fallback
+        localStorage.setItem(STORAGE_KEY, fallback)
+      }
       localStorage.removeItem(STORAGE_KEY_ID)
     }
   }

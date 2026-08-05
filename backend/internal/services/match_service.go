@@ -47,27 +47,45 @@ func GetMatchByID(id uint) (*models.Match, error) {
 	return repositories.GetMatchByID(id)
 }
 
-func GetTodayMatches(worldCup bool) ([]models.Match, error) {
-	now := time.Now().UTC()
-	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	end := start.AddDate(0, 0, 1)
+// dayRangeInTZ returns the [start, end) UTC range of the calendar day that
+// contains `now` in the given IANA timezone (UTC when tz is empty/invalid).
+// DST transitions produce 23/25-hour days — handled naturally by local
+// midnight math (DATA-05D).
+func dayRangeInTZ(now time.Time, tz string) (start, end time.Time) {
+	loc := time.UTC
+	if tz != "" {
+		if l, err := time.LoadLocation(tz); err == nil {
+			loc = l
+		}
+	}
+	local := now.In(loc)
+	start = time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, loc).UTC()
+	// Next local midnight (handles DST 23/25-hour days and month ends via
+	// time.Date normalization; AddDate on the UTC value would add 24h).
+	end = time.Date(local.Year(), local.Month(), local.Day()+1, 0, 0, 0, 0, loc).UTC()
+	return start, end
+}
+
+func GetTodayMatches(worldCup bool, tz string) ([]models.Match, error) {
+	start, end := dayRangeInTZ(time.Now().UTC(), tz)
 	return repositories.GetMatchesByDateRange(start, end, worldCup)
 }
 
-func GetTomorrowMatches(worldCup bool) ([]models.Match, error) {
-	now := time.Now().UTC()
-	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, 1)
-	end := start.AddDate(0, 0, 1)
-	return repositories.GetMatchesByDateRange(start, end, worldCup)
+func GetTomorrowMatches(worldCup bool, tz string) ([]models.Match, error) {
+	_, end := dayRangeInTZ(time.Now().UTC(), tz)
+	// "Tomorrow" is the calendar day containing `end` — NOT end+24h, which
+	// drifts by an hour across DST transitions (DATA-05D).
+	_, nextEnd := dayRangeInTZ(end, tz)
+	return repositories.GetMatchesByDateRange(end, nextEnd, worldCup)
 }
 
 func GetUpcomingMatches(worldCup bool) ([]models.Match, error) {
 	var matches []models.Match
 	all, _, err := repositories.ListMatches(repositories.MatchFilter{
-		Status:   "scheduled",
+		Status:       "scheduled",
 		WorldCupOnly: worldCup,
-		Page:     1,
-		PageSize: 10,
+		Page:         1,
+		PageSize:     10,
 	})
 	if err != nil {
 		return nil, err
@@ -78,10 +96,10 @@ func GetUpcomingMatches(worldCup bool) ([]models.Match, error) {
 
 func GetLiveMatches(worldCup bool) ([]models.Match, error) {
 	matches, _, err := repositories.ListMatches(repositories.MatchFilter{
-		Status:   "live",
+		Status:       "live",
 		WorldCupOnly: worldCup,
-		Page:     1,
-		PageSize: 100,
+		Page:         1,
+		PageSize:     100,
 	})
 	return matches, err
 }

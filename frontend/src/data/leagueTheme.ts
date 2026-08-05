@@ -1,4 +1,6 @@
-export type CompetitionCode = 'WC' | 'PL' | 'PD' | 'BL1' | 'SA' | 'FL1'
+// Competition codes are now admin-configurable: 'WC' is built-in, the rest
+// come from the backend competitions table (may grow beyond the static set).
+export type CompetitionCode = string
 
 export type DemoTeam = readonly [name: string, code: string, city: string, color: string, crest?: string]
 
@@ -106,10 +108,44 @@ export const leagueThemes: Record<CompetitionCode, LeagueTheme> = {
   },
 }
 
-export const competitionCodes = Object.keys(leagueThemes) as CompetitionCode[]
+/**
+ * Admin-configurable leagues: the frontend competition switcher is driven
+ * by the backend `competitions` table (GET /api/competitions, active only).
+ * Static `leagueThemes` entries remain as the visual identity for known
+ * leagues; leagues added in the admin panel get a neutral generated theme.
+ */
+export interface CompetitionMeta {
+  code: string
+  name: string
+  name_en: string
+  season: number
+  logo_url: string
+  country: string
+  format: string
+}
 
-export function isCompetitionCode(value: string | null): value is CompetitionCode {
-  return Boolean(value && Object.prototype.hasOwnProperty.call(leagueThemes, value))
+export function buildThemeFromCompetition(c: CompetitionMeta): LeagueTheme {
+  return {
+    code: c.code,
+    slug: c.code.toLowerCase(),
+    name: c.name || c.code,
+    en: c.name_en || c.code,
+    season: formatSeasonRange(c.season),
+    mark: c.code.slice(0, 2).toUpperCase(),
+    tagline: '',
+    description: '',
+    stage: '',
+    played: 0,
+    total: 1,
+    venue: c.country || '',
+    teams: [],
+  }
+}
+
+// "2026–27" style season label for the competition switcher.
+export function formatSeasonRange(season: number): string {
+  if (!season) return ''
+  return `${season}–${String((season + 1) % 100).padStart(2, '0')}`
 }
 
 export function getDemoMatches(theme: LeagueTheme): DemoMatch[] {

@@ -54,20 +54,62 @@ watch(() => theme.currentCode, () => { query.value = ''; loadTeams() })
 
 <template>
   <div class="page-view">
-    <header class="page-heading"><div><p class="eyebrow">{{ theme.current.en }}</p><h1>{{ theme.current.slug === 'wc' ? '国家队' : '俱乐部' }}</h1></div><p class="muted">{{ teamStore.teams.length }} 支球队 · 数据来自赛事中心</p></header>
-    <label class="search-box"><ThemeIcon name="search" /><input v-model="query" type="search" placeholder="搜索球队名称、国家或缩写" aria-label="搜索球队" /></label>
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">
+          {{ theme.current.en }}
+        </p><h1>{{ theme.current.slug === 'wc' ? '国家队' : '俱乐部' }}</h1>
+      </div><p class="muted">
+        {{ teamStore.teams.length }} 支球队 · 数据来自赛事中心
+      </p>
+    </header>
+    <label class="search-box"><ThemeIcon name="search" /><input
+      v-model="query"
+      type="search"
+      placeholder="搜索球队名称、国家或缩写"
+      aria-label="搜索球队"
+    ></label>
     <section class="section">
-      <div v-if="teamStore.loading" class="page-state"><span class="state-spinner" />正在加载球队</div>
-      <div v-else-if="teams.length" class="teams-grid">
-        <article v-for="team in teams" :key="team.id" class="team-card">
-          <button class="team-card-open" type="button" @click="router.push(`/teams/${team.id}`)">
+      <div
+        v-if="teamStore.loading"
+        class="page-state"
+      >
+        <span class="state-spinner" />正在加载球队
+      </div>
+      <div
+        v-else-if="teams.length"
+        class="teams-grid"
+      >
+        <article
+          v-for="team in teams"
+          :key="team.id"
+          class="team-card"
+        >
+          <button
+            class="team-card-open"
+            type="button"
+            @click="router.push(`/teams/${team.id}`)"
+          >
             <TeamBadge :team="teamToThemeTeam(team)" /><h3>{{ team.name }}</h3><p>{{ team.country || team.continent }} · {{ team.code }}</p>
             <span class="team-card-footer"><span>{{ team.group_name || team.venue || '查看球队资料' }}</span><ThemeIcon name="arrow" /></span>
           </button>
-          <button class="team-follow" :class="{ active: favorites.isTeamFollowed(team.id) }" type="button" :aria-label="favorites.isTeamFollowed(team.id) ? `取消关注${team.name}` : `关注${team.name}`" @click="toggleFollow(team)"><ThemeIcon name="star" /></button>
+          <button
+            class="team-follow"
+            :class="{ active: favorites.isTeamFollowed(team.id) }"
+            type="button"
+            :aria-label="favorites.isTeamFollowed(team.id) ? `取消关注${team.name}` : `关注${team.name}`"
+            @click="toggleFollow(team)"
+          >
+            <ThemeIcon name="star" />
+          </button>
         </article>
       </div>
-      <article v-else class="card empty-compact"><span class="empty-art"><ThemeIcon name="search" /></span><span class="empty-copy"><h3>{{ query ? '没有找到球队' : '暂无球队数据' }}</h3><p>{{ error || '请调整搜索条件，或先在后台同步当前赛事球队。' }}</p></span></article>
+      <article
+        v-else
+        class="card empty-compact"
+      >
+        <span class="empty-art"><ThemeIcon name="search" /></span><span class="empty-copy"><h3>{{ query ? '没有找到球队' : '暂无球队数据' }}</h3><p>{{ error || '请调整搜索条件，或先在后台同步当前赛事球队。' }}</p></span>
+      </article>
     </section>
   </div>
 </template>

@@ -13,6 +13,13 @@ import (
 // TeamExistsByCode reports whether fifa_code or external_code is already
 // taken by another team (excludeID excludes the team being updated).
 func TeamExistsByCode(fifaCode, externalCode *string, excludeID uint) (bool, error) {
+	// QA-02: with both codes absent there is nothing to collide on — a
+	// global "id != ?" count would wrongly report a conflict as soon as
+	// ANY team exists (the legacy unique-index semantics handle real
+	// duplicates, since both columns are nullable).
+	if (fifaCode == nil || *fifaCode == "") && (externalCode == nil || *externalCode == "") {
+		return false, nil
+	}
 	q := database.DB.Model(&models.Team{})
 	if fifaCode != nil && *fifaCode != "" {
 		q = q.Where("fifa_code = ?", *fifaCode)

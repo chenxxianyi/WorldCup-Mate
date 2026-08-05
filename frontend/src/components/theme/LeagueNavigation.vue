@@ -22,7 +22,10 @@ const activePath = computed(() => {
 </script>
 
 <template>
-  <aside class="desktop-rail" aria-label="主要导航">
+  <aside
+    class="desktop-rail"
+    aria-label="主要导航"
+  >
     <button
       v-for="item in navItems"
       :key="item.path"
@@ -31,10 +34,15 @@ const activePath = computed(() => {
       type="button"
       :aria-current="activePath === item.path ? 'page' : undefined"
       @click="router.push(item.path)"
-    ><ThemeIcon :name="item.icon" /><span>{{ item.label }}</span></button>
+    >
+      <ThemeIcon :name="item.icon" /><span>{{ item.label }}</span>
+    </button>
   </aside>
 
-  <nav class="bottom-nav" aria-label="主要导航">
+  <nav
+    class="bottom-nav"
+    aria-label="主要导航"
+  >
     <button
       v-for="item in navItems"
       :key="item.path"
@@ -43,6 +51,8 @@ const activePath = computed(() => {
       type="button"
       :aria-current="activePath === item.path ? 'page' : undefined"
       @click="router.push(item.path)"
-    ><ThemeIcon :name="item.icon" /><span>{{ item.label }}</span></button>
+    >
+      <ThemeIcon :name="item.icon" /><span>{{ item.label }}</span>
+    </button>
   </nav>
 </template>

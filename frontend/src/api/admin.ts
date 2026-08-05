@@ -47,3 +47,40 @@ export interface LeagueRecalculateResult {
 export function apiAdminRecalculateLeagueStanding(data: Record<string, any>) {
   return request.post('/admin/standings/league/recalculate', data) as Promise<LeagueRecalculateResult>
 }
+
+export interface AdminCompetition {
+  id: number
+  code: string
+  name: string
+  name_en: string
+  country: string
+  logo_url: string
+  format: string
+  season: number
+  status: string
+  sort_order: number
+}
+
+export interface CompetitionInput {
+  code?: string
+  name?: string
+  name_en?: string
+  country?: string
+  logo_url?: string
+  format?: string
+  season?: number
+  status?: string
+  sort_order?: number
+}
+
+export function apiAdminListCompetitions() {
+  return request.get('/admin/competitions') as Promise<AdminCompetition[]>
+}
+
+export function apiAdminCreateCompetition(data: CompetitionInput) {
+  return request.post('/admin/competitions', data) as Promise<AdminCompetition>
+}
+
+export function apiAdminUpdateCompetition(id: number, data: CompetitionInput) {
+  return request.put(`/admin/competitions/${id}`, data) as Promise<AdminCompetition>
+}

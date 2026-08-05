@@ -87,7 +87,10 @@ async function createReminders() {
 </script>
 
 <template>
-  <div class="reminder-control" @click.stop>
+  <div
+    class="reminder-control"
+    @click.stop
+  >
     <button
       v-if="mode === 'icon'"
       class="icon-trigger"
@@ -113,8 +116,13 @@ async function createReminders() {
       {{ hasReminder ? '取消提醒' : '设置提醒' }}
     </button>
 
-    <div v-if="open && !hasReminder" class="reminder-popover">
-      <div class="popover-title">提醒时间</div>
+    <div
+      v-if="open && !hasReminder"
+      class="reminder-popover"
+    >
+      <div class="popover-title">
+        提醒时间
+      </div>
       <div class="option-grid">
         <button
           v-for="option in minuteOptions"
@@ -127,7 +135,9 @@ async function createReminders() {
         </button>
       </div>
 
-      <div class="popover-title">提醒渠道</div>
+      <div class="popover-title">
+        提醒渠道
+      </div>
       <div class="option-grid two">
         <button
           class="choice"
@@ -144,21 +154,41 @@ async function createReminders() {
           邮件通知
         </button>
       </div>
-      <p v-if="selectedChannel === 'email' && !hasEmailTarget" class="hint-text">
+      <p
+        v-if="selectedChannel === 'email' && !hasEmailTarget"
+        class="hint-text"
+      >
         请先在个人中心设置通知邮箱
       </p>
 
-      <p v-if="error" class="error-text">{{ error }}</p>
+      <p
+        v-if="error"
+        class="error-text"
+      >
+        {{ error }}
+      </p>
 
       <div class="popover-actions">
-        <button class="text-btn" @click="open = false">取消</button>
-        <button class="save-btn" :disabled="saving" @click="createReminders">
+        <button
+          class="text-btn"
+          @click="open = false"
+        >
+          取消
+        </button>
+        <button
+          class="save-btn"
+          :disabled="saving"
+          @click="createReminders"
+        >
           {{ saving ? '创建中...' : '确认' }}
         </button>
       </div>
     </div>
 
-    <div v-if="hasReminder && mode === 'pill' && currentSummary" class="summary">
+    <div
+      v-if="hasReminder && mode === 'pill' && currentSummary"
+      class="summary"
+    >
       {{ currentSummary }}
     </div>
   </div>

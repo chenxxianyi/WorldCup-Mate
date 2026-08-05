@@ -74,6 +74,7 @@ func Setup() *gin.Engine {
 	// Competitions (public)
 	api.GET("/competitions", handlers.ListCompetitions)
 	api.GET("/competitions/:code/standings", handlers.GetCompetitionStandings)
+	api.GET("/featured", handlers.PublicFeatured)
 
 	// Authenticated routes
 	authRequired := api.Group("")
@@ -128,6 +129,10 @@ func Setup() *gin.Engine {
 			adminAuth.GET("/competitions", handlers.AdminListCompetitions)
 			adminAuth.POST("/competitions", handlers.AdminCreateCompetition)
 			adminAuth.PUT("/competitions/:id", handlers.AdminUpdateCompetition)
+
+			adminAuth.GET("/featured", handlers.AdminListFeatured)
+			adminAuth.GET("/featured/:code/matches", handlers.AdminFeaturedMatches)
+			adminAuth.PUT("/featured/:code", handlers.AdminUpsertFeatured)
 
 			adminAuth.GET("/teams", handlers.AdminListTeams)
 			adminAuth.POST("/teams", handlers.AdminCreateTeam)

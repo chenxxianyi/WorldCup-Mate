@@ -102,24 +102,65 @@ watch(leagueCode, loadLeagueStandings)
         <span>{{ mode === 'group' ? filteredStandings.length + ' 条记录' : leagueStandings.length + ' 条记录' }}</span>
       </div>
       <div class="tools">
-        <select v-model="mode" class="admin-select" aria-label="积分榜类型">
-          <option value="group">小组积分榜（世界杯）</option>
-          <option value="league">联赛积分榜</option>
+        <select
+          v-model="mode"
+          class="admin-select"
+          aria-label="积分榜类型"
+        >
+          <option value="group">
+            小组积分榜（世界杯）
+          </option>
+          <option value="league">
+            联赛积分榜
+          </option>
         </select>
-        <select v-if="mode === 'group'" v-model="groupName" class="admin-select">
-          <option value="">全部小组</option>
-          <option v-for="name in groupOptions" :key="name" :value="name">{{ name }}</option>
+        <select
+          v-if="mode === 'group'"
+          v-model="groupName"
+          class="admin-select"
+        >
+          <option value="">
+            全部小组
+          </option>
+          <option
+            v-for="name in groupOptions"
+            :key="name"
+            :value="name"
+          >
+            {{ name }}
+          </option>
         </select>
         <template v-else>
-          <select v-model="leagueCode" class="admin-select" aria-label="选择联赛">
-            <option value="">选择联赛</option>
-            <option v-for="c in competitions" :key="c.code" :value="c.code">{{ c.name }}</option>
+          <select
+            v-model="leagueCode"
+            class="admin-select"
+            aria-label="选择联赛"
+          >
+            <option value="">
+              选择联赛
+            </option>
+            <option
+              v-for="c in competitions"
+              :key="c.code"
+              :value="c.code"
+            >
+              {{ c.name }}
+            </option>
           </select>
-          <button class="pill-btn primary" :disabled="recalculating || !leagueCode" @click="recalculateLeague">
+          <button
+            class="pill-btn primary"
+            :disabled="recalculating || !leagueCode"
+            @click="recalculateLeague"
+          >
             {{ recalculating ? '重算中...' : '重算联赛积分' }}
           </button>
         </template>
-        <button v-if="mode === 'group'" class="pill-btn primary" :disabled="recalculating" @click="recalculate">
+        <button
+          v-if="mode === 'group'"
+          class="pill-btn primary"
+          :disabled="recalculating"
+          @click="recalculate"
+        >
           {{ recalculating ? '重算中...' : '重算积分' }}
         </button>
       </div>
@@ -134,7 +175,10 @@ watch(leagueCode, loadLeagueStandings)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredStandings" :key="item.id">
+            <tr
+              v-for="item in filteredStandings"
+              :key="item.id"
+            >
               <td>{{ item.group?.name || '-' }}</td>
               <td><b>{{ item.team?.name || '-' }}</b></td>
               <td>{{ item.played }}</td>
@@ -146,7 +190,12 @@ watch(leagueCode, loadLeagueStandings)
               <td>{{ item.qualification_status || '-' }}</td>
             </tr>
             <tr v-if="!loading && !filteredStandings.length">
-              <td colspan="9" class="empty-row">暂无积分数据</td>
+              <td
+                colspan="9"
+                class="empty-row"
+              >
+                暂无积分数据
+              </td>
             </tr>
           </tbody>
         </table>
@@ -162,7 +211,10 @@ watch(leagueCode, loadLeagueStandings)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in leagueStandings" :key="item.id">
+            <tr
+              v-for="item in leagueStandings"
+              :key="item.id"
+            >
               <td>{{ item.position }}</td>
               <td><b>{{ item.team?.name || '-' }}</b></td>
               <td>{{ item.type }}</td>
@@ -175,7 +227,12 @@ watch(leagueCode, loadLeagueStandings)
               <td>{{ item.zone || '-' }}</td>
             </tr>
             <tr v-if="!leagueLoading && !leagueStandings.length">
-              <td colspan="10" class="empty-row">请选择联赛查看积分榜</td>
+              <td
+                colspan="10"
+                class="empty-row"
+              >
+                请选择联赛查看积分榜
+              </td>
             </tr>
           </tbody>
         </table>
