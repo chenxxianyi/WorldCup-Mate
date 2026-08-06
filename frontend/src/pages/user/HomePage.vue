@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router'
 import { apiGetCompetitionStandings } from '@/api/competitions'
 import { apiListMatches, apiGetMatchesByTeam } from '@/api/matches'
 import { apiGetAllStandings } from '@/api/standings'
+import { apiGetSyncStatus } from '@/api/sync'
+import type { SyncState } from '@/types/sync'
 import TeamBadge from '@/components/theme/TeamBadge.vue'
 import ThemeIcon from '@/components/theme/ThemeIcon.vue'
 import ThemeMatchCard from '@/components/theme/ThemeMatchCard.vue'
@@ -31,6 +33,17 @@ const standings = ref<PreviewStanding[]>([])
 const totalMatches = ref(0)
 const finishedMatches = ref(0)
 const followedSchedule = ref<Match[]>([])
+// DATA-11: data credibility — last sync timestamp from the backend.
+const syncStates = ref<SyncState[]>([])
+const lastSyncAt = computed(() => {
+  if (!syncStates.value.length) return ''
+  const ts = syncStates.value
+    .map((s) => s.last_synced_at)
+    .filter(Boolean)
+    .sort()
+    .pop()
+  return ts || ''
+})
 
 const themeMatches = computed(() => matches.value.map(matchToThemeMatch))
 // Focus match: an admin-pinned match wins (unless it is finished — a
@@ -114,9 +127,10 @@ async function loadHome(quiet = false) {
   try {
     await theme.initialize()
     const signal = freshSignal()
-    const [response, finishedResponse] = await Promise.all([
+    const [response, finishedResponse, syncResponse] = await Promise.all([
       apiListMatches({ page: 1, page_size: 50 }, { signal }),
       apiListMatches({ page: 1, page_size: 1, status: 'finished' }, { signal }),
+      apiGetSyncStatus().catch(() => []),
     ])
     if (!gen.isCurrent(g)) return // stale: a newer load/switch won
     const list = response.list.map(normalizeMatch)
@@ -124,6 +138,7 @@ async function loadHome(quiet = false) {
     totalMatches.value = Number(response.total ?? list.length)
     const finishedList = finishedResponse.list
     finishedMatches.value = Number(finishedResponse.total ?? finishedList.length)
+    syncStates.value = syncResponse as SyncState[]
     if (auth.isLoggedIn) await favorites.fetchFavoriteTeams()
     if (!gen.isCurrent(g)) return
     await Promise.all([loadStandings(g), loadFollowedSchedule(g)])
@@ -188,6 +203,13 @@ watch(() => theme.currentCode, () => { gen.bump(); loadHome() })
               :style="{ width: `${progress}%` }"
             />
           </div>
+          <!-- DATA-11: data credibility — last sync time -->
+          <p
+            v-if="lastSyncAt"
+            class="sync-meta"
+          >
+            数据同步于 {{ lastSyncAt.replace('T', ' ').slice(0, 16) }}
+          </p>
         </div>
       </div>
       <div
@@ -378,3 +400,11 @@ watch(() => theme.currentCode, () => { gen.bump(); loadHome() })
     </div>
   </div>
 </template>
+
+<style scoped>
+.sync-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+</style>

@@ -18,6 +18,11 @@ export interface LeagueTheme {
   total: number
   venue: string
   teams: DemoTeam[]
+  /** Backend competition id, when the theme originates from an admin-added
+   *  league. 0 for built-in/WC themes. (DATA-09) */
+  id?: number
+  /** 'league' | 'cup' | 'group' — lets schedule/overview adapt. (DATA-09) */
+  format?: string
 }
 
 export interface DemoMatch {
@@ -139,6 +144,8 @@ export function buildThemeFromCompetition(c: CompetitionMeta): LeagueTheme {
     total: 1,
     venue: c.country || '',
     teams: [],
+    id: 0,
+    format: c.format,
   }
 }
 

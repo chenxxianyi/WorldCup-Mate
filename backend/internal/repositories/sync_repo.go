@@ -42,3 +42,14 @@ func MarkInterruptedSyncState(provider, resource, message string, now time.Time)
 			"next_sync_at":   nil,
 		}).Error
 }
+
+// ListSyncHistory returns the last N sync states ordered by id descending.
+// It is used by ADM-13 / sync history operations.
+func ListSyncHistory(limit int) ([]models.SyncState, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	var states []models.SyncState
+	err := database.DB.Order("id DESC").Limit(limit).Find(&states).Error
+	return states, err
+}

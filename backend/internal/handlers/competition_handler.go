@@ -52,6 +52,56 @@ func GetCompetitionStandings(c *gin.Context) {
 	utils.Success(c, standings)
 }
 
+// CompetitionOverview returns the public overview for a league competition:
+// its current season, available seasons, latest matchday, and total match count.
+// This is the DATA-09 endpoint used by the league switcher and season selector.
+func CompetitionOverview(c *gin.Context) {
+	code := strings.ToUpper(c.Param("code"))
+	competition, err := repositories.GetCompetitionByCode(code)
+	if err != nil {
+		utils.Error(c, 404, "competition not found")
+		return
+	}
+	if competition.Status != "active" {
+		utils.Error(c, 404, "competition not found")
+		return
+	}
+
+	seasons, err := repositories.ListCompetitionSeasons(competition.ID)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+
+	// Default season is the competition's current season.
+	season := competition.Season
+	if v, err := strconv.Atoi(c.Query("season")); err == nil && v > 0 {
+		season = v
+	}
+
+	// Latest matchday for the selected season (league only).
+	matchday, err := repositories.GetLatestMatchday(competition.ID, season)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+
+	// Match count for the selected season.
+	matchCount, err := repositories.CountMatchesByCompetitionAndSeason(competition.ID, season)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+
+	utils.Success(c, gin.H{
+		"competition": competition,
+		"seasons":     seasons,
+		"season":      season,
+		"matchday":    matchday,
+		"match_count": matchCount,
+	})
+}
+
 func AdminListCompetitions(c *gin.Context) {
 	competitions, err := repositories.ListCompetitions()
 	if err != nil {

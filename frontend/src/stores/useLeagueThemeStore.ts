@@ -45,7 +45,7 @@ export const useLeagueThemeStore = defineStore('league-theme', () => {
   const dynamicThemes = ref<Record<string, LeagueTheme>>({})
 
   function themeFor(code: string): LeagueTheme {
-    if (leagueThemes[code]) return leagueThemes[code]
+    if (leagueThemes[code]) return { ...leagueThemes[code], id: 0, format: 'league' }
     if (dynamicThemes.value[code]) return dynamicThemes.value[code]
     const comp = competition.competitions.find((c) => c.code === code)
     const theme = comp

@@ -45,3 +45,32 @@ func CountCompetitions() int64 {
 	database.DB.Model(&models.Competition{}).Count(&count)
 	return count
 }
+
+// ListCompetitionSeasons returns distinct seasons for a competition,
+// ordered descending (most recent first).
+func ListCompetitionSeasons(competitionID uint) ([]int, error) {
+	var seasons []int
+	err := database.DB.Model(&models.Match{}).
+		Where("competition_id = ? AND season IS NOT NULL", competitionID).
+		Select("DISTINCT season").Order("season DESC").Find(&seasons).Error
+	return seasons, err
+}
+
+// GetLatestMatchday returns the latest matchday number for the given
+// competition and season (league only).
+func GetLatestMatchday(competitionID uint, season int) (*int, error) {
+	var maxMatchday *int
+	err := database.DB.Model(&models.Match{}).
+		Where("competition_id = ? AND season = ?", competitionID, season).
+		Order("matchday DESC").Limit(1).Pluck("matchday", &maxMatchday).Error
+	return maxMatchday, err
+}
+
+// CountMatchesByCompetitionAndSeason returns the total match count
+// for a competition in the given season.
+func CountMatchesByCompetitionAndSeason(competitionID uint, season int) (int64, error) {
+	var count int64
+	err := database.DB.Model(&models.Match{}).
+		Where("competition_id = ? AND season = ?", competitionID, season).Count(&count).Error
+	return count, err
+}

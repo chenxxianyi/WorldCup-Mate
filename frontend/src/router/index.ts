@@ -43,6 +43,8 @@ const router = createRouter({
         { path: 'matches', name: 'admin-matches', component: () => import('@/pages/admin/AdminMatchesPage.vue') },
         { path: 'standings', name: 'admin-standings', component: () => import('@/pages/admin/AdminStandingsPage.vue') },
         { path: 'sync', name: 'admin-sync', component: () => import('@/pages/admin/AdminSyncPage.vue') },
+        { path: 'sync/history', name: 'admin-sync-history', component: () => import('@/pages/admin/AdminSyncHistoryPage.vue') },
+        { path: 'reminders', name: 'admin-reminders', component: () => import('@/pages/admin/AdminRemindersPage.vue') },
       ],
     },
   ],

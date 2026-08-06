@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"worldcup-mate/internal/repositories"
 	"worldcup-mate/internal/services"
 	"worldcup-mate/internal/utils"
 
@@ -25,6 +26,32 @@ func ListMatches(c *gin.Context) {
 		return
 	}
 	utils.Paginated(c, matches, total, q.Page, q.PageSize)
+}
+
+// HomeAggregate returns the homepage aggregation: upcoming matches,
+// live matches, competitions, and the latest sync state (DATA-10).
+func HomeAggregate(c *gin.Context) {
+	now := time.Now().UTC()
+
+	upcoming, _ := services.GetUpcomingMatches(false)
+	live, _ := services.GetLiveMatches(false)
+	competitions, _ := repositories.ListActiveCompetitions()
+
+	// Latest sync states for credibility display (DATA-11).
+	syncStates, _ := repositories.GetSyncStates()
+
+	// Upcoming matches limited to 10 for the homepage.
+	if len(upcoming) > 10 {
+		upcoming = upcoming[:10]
+	}
+
+	utils.Success(c, gin.H{
+		"upcoming_matches": upcoming,
+		"live_matches":     live,
+		"competitions":     competitions,
+		"sync_states":      syncStates,
+		"synced_at":        now.Format(time.RFC3339),
+	})
 }
 
 func GetTodayMatches(c *gin.Context) {

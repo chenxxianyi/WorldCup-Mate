@@ -197,6 +197,10 @@ go test ./...
 项目提供了 `docker-compose.yml`，包含 MySQL、Redis、后端和前端服务。
 
 ```bash
+# 1. 准备环境变量（必填：MYSQL_ROOT_PASSWORD、JWT_SECRET、CORS_ALLOWED_ORIGINS）
+cp .env.example .env
+
+# 2. 启动
 docker compose up -d --build
 ```
 
@@ -209,7 +213,19 @@ docker compose up -d --build
 | MySQL | `3306:3306` |
 | Redis | `5001:6379` |
 
-注意：当前 Docker 部署前需要先修正 `MYSQL_DSN` 与 MySQL 服务用户配置不一致的问题。
+敏感配置如 JWT 密钥、数据库密码和 CORS 域名一律通过根目录 `.env` 注入；生产环境不内置任何默认密码。后端提供 `/health/live` 与 `/health/ready` 两个健康检查接口，Nginx 已代理 `/uploads/` 静态资源，上传文件落在持久化卷 `uploads_data`。（DEP-01 / DEP-02）
+
+## 数据库迁移（DB-01）
+
+结构变更使用 `backend/migrations/` 下的版本化 SQL 迁移文件，按数字前缀顺序执行。所有迁移都是幂等的（使用 `IF NOT EXISTS`）。
+
+```bash
+mysql -u root -p worldcup_mate < backend/migrations/0001_duplicate_cleanup.sql
+mysql -u root -p worldcup_mate < backend/migrations/0002_unique_constraints.sql
+mysql -u root -p worldcup_mate < backend/migrations/0003_reminder_atomic_claim.sql
+```
+
+生产环境启动时不自动执行不可控的结构变更；显式迁移是数据库状态的唯一来源，失败迁移可检测并重跑。
 
 ## 环境变量
 

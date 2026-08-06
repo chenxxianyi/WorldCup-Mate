@@ -12,9 +12,14 @@ import (
 func Setup() *gin.Engine {
 	r := gin.New()
 	r.Use(middleware.RequestID())
-	r.Use(middleware.Logger())
+	r.Use(middleware.JSONLogger())
 	r.Use(middleware.Recover())
 	r.Use(middleware.CORS())
+
+	// Health checks (OBS-04).
+	r.GET("/health/live", handlers.HealthLive)
+	r.GET("/health/ready", handlers.HealthReady)
+
 	api := r.Group("/api")
 
 	// Auth (public)
@@ -71,8 +76,12 @@ func Setup() *gin.Engine {
 	api.GET("/stadiums/:id", handlers.GetStadiumDetail)
 	api.GET("/sync/status", handlers.GetSyncStatus)
 
+	// Home aggregation (DATA-10).
+	api.GET("/home", handlers.HomeAggregate)
+
 	// Competitions (public)
 	api.GET("/competitions", handlers.ListCompetitions)
+	api.GET("/competitions/:code/overview", handlers.CompetitionOverview)
 	api.GET("/competitions/:code/standings", handlers.GetCompetitionStandings)
 	api.GET("/featured", handlers.PublicFeatured)
 
@@ -170,6 +179,10 @@ func Setup() *gin.Engine {
 
 			adminAuth.GET("/users", handlers.AdminListUsers)
 			adminAuth.PUT("/users/:id/status", handlers.AdminUpdateUserStatus)
+
+			adminAuth.GET("/sync/history", handlers.AdminListSyncHistory)
+			adminAuth.GET("/reminders", handlers.AdminListReminders)
+			adminAuth.POST("/reminders/:id/retry", handlers.AdminRetryReminder)
 		}
 	}
 

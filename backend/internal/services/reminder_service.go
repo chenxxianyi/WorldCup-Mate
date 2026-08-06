@@ -1,6 +1,8 @@
 package services
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -164,37 +166,62 @@ var sendEmail = func(to, subject, htmlBody string) error {
 	return utils.SendEmail(to, subject, htmlBody)
 }
 
-// claimDueReminders atomically marks due pending reminders as "sending".
-// Concurrent scanners (multiple instances) race on the conditional UPDATE:
-// only the winner's RowsAffected counts, so each reminder is processed
-// exactly once (QA-03B).
+// claimDueReminders atomically marks due pending reminders as "sending"
+// using a claim_token. Each scanner generates a unique worker ID and
+// updates only pending reminders whose next_retry_at has passed. The
+// UPDATE is conditional on status=pending, so concurrent scanners
+// cannot overlap (REL-08). A reminder left in "sending" for longer
+// than the claim timeout is reclaimed automatically on the next scan.
 func claimDueReminders(now time.Time, limit int) ([]models.Reminder, error) {
+	workerID := generateWorkerID()
+	claimTimeout := 5 * time.Minute
+
+	// Reclaim stale claims from crashed workers first.
+	database.DB.Model(&models.Reminder{}).
+		Where("status = ? AND claimed_at IS NOT NULL AND claimed_at < ?", "sending", now.Add(-claimTimeout)).
+		Updates(map[string]interface{}{"status": "pending", "claim_token": "", "claimed_at": nil, "worker_id": ""})
+
+	// Claim pending reminders atomically. The conditional WHERE clause
+	// ensures only one scanner can claim each row (REL-08).
 	var due []models.Reminder
-	if err := database.DB.Where("status = ? AND remind_at <= ?", "pending", now).
-		Order("remind_at ASC").Limit(limit).Find(&due).Error; err != nil {
+	claimQuery := database.DB.Model(&models.Reminder{}).
+		Where("status = ? AND (next_retry_at IS NULL OR next_retry_at <= ?) AND remind_at <= ?", "pending", now, now).
+		Order("remind_at ASC").Limit(limit)
+
+	token := generateClaimToken()
+	err := claimQuery.Updates(map[string]interface{}{
+		"status":      "sending",
+		"claim_token": token,
+		"claimed_at":  now,
+		"worker_id":   workerID,
+	}).Error
+	if err != nil {
 		return nil, err
 	}
-	if len(due) == 0 {
-		return nil, nil
-	}
-	ids := make([]uint, 0, len(due))
-	for _, r := range due {
-		ids = append(ids, r.ID)
-	}
-	res := database.DB.Model(&models.Reminder{}).
-		Where("id IN ? AND status = ?", ids, "pending").
-		Update("status", "sending")
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	if res.RowsAffected == 0 {
-		return nil, nil // another scanner claimed them first
-	}
-	var claimed []models.Reminder
-	if err := database.DB.Preload("User").Where("id IN ? AND status = ?", ids, "sending").Find(&claimed).Error; err != nil {
+
+	// Fetch only the reminders claimed by this worker (token match).
+	if err := database.DB.Preload("User").
+		Where("claim_token = ? AND status = ?", token, "sending").
+		Order("remind_at ASC").Find(&due).Error; err != nil {
 		return nil, err
 	}
-	return claimed, nil
+	return due, nil
+}
+
+// generateClaimToken returns a random hex token used to scope a
+// scanner's claim so it never processes another worker's reminders.
+func generateClaimToken() string {
+	b := make([]byte, 18)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+// generateWorkerID returns a short random identifier for the current
+// scanner process (used for observability in audit logs).
+func generateWorkerID() string {
+	b := make([]byte, 12)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
 }
 
 // ClaimDueRemindersForTest exposes the claim step for service tests.
@@ -228,7 +255,8 @@ func ScanAndSendReminders() {
 
 		// In-app notification is created only on the FIRST attempt;
 		// retries after a failed email must not duplicate it.
-		if r.RetryCount == 0 {
+		// Use NotificationID as idempotency key (REL-08).
+		if r.RetryCount == 0 && (r.NotificationID == nil || *r.NotificationID == 0) {
 			notification := &models.Notification{
 				UserID:  r.UserID,
 				Title:   title,
@@ -243,6 +271,7 @@ func ScanAndSendReminders() {
 				requeueTransient(&r, err)
 				continue
 			}
+			r.NotificationID = &notification.ID
 		}
 
 		// Send email if channel is "email"
@@ -278,14 +307,24 @@ func ScanAndSendReminders() {
 
 // requeueReminder moves a failed email reminder back to pending (or to
 // failed at the retry cap), logging the reason. RetryCount counts EMAIL
-// attempts only.
+// attempts only. On retry, apply exponential backoff via NextRetryAt so
+// failed reminders are not hot-retried and appear in the admin view
+// (ADM-13 / REL-08).
 func requeueReminder(r *models.Reminder, cause error) {
 	r.RetryCount++
 	if r.RetryCount >= reminderMaxEmailRetries {
 		r.Status = "failed"
+		r.LastError = cause.Error()
 		log.Printf("Reminder %d failed permanently after %d attempts: %v", r.ID, r.RetryCount, cause)
 	} else {
 		r.Status = "pending"
+		// Exponential backoff: 1min, 2min, 4min.
+		backoff := time.Duration(1<<uint(r.RetryCount-1)) * time.Minute
+		now := time.Now().UTC()
+		next := now.Add(backoff)
+		r.NextRetryAt = &next
+		r.LastError = cause.Error()
+		log.Printf("Reminder %d requeued for retry %d with backoff %v: %v", r.ID, r.RetryCount, backoff, cause)
 	}
 	_ = repositories.UpdateReminder(r)
 }
@@ -296,5 +335,8 @@ func requeueReminder(r *models.Reminder, cause error) {
 func requeueTransient(r *models.Reminder, cause error) {
 	log.Printf("Reminder %d requeued (transient): %v", r.ID, cause)
 	r.Status = "pending"
+	r.LastError = cause.Error()
+	now := time.Now().UTC()
+	r.NextRetryAt = &now
 	_ = repositories.UpdateReminder(r)
 }

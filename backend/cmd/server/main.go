@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"worldcup-mate/internal/config"
@@ -98,12 +102,39 @@ func main() {
 	}
 
 	// Start background workers only after the HTTP port is available.
-	jobs.StartReminderScanner()
-	jobs.StartMatchSyncer()
-	jobs.StartLeagueSyncer()
+	// A cancelable process context allows graceful shutdown of all workers.
+	appCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	server := &http.Server{Handler: r}
+
+	// Listen for OS signals and shut down gracefully on SIGINT/SIGTERM (OBS-04).
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigCh
+		log.Printf("received signal %v, shutting down...", sig)
+
+		// Stop background workers first.
+		jobs.StopReminderScanner()
+		jobs.StopMatchSyncer()
+		jobs.StopLeagueSyncer()
+		cancel() // cancels in-flight worker contexts
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownCancel()
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			log.Printf("graceful shutdown error: %v", err)
+		}
+		os.Exit(0)
+	}()
+
+	jobs.StartReminderScanner(appCtx)
+	jobs.StartMatchSyncer(appCtx)
+	jobs.StartLeagueSyncer(appCtx)
 
 	log.Printf("Server starting on %s", addr)
-	if err := r.RunListener(listener); err != nil {
+	if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server failed: %v", err)
 	}
 }

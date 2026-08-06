@@ -14,6 +14,8 @@ const navItems = [
   { label: '比赛管理', path: '/admin/matches' },
   { label: '积分榜管理', path: '/admin/standings' },
   { label: '同步管理', path: '/admin/sync' },
+  { label: '同步历史', path: '/admin/sync/history' },
+  { label: '提醒管理', path: '/admin/reminders' },
 ]
 
 function isActive(path: string) {

@@ -153,7 +153,19 @@ func TestEmailFailureRetriesThenFails(t *testing.T) {
 	defer func() { services.SetSendEmailForTest(orig) }()
 
 	// Scan 3 times: each attempt fails, retry count climbs to the cap.
+	// The exponential backoff sets next_retry_at into the future, so reset
+	// it before each scan to simulate real time passing (REL-08).
 	for i := 0; i < 3; i++ {
+		var list []models.Reminder
+		if err := database.DB.Find(&list).Error; err != nil {
+			t.Fatalf("list reminders: %v", err)
+		}
+		for _, rem := range list {
+			now := time.Now().UTC()
+			if err := database.DB.Model(&rem).Update("next_retry_at", now.Add(-time.Minute)).Error; err != nil {
+				t.Fatalf("clear next_retry_at: %v", err)
+			}
+		}
 		services.ScanAndSendReminders()
 	}
 	var r models.Reminder

@@ -1,21 +1,20 @@
-version: '3.8'
-
 services:
   mysql:
     image: mysql:8.0
     container_name: wc-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: worldcup_mate
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-worldcup_mate}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -38,22 +37,36 @@ services:
     environment:
       APP_ENV: production
       APP_PORT: 8080
-      JWT_SECRET: change_this_in_production
-      MYSQL_DSN: root:password@tcp(mysql:3306)/worldcup_mate?charset=utf8mb4&parseTime=True&loc=Local
+      UPLOAD_DIR: /app/uploads
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be provided and at least 32 characters}
+      MYSQL_DSN: root:${MYSQL_ROOT_PASSWORD:?}@tcp(mysql:3306)/${MYSQL_DATABASE:-worldcup_mate}?charset=utf8mb4&parseTime=True&loc=Local
       REDIS_ADDR: redis:6379
-      REDIS_PASSWORD: ""
-      REDIS_DB: "0"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required in production}
       # League sync (top-5 leagues). Format: CODE:SEASON,COMMA_SEPARATED.
       # Leave empty to keep World Cup-only behavior.
-      # Example: PL:2025,PD:2025,BL1:2025,SA:2025,FL1:2025
-      SYNC_COMPETITIONS: ""
-      LEAGUE_SYNC_INTERVAL_MINUTES: "30"
-      FOOTBALL_DATA_API_KEY: ""
+      SYNC_COMPETITIONS: ${SYNC_COMPETITIONS:-}
+      LEAGUE_SYNC_INTERVAL_MINUTES: ${LEAGUE_SYNC_INTERVAL_MINUTES:-30}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   frontend:
     build:
@@ -63,7 +76,9 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   mysql_data:
+  uploads_data:

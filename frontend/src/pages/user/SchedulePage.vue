@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { apiListMatches } from '@/api/matches'
+import { apiCompetitionOverview } from '@/api/competitions'
 import ThemeIcon from '@/components/theme/ThemeIcon.vue'
 import ThemeMatchCard from '@/components/theme/ThemeMatchCard.vue'
 import { localDateLabel, matchToThemeMatch, type ThemeMatch } from '@/data/themeAdapters'
@@ -13,28 +14,69 @@ import { useGeneration } from '@/composables/useRequestGuard'
 import { isCancel } from '@/types/common'
 import { normalizeMatch } from '@/types/match'
 
+const route = useRoute()
 const router = useRouter()
 const theme = useLeagueThemeStore()
 const auth = useAuthStore()
 const favorites = useFavoriteStore()
-const filter = ref('全部')
+
+const filter = ref<string>('全部')
 const matches = ref<ThemeMatch[]>([])
 const loading = ref(false)
 const error = ref('')
-const filters = computed(() => theme.current.slug === 'wc' ? ['全部', '小组赛', '淘汰赛', '收藏'] : ['全部', '第 11 轮', '第 12 轮', '直播', '收藏'])
+const hasMore = ref(false)
+const page = ref(1)
+const PAGE_SIZE = 40
+
+// DATA-09: matchday ranges are derived from the backend overview, not
+// hard-coded. Once loaded, `roundFilters` holds the available rounds.
+const roundFilters = ref<string[]>([])
+const overviewLoading = ref(false)
+
+const isLeague = computed(() => theme.current.format === 'league')
+const filters = computed(() => {
+  if (theme.current.slug === 'wc') return ['全部', '小组赛', '淘汰赛', '收藏']
+  const rounds = roundFilters.value.length ? roundFilters.value : ['第 1 轮']
+  return ['全部', ...rounds, '直播', '收藏']
+})
+
 const groupedMatches = computed(() => {
   const groups = new Map<string, ThemeMatch[]>()
   matches.value.forEach((match) => groups.set(match.kickoffKey, [...(groups.get(match.kickoffKey) || []), match]))
   return [...groups.entries()].map(([key, items]) => ({ key, label: localDateLabel(key), matches: items }))
 })
 
+// ---------- UI state derives from the URL query (DATA-09) ----------
+const qsValue = () => route.query.filter as string | undefined
+const roundFromQuery = () => (route.query.matchday ? Number(route.query.matchday) : null)
+
+watch(() => route.query, () => {
+  filter.value = qsValue() || '全部'
+}, { immediate: true })
+
+// Toggle a filter; push it to the URL query so refresh/share keeps it.
+function selectFilter(value: string) {
+  const query: Record<string, any> = { ...route.query }
+  if (value === '全部') delete query.filter
+  else query.filter = value
+  const round = value.match(/第\s*(\d+)\s*轮/)
+  if (round) query.matchday = Number(round[1])
+  else delete query.matchday
+  router.push({ query }).catch(() => {})
+}
+
 function queryForFilter() {
-  const params: Record<string, unknown> = { page: 1, page_size: 100 }
+  const params: Record<string, unknown> = { page: page.value, page_size: PAGE_SIZE }
   if (filter.value === '小组赛') params.stage = 'group'
   if (filter.value === '淘汰赛') params.stage = 'knockout'
   if (filter.value === '直播') params.status = 'live'
   const round = filter.value.match(/第\s*(\d+)\s*轮/)
   if (round) params.matchday = Number(round[1])
+  const league = theme.current
+  if (league.id) {
+    params.competitionId = league.id
+    if (league.season) params.season = league.season
+  }
   return params
 }
 
@@ -49,14 +91,16 @@ function freshSignal(): AbortSignal {
 onBeforeUnmount(() => listController?.abort())
 onBeforeUnmount(() => gen.bump()) // LIVE-02: drop in-flight flows writing refs of this page
 
-async function loadMatches(quiet = false) {
-  // quiet: polling refreshes must not flash the loading state (LIVE-01).
-  const g = gen.next() // LIVE-02: claim this load's generation
-  if (!quiet) loading.value = true
+// PERF-04: incremental loading. First load pulls one page; subsequent
+// load calls stack pages instead of re-fetching everything.
+async function loadMatches(quiet = false, append = false) {
+  const g = gen.next()
+  if (!quiet && !append) loading.value = true
   error.value = ''
   try {
     if (filter.value === '收藏' && !auth.isLoggedIn) {
       matches.value = []
+      hasMore.value = false
       return
     }
     if (filter.value === '收藏') await favorites.fetchFavoriteMatches()
@@ -64,49 +108,85 @@ async function loadMatches(quiet = false) {
     const signal = freshSignal()
     const response = await apiListMatches(params, { signal })
     if (!gen.isCurrent(g)) return // stale: a newer load/switch won
-    let rawRows = response.list
-    const total = Number(response.total ?? rawRows.length)
-    if (rawRows.length && rawRows.length < total) {
-      const pageSize = Number(response.page_size || params.page_size || 100)
-      const pageCount = Math.ceil(total / pageSize)
-      const remaining = await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) =>
-        apiListMatches({ ...params, page: index + 2, page_size: pageSize }, { signal }),
-      ))
-      if (!gen.isCurrent(g)) return
-      rawRows = rawRows.concat(...remaining.map((page) => page.list))
+
+    const rows = response.list.map(normalizeMatch)
+    let final = rows
+    if (filter.value === '收藏') final = rows.filter((match: any) => favorites.isMatchFavorite(match.id))
+
+    if (append) {
+      matches.value = [...matches.value, ...final.map(matchToThemeMatch)]
+    } else {
+      matches.value = final.map(matchToThemeMatch)
     }
-    let rows = rawRows.map(normalizeMatch)
-    if (filter.value === '收藏') rows = rows.filter((match: any) => favorites.isMatchFavorite(match.id))
-    matches.value = rows.map(matchToThemeMatch)
+    // Determine whether more pages remain.
+    const total = Number(response.total ?? rows.length)
+    const pageSize = Number(response.page_size || PAGE_SIZE)
+    hasMore.value = page.value * pageSize < total
   } catch (reason) {
-    if (isCancel(reason)) return // aborted by a newer load / unmount
-    // quiet polling failures keep the last good data on screen.
+    if (isCancel(reason)) return
     if (!quiet) {
-      matches.value = []
+      // On an append failure keep what we already have; only a first page
+      // failure clears the list.
+      if (!append) matches.value = []
       error.value = reason instanceof Error ? reason.message : '赛程加载失败'
     }
   } finally {
-    if (!quiet) loading.value = false
-    polling.schedule() // LIVE-01: (re)arm the adaptive timer once data is present
+    if (!quiet && !append) loading.value = false
+    polling.schedule() // LIVE-01: (re)arm the adaptive timer
   }
 }
 
-// LIVE-01: adaptive polling of the schedule (30s while live, 60s near
-// kickoff, 5min idle); pauses in the background.
-const gen = useGeneration() // LIVE-02: stale-response guard
+async function loadMore() {
+  page.value += 1
+  await loadMatches(true, true)
+}
+
+function resetToTop() {
+  router.push({ query: { ...route.query, filter: route.query.filter } }).catch(() => {})
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// LIVE-01: adaptive polling of the schedule.
+const gen = useGeneration()
 const polling = useLivePolling(
   () => pollingStatusFrom(matches.value),
   () => loadMatches(true),
   () => matches.value.length > 0,
 )
 
-async function selectFilter(value: string) {
-  filter.value = value
-  await loadMatches()
+// Load overview (available rounds) for leagues on mount & on switch.
+async function loadOverview() {
+  const competition = theme.current
+  if (!competition.code) return
+  if (competition.slug === 'wc') return
+  overviewLoading.value = true
+  try {
+    const overview = await apiCompetitionOverview(competition.code)
+    const maxMatchday = Number(overview.matchday) || 0
+    roundFilters.value = Array.from({ length: maxMatchday }, (_, i) => `第 ${i + 1} 轮`)
+  } catch {
+    roundFilters.value = []
+  } finally {
+    overviewLoading.value = false
+  }
 }
 
-onMounted(loadMatches)
-watch(() => theme.currentCode, () => { gen.bump(); filter.value = '全部'; loadMatches() })
+onMounted(() => {
+  loadOverview()
+  loadMatches()
+})
+// DATA-09: switching to a league loads its current season/round range.
+watch(() => theme.currentCode, () => {
+  gen.bump()
+  page.value = 1
+  roundFilters.value = []
+  loadOverview()
+  loadMatches()
+})
+watch(filter, () => {
+  page.value = 1
+  loadMatches()
+})
 </script>
 
 <template>
@@ -158,6 +238,26 @@ watch(() => theme.currentCode, () => { gen.bump(); filter.value = '全部'; load
           />
         </div>
       </section>
+      <!-- PERF-04: load-more + back-to-top -->
+      <div class="load-more-row">
+        <button
+          v-if="hasMore"
+          class="load-more-button"
+          type="button"
+          :disabled="loading"
+          @click="loadMore"
+        >
+          {{ loading ? '加载中…' : '加载更多' }}
+        </button>
+        <button
+          v-if="groupedMatches.length > 10"
+          class="load-more-button ghost"
+          type="button"
+          @click="resetToTop"
+        >
+          返回顶部
+        </button>
+      </div>
     </template>
     <article
       v-else
@@ -174,3 +274,32 @@ watch(() => theme.currentCode, () => { gen.bump(); filter.value = '全部'; load
     </article>
   </div>
 </template>
+
+<style scoped>
+.load-more-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.load-more-button {
+  min-height: 40px;
+  padding: 0 22px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.load-more-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.load-more-button.ghost {
+  background: transparent;
+}
+</style>

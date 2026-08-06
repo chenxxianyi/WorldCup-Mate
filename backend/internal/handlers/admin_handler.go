@@ -894,3 +894,63 @@ func AdminUpdateUserStatus(c *gin.Context) {
 	services.RecordAudit(adminID, adminEmail, "user", strconv.FormatUint(uint64(user.ID), 10), "status", before, user)
 	utils.Success(c, user)
 }
+
+// ---------- Sync history (ADM-13) ----------
+
+func AdminListSyncHistory(c *gin.Context) {
+	limit := utils.GetPageSize(c)
+	if limit > 200 {
+		limit = 200
+	}
+	states, err := repositories.ListSyncHistory(limit)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+	utils.Success(c, states)
+}
+
+// ---------- Reminder operations (ADM-13) ----------
+
+func AdminListReminders(c *gin.Context) {
+	page := utils.GetPage(c)
+	pageSize := utils.GetPageSize(c)
+	reminders, total, err := repositories.ListRemindersWithStats(page, pageSize)
+	if err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+	utils.Paginated(c, reminders, total, page, pageSize)
+}
+
+func AdminRetryReminder(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.Error(c, 400, "invalid reminder id")
+		return
+	}
+	reminder, err := repositories.GetReminderByID(uint(id))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.Error(c, 404, "reminder not found")
+			return
+		}
+		utils.Error(c, 500, err.Error())
+		return
+	}
+	// Requeue a failed/sending reminder for a fresh attempt.
+	now := time.Now().UTC()
+	reminder.Status = "pending"
+	reminder.RetryCount = 0
+	reminder.ClaimToken = ""
+	reminder.ClaimedAt = nil
+	reminder.NextRetryAt = &now
+	reminder.LastError = ""
+	if err := repositories.UpdateReminder(reminder); err != nil {
+		utils.Error(c, 500, err.Error())
+		return
+	}
+	adminID, adminEmail := adminIdentity(c)
+	services.RecordAudit(adminID, adminEmail, "reminder", strconv.FormatUint(uint64(reminder.ID), 10), "retry", nil, reminder)
+	utils.Success(c, gin.H{"retried": true, "reminder_id": reminder.ID})
+}
